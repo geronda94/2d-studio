@@ -17,12 +17,16 @@ TEMPLATE_SLUG = "forest-drive"
 TPL = get_template(TEMPLATE_SLUG)
 if not TPL:
     raise SystemExit(f"Template not found: {TEMPLATE_SLUG}")
+TPL2 = get_template("cinematic-forest")
 
 DEMO_CODE = TPL["code"]
 DEMO_PROPS = TPL["default_props"]
 DEMO_DURATION = TPL["duration"]
 DEMO_VIEW = TPL.get("view") or "day"
 DEMO_CUES = TPL.get("cues") or []
+DEMO2_DURATION = TPL2["duration"] if TPL2 else 7000
+DEMO2_VIEW = (TPL2.get("view") if TPL2 else "") or "day"
+DEMO2_CUES = TPL2.get("cues") if TPL2 else []
 DEMO_TITLE = "Forest drive"
 
 
@@ -102,11 +106,51 @@ def run():
                 "cues": DEMO_CUES,
             }))
 
+        if TPL2:
+            scene2 = db.query(models.Slide).filter(
+                models.Slide.presentation_id == pres_id,
+                models.Slide.slide_id == "scene-demo-2",
+            ).first()
+            start2 = DEMO_DURATION + 1000
+            if not scene2:
+                scene2 = models.Slide(
+                    presentation_id=pres_id,
+                    slide_id="scene-demo-2",
+                    component="__scene__",
+                    start_time=start2,
+                    title="Cinematic forest",
+                    subtitle="",
+                    layout="col",
+                    order_index=1,
+                )
+                db.add(scene2)
+                db.flush()
+            scene2.kind = "scene"
+            scene2.duration = DEMO2_DURATION
+            scene2.code = TPL2["code"]
+            scene2.props = TPL2.get("default_props") or {}
+            scene2.props_schema = TPL2.get("props_schema") or {}
+            scene2.track = scene2.track or "main"
+            scene2.z_index = scene2.z_index or 0
+            payload2 = {
+                "kind": "scene",
+                "code": TPL2["code"],
+                "props": TPL2.get("default_props") or {},
+                "props_schema": TPL2.get("props_schema") or {},
+                "duration": DEMO2_DURATION,
+                "view": DEMO2_VIEW,
+                "cues": DEMO2_CUES,
+            }
+            if scene2.data:
+                scene2.data.payload = payload2
+            else:
+                db.add(models.SlideData(slide_id=scene2.id, payload=payload2))
+
         end = db.query(models.Slide).filter(
             models.Slide.presentation_id == pres_id,
             models.Slide.component == "EndMarkerSlide",
         ).first()
-        target_end = DEMO_DURATION + 1000
+        target_end = DEMO_DURATION + 1000 + DEMO2_DURATION + 1000 if TPL2 else DEMO_DURATION + 1000
         if not end:
             db.add(models.Slide(
                 presentation_id=pres_id,
@@ -116,7 +160,7 @@ def run():
                 title="Конец",
                 subtitle="",
                 layout="col",
-                order_index=1,
+                order_index=2 if TPL2 else 1,
             ))
         else:
             end.start_time = target_end

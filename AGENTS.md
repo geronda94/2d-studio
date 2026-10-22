@@ -10,7 +10,7 @@
 Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
 Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
-Object Studio: **`docs/OBJECT_STUDIO.md`**.
+Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 
 ---
@@ -135,6 +135,8 @@ Environment + Objects + Mechanisms + Cues = Scene
 - Механизм — функция фазы от `t` (колёса, качание, пар, светофор).
 - Ключ — `{ at, set }` на локальном таймлайне.
 - Массовые объекты (деревья/птицы) — `SceneKit.scatter(...)`, не дублировать вручную.
+- «3D-вид» — `SceneKit.camera` + слои/глубина, не плоский zoom.
+- Уникальные сцены можно писать с нуля; библиотека не обязательна.
 
 Пример:
 

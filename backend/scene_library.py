@@ -810,7 +810,7 @@ def _obj(slug):
     return next(o for o in OBJECTS if o["slug"] == slug)
 
 
-def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None):
+def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None, extra_css='', extra_html=''):
     env = _env(env_slug)
     objs = [_obj(s) for s in obj_slugs]
     actors = [o for o in objs if o.get("category") == "character"]
@@ -823,9 +823,10 @@ def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, pro
         + '\n</div>\n'
         + ('<div class="layer layer-actors" data-layer="actors">\n'
            + "\n".join(o["html"] for o in actors) + '\n</div>\n' if actors else '')
+        + ('<div class="layer layer-overlay" data-layer="overlay">' + extra_html + '</div>' if extra_html else '')
         + '</div>'
     )
-    css = (BASE_CSS + "\n" + env["css"] + "\n" + "\n".join(o["css"] for o in objs)).strip()
+    css = (BASE_CSS + "\n" + env["css"] + "\n" + "\n".join(o["css"] for o in objs) + "\n" + extra_css).strip()
     return {
         "slug": title.lower().replace(" ", "-"),
         "title": title,
@@ -984,6 +985,73 @@ function seek(t) {
 window.scene = { seek };
 """
 
+CINEMATIC_FOREST_CSS = """
+.scene { perspective: 1400px; transform-style: preserve-3d; }
+.layer-world, .layer-objects, .layer-actors { transform-style: preserve-3d; }
+.scene::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:60;
+  background:radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,.45) 100%);
+  mix-blend-mode:multiply; }
+.scene::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:55;
+  background:linear-gradient(180deg, rgba(255,220,150,.06), transparent 30%, transparent 75%, rgba(0,0,0,.18));
+  mix-blend-mode:screen; }
+"""
+
+CINEMATIC_FOREST_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const car = root.querySelector('.obj-car');
+const wheels = root.querySelectorAll('[data-wheel]');
+const dashes = root.querySelector('.obj-road .road-dashes');
+const tree = root.querySelector('.obj-tree');
+const pine = root.querySelector('.obj-pine');
+if (tree) SceneKit.scatter(tree, { count: Number(p.tree_count) || 5, x: [0.05, 0.95], y: [0.16, 0.32], scale: [0.6, 1.4], seed: 11 });
+if (pine) SceneKit.scatter(pine, { count: Number(p.pine_count) || 6, x: [0.02, 0.98], y: [0.12, 0.34], scale: [0.6, 1.5], seed: 23 });
+if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
+SceneKit.views(root, p.views || { car: 'side' });
+
+const depthEls = [
+  { el: root.querySelector('.env-forest .sky'), depth: 0.15 },
+  { el: root.querySelector('.env-forest .sun'), depth: 0.2 },
+  { el: root.querySelector('.env-forest .ridge'), depth: 0.35 },
+  { el: root.querySelector('.env-forest .pines-far'), depth: 0.55 },
+  { el: root.querySelector('.env-forest .pines-near'), depth: 0.8 },
+  { el: root.querySelector('.env-forest .ground'), depth: 0.9 },
+  { el: root.querySelector('.env-forest .fog'), depth: 1.0 },
+].filter((x) => x.el);
+const cam = SceneKit.camera(depthEls, {
+  path(t) {
+    const a = Number(p.camera_amount) || 1;
+    return {
+      x: Math.sin(t / 2600) * 26 * a,
+      y: Math.cos(t / 3400) * 10 * a,
+      z: -t * 0.01 * a,
+      zoom: Math.sin(t / 4200) * 0.02 * a,
+      rot: Math.sin(t / 5000) * 0.5 * a,
+    };
+  },
+});
+
+const base = Number(p.cruise_speed) || 1.4;
+const defaultCues = [
+  { at: 0, set: { speed: base, brake: false } },
+  { at: 2200, set: { speed: base * 2.1 } },
+  { at: 4600, set: { speed: base * 0.25, brake: true } },
+];
+const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
+const cues = SceneKit.cues(cueList);
+
+function seek(t) {
+  const st = cues.stateAt(t);
+  const dist = cues.integrate('speed', t) * 90;
+  cam.seek(t);
+  if (car) car.style.transform = `translate3d(${dist}px,0,0)`;
+  wheels.forEach((w) => { w.style.transform = `rotate(${cues.integrate('speed', t) * 360}deg)`; });
+  if (dashes) dashes.style.transform = `translate3d(${-dist * 0.8}px,0,0)`;
+  if (car) car.classList.toggle('braking', !!st.brake);
+}
+window.scene = { seek };
+"""
+
 TEMPLATES = [
     _compose(
         "forest", ["road", "car", "tree", "pine", "cloud"],
@@ -1046,6 +1114,24 @@ TEMPLATES = [
         duration=5000,
         props_schema={"headline": {"type": "text", "label": "Заголовок"}},
         default_props={"headline": "STUDIO"},
+    ),
+    _compose(
+        "forest", ["road", "car", "tree", "pine", "cloud"],
+        CINEMATIC_FOREST_JS,
+        title="Cinematic forest",
+        description="2.5D-камера: глубина, параллакс, свет, виньетка, машина в кадре.",
+        tags=["scene", "cinematic", "2.5d", "forest"],
+        duration=7000,
+        props_schema={
+            "car_color": {"type": "color", "label": "Цвет машины"},
+            "cruise_speed": {"type": "number", "label": "Скорость"},
+            "tree_count": {"type": "integer", "label": "Деревьев"},
+            "pine_count": {"type": "integer", "label": "Сосен"},
+            "camera_amount": {"type": "number", "label": "Амплитуда камеры"},
+        },
+        default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "tree_count": 5, "pine_count": 6, "camera_amount": 1, "views": {"car": "side"}},
+        cues=[{"at": 0, "set": {"speed": 1.4, "brake": False}}, {"at": 2200, "set": {"speed": 2.9}}, {"at": 4600, "set": {"speed": 0.35, "brake": True}}],
+        extra_css=CINEMATIC_FOREST_CSS,
     ),
 ]
 

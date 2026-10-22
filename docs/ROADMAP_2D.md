@@ -43,6 +43,8 @@
 - [x] Реестр ошибок `scene_learnings` + API.
 - [x] DAM-дизайн (`ASSETS.md`).
 - [x] Персонаж-заготовка `character` + research (`CHARACTERS.md`).
+- [x] 2.5D-камера `SceneKit.camera` + шаблон `cinematic-forest`.
+- [x] Режимы `code` / `composite` описаны в `SCENE_MODES.md`.
 
 ## Phase 3 — Content factory
 

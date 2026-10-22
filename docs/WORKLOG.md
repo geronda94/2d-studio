@@ -249,3 +249,12 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 **Причина:** статический импорт CodeMirror.
 **Решение:** `defineAsyncComponent(() => import('./CodeEditor.vue'))` → отдельный chunk.
 **Урок:** тяжёлые редакторы подключать лениво.
+
+
+---
+
+## 2026-10-22 — 2.5D-камера и режимы сцен
+
+- `SceneKit.camera` + шаблон `cinematic-forest`.
+- `docs/SCENE_MODES.md`: code vs composite, каст проекта, 2.5D-техники.
+- Подчёркнуто: библиотека объектов — опция; большинство сцен можно писать с нуля.

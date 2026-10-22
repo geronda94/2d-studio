@@ -23,6 +23,7 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 
 - `docs/ENGINE.md` — обзор движка
 - `docs/SCENES.md` — контракт сцены
+- `docs/SCENE_MODES.md` — сцены с нуля / переиспользование
 - `docs/API.md` — API
 - `docs/EDITOR.md` — редактор
 - `docs/OBJECT_STUDIO.md` — создание объектов

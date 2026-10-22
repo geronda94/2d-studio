@@ -70,6 +70,26 @@
     }
   }
 
+  // 2.5D camera: move depth layers by a deterministic path.
+  // path(t) -> { x, y, z, zoom, rot } (pixels / multiplier / degrees).
+  function camera(layers, opts) {
+    const path = (opts && opts.path) || function () { return {} }
+    return {
+      seek(t) {
+        const c = path(t) || {}
+        for (const l of layers) {
+          const d = Number(l.depth) || 1
+          const x = (Number(c.x) || 0) * d
+          const y = (Number(c.y) || 0) * d
+          const z = (Number(c.z) || 0) * d
+          const zoom = 1 + (Number(c.zoom) || 0) * d
+          const rot = (Number(c.rot) || 0) * d
+          l.el.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,' + z.toFixed(2) + 'px) scale(' + zoom.toFixed(4) + ') rotate(' + rot.toFixed(3) + 'deg)'
+        }
+      },
+    }
+  }
+
   // Deterministic scatter: clone an object N times with seeded positions/scales.
   // Solves "100 identical trees" without hand-duplicating layers.
   function mulberry32(seed) {
@@ -133,5 +153,5 @@
     }
   }
 
-  window.SceneKit = { cues, mechanism, parallax, compose, views: applyViews, scatter, mulberry32 }
+  window.SceneKit = { cues, mechanism, parallax, camera, compose, views: applyViews, scatter, mulberry32 }
 })()
