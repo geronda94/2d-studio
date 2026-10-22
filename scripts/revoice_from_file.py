@@ -152,7 +152,7 @@ def main():
     timeline = build_audio_timeline(voice_clips, bgm_path or BGM_FILE)
     r = requests.put(f"{BASE}/presentations/{args.pres_id}", json={"audio_timeline": timeline})
     print("timeline PUT:", r.status_code)
-    print(f"DONE: pres {args.pres_id}, total {total/1000:.1f}s, preview http://localhost:5174/p/{args.pres_id}")
+    print(f"DONE: pres {args.pres_id}, total {total/1000:.1f}s, preview http://localhost:5175/p/{args.pres_id}")
 
 
 if __name__ == "__main__":

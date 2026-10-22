@@ -33,7 +33,7 @@ except Exception:
     except Exception:
         pass
 
-BASE = "http://localhost:8001"
+BASE = "http://localhost:8002"
 API = f"{BASE}"
 FOLDER_ID_SHORTS = 2  # Папка "Шортсы" в проекте IT2B
 
@@ -434,7 +434,7 @@ def run_pipeline(short_num: int = None, scenario: dict = None):
 
     print(f"\n{'='*60}")
     print(f"  DONE: Presentation {pres_id} created with {len(voice_clips)} audio clips")
-    print(f"  Preview: http://localhost:5174/p/{pres_id}")
+    print(f"  Preview: http://localhost:5175/p/{pres_id}")
     print(f"  REMINDER: ~half of title words must be in <em> tags (gradient in tech variant)")
     print(f"{'='*60}\n")
 

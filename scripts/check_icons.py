@@ -19,7 +19,7 @@ except Exception:
     except Exception:
         pass
 
-BASE = "http://localhost:8001"
+BASE = "http://localhost:8002"
 
 
 def collect_icons(node, out):

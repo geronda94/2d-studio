@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from . import models
 from .database import engine
-from .routers import presentations, components, projects, ai, renders, variants, presets, api_keys, auth, admin, audit as audit_router, revisions as revisions_router, ai_runs as ai_runs_router, delegations as delegations_router
+from .routers import presentations, components, projects, ai, renders, variants, presets, api_keys, auth, admin, audit as audit_router, revisions as revisions_router, ai_runs as ai_runs_router, delegations as delegations_router, scene_library
 from . import audit
 
 models.Base.metadata.create_all(bind=engine)
@@ -22,6 +22,13 @@ def _ensure_columns():
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS config JSON",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS version INT DEFAULT 0",
         "ALTER TABLE presentations ADD COLUMN IF NOT EXISTS version INT DEFAULT 0",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS kind VARCHAR DEFAULT 'legacy'",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS duration FLOAT",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS code JSON",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS props JSON",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS props_schema JSON",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS track VARCHAR DEFAULT 'main'",
+        "ALTER TABLE slides ADD COLUMN IF NOT EXISTS z_index INT DEFAULT 0",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_bot BOOLEAN DEFAULT false",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS owner_user_id INT",
         "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS kind VARCHAR DEFAULT 'personal'",
@@ -221,6 +228,7 @@ app.include_router(audit_router.router)
 app.include_router(revisions_router.router)
 app.include_router(ai_runs_router.router)
 app.include_router(delegations_router.router)
+app.include_router(scene_library.router)
 
 @app.get("/")
 def read_root():

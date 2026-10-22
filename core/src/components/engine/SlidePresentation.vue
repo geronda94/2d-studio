@@ -32,7 +32,7 @@
       >
         <span
           class="text-text-secondary text-xs font-bold uppercase tracking-wider ml-1"
-          >Слайды</span
+          >Сцены</span
         >
         <div class="flex gap-1">
           <button
@@ -99,7 +99,7 @@
                   ? 'border-brand-blue bg-brand-blue/10 text-brand-blue scale-[1.02]'
                   : 'border-text-muted bg-bg-surface text-text-muted group-hover:border-text-secondary group-hover:bg-bg-surface'
               "
-              :title="thumbnails[index] || `Слайд ${index + 1}`"
+              :title="thumbnails[index] || `Сцена ${index + 1}`"
             >
               <!-- Slide Number and Time -->
               <div
@@ -163,11 +163,11 @@
             </div>
           </div>
         </template>
-        <!-- Add Slide Button -->
+        <!-- Add Scene Button -->
         <button
           @click="$emit('add-slide')"
           class="w-full h-12 flex flex-row items-center justify-center gap-2 bg-brand-green/10 hover:bg-brand-green/20 text-brand-green rounded-lg transition-colors border border-brand-green/30 font-bold group mt-1"
-          title="Add Slide"
+          title="Добавить сцену"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -184,7 +184,7 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span class="text-sm">Новый слайд</span>
+          <span class="text-sm">Новая сцена</span>
         </button>
         <template
           v-for="(slide, index) in slidesData"
@@ -246,7 +246,7 @@
       </div>
     </div>
 
-    <!-- Slide context menu -->
+    <!-- Scene context menu -->
     <div
       v-if="ctxMenu"
       class="fixed inset-0 z-[400]"
@@ -383,7 +383,7 @@
             @click="isSidebarOpen = !isSidebarOpen"
             class="transition-colors p-2 -ml-1"
             :class="navOpen ? 'text-brand-blue' : 'text-text-secondary hover:text-text-primary'"
-            title="Слайды (навигация)"
+            title="Сцены (навигация)"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           </button>
@@ -393,7 +393,7 @@
             @click="goBack()"
             class="text-text-secondary hover:text-text-primary transition-colors disabled:opacity-30 p-1.5 -mx-0.5"
             :disabled="currentSlide === 0 && currentClick === 0"
-            title="Предыдущий слайд"
+            title="Предыдущая сцена"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
@@ -418,7 +418,7 @@
             @click="advance()"
             class="text-text-secondary hover:text-text-primary transition-colors disabled:opacity-30 p-1.5 -mx-0.5"
             :disabled="currentSlide >= normalSlidesCount"
-            title="Следующий слайд"
+            title="Следующая сцена"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
@@ -546,7 +546,7 @@
             </button>
             <div v-if="openMenu === 'view'" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-bg-surface border border-text-muted rounded-lg shadow-2xl p-1 flex flex-col min-w-[190px] z-50">
               <button @click="toggleMobileMode(); openMenu = null" class="text-left px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-surface-hover whitespace-nowrap">📱 Мобильный [M]</button>
-              <button @click="toggleSidebar(); openMenu = null" class="text-left px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-surface-hover whitespace-nowrap">▤ Слайды [S]</button>
+              <button @click="toggleSidebar(); openMenu = null" class="text-left px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-surface-hover whitespace-nowrap">▤ Сцены [S]</button>
               <button @click="toggleFullscreen(); openMenu = null" class="text-left px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-surface-hover whitespace-nowrap">⛶ На весь экран [F]</button>
               <button v-if="canEdit" @click="isDebugOpen = !isDebugOpen; openMenu = null" class="text-left px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-surface-hover whitespace-nowrap">🐞 Отладка [D]</button>
             </div>

@@ -4,13 +4,13 @@
          :class="[
            `variant-${variantSlug}`,
            effectiveLayout === 'row' ? 'flex-row items-center' : 'flex-col',
-           isMobile ? 'pt-5 px-4 pb-6' : 'px-12 py-8'
+           bare ? 'p-0' : (isMobile ? 'pt-5 px-4 pb-6' : 'px-12 py-8')
          ]"
           :style="[surfaceVars, slideBgStyle]">
       
       <!-- УНИФИЦИРОВАННЫЙ ЗАГОЛОВОК -->
       <!-- ВАРИАНТ 1: COL LAYOUT (Горизонтально сверху) -->
-      <div v-if="(title || subtitle || $slots.header) && effectiveLayout === 'col'" 
+      <div v-if="!bare && (title || subtitle || $slots.header) && effectiveLayout === 'col'" 
            class="w-full flex flex-col shrink-0 z-10 relative"
            :class="isMobile ? 'text-left px-2 items-start mb-3 mt-1' : 'text-center items-center mb-4'">
         <div class="mb-2 w-full">
@@ -30,7 +30,7 @@
       </div>
 
       <!-- ВАРИАНТ 2: ROW LAYOUT (Вертикально слева) -->
-      <div v-if="(title || subtitle || $slots.header) && effectiveLayout === 'row'" 
+      <div v-if="!bare && (title || subtitle || $slots.header) && effectiveLayout === 'row'" 
            class="flex-1 flex flex-col justify-center text-left px-8 z-10 h-full relative">
         <slot name="header">
             <div v-if="title" class="overflow-hidden">
@@ -43,10 +43,15 @@
         <slot name="left-content" :clicks="currentClick"></slot>
       </div>
 
-      <VerticalDivider v-if="effectiveLayout === 'row' && hasHeadline" class="h-3/4" />
+      <VerticalDivider v-if="!bare && effectiveLayout === 'row' && hasHeadline" class="h-3/4" />
+
+      <!-- FULL-BLEED (сцена): сцена рисует весь кадр сама -->
+      <div v-if="bare" class="absolute inset-0 z-0">
+        <slot v-if="isActive" :clicks="currentClick"></slot>
+      </div>
 
       <!-- УНИФИЦИРОВАННЫЙ КОНТЕНТ (строго по центру оставшегося места) -->
-      <div class="flex-1 min-h-0 w-full flex items-center justify-center relative z-0" 
+      <div v-else class="flex-1 min-h-0 w-full flex items-center justify-center relative z-0" 
            :class="effectiveLayout === 'row' ? 'px-8' : ''">
         <slot :clicks="currentClick"></slot>
       </div>
@@ -105,6 +110,11 @@ const props = defineProps({
   startTime: {
     type: Number,
     default: 0
+  },
+  // Сцена рисует весь кадр сама: без заголовка, паддингов и стандартного контентного слоя.
+  bare: {
+    type: Boolean,
+    default: false
   }
 })
 

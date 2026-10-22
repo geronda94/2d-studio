@@ -23,7 +23,7 @@ except Exception:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import agent_auth  # noqa: E402,F401  (патчит requests: авторизация + CSRF)
 
-BASE = "http://localhost:8001"
+BASE = "http://localhost:8002"
 FOLDER_LONG = 1
 SCENARIO_MD = "/root/projects/YouTube Channel/it2b/готовые_сценарии/Месяц_1/Длинное_03 — Почему сайты на Tilda не конвертируют и при чём здесь архитектура.md"
 TITLE = "03 - Почему сайты на Tilda не конвертируют"

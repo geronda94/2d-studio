@@ -439,6 +439,67 @@ export async function deleteSlide(slideId) {
   return response.json();
 }
 
+// --- SceneEngine ---------------------------------------------------------
+export async function createScene(presentationId, payload) {
+  const response = await apiFetch(`${API_BASE_URL}/presentations/${presentationId}/scenes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = new Error('Failed to create scene');
+    try { err.detail = await response.json(); } catch { /* noop */ }
+    throw err;
+  }
+  return response.json();
+}
+
+export async function updateScene(sceneId, payload) {
+  const response = await apiFetch(`${API_BASE_URL}/presentations/scenes/${sceneId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = new Error('Failed to update scene');
+    try { err.detail = await response.json(); } catch { /* noop */ }
+    throw err;
+  }
+  return response.json();
+}
+
+export async function deleteScene(sceneId) {
+  const response = await apiFetch(`${API_BASE_URL}/presentations/scenes/${sceneId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete scene');
+  return response.json();
+}
+
+export async function fetchSceneTemplates() {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/templates`);
+  if (!response.ok) throw new Error('Failed to fetch scene templates');
+  return response.json();
+}
+
+export async function fetchSceneTemplate(slug) {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/templates/${encodeURIComponent(slug)}`);
+  if (!response.ok) throw new Error('Failed to fetch scene template');
+  return response.json();
+}
+
+export async function fetchSceneEnvironments() {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/environments`);
+  if (!response.ok) throw new Error('Failed to fetch scene environments');
+  return response.json();
+}
+
+export async function fetchSceneObjects() {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/objects`);
+  if (!response.ok) throw new Error('Failed to fetch scene objects');
+  return response.json();
+}
+
 export async function uploadMedia(presentationId, file, fileType = null) {
   const formData = new FormData();
   formData.append('file', file);

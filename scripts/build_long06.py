@@ -14,7 +14,7 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import agent_auth  # noqa: E402,F401
 
-BASE = "http://localhost:8001"
+BASE = "http://localhost:8002"
 FOLDER_LONG = 1
 SCENARIO_TXT = "/root/projects/YouTube Channel/it2b/готовые_сценарии/Тексты_под_озвучку/Месяц_2/Длинное_06 — MVP за несколько недель.txt"
 TITLE = "06 - MVP за несколько недель"

@@ -1,4 +1,4 @@
 #!/bin/bash
-echo "Остановка инфраструктуры презентаций..."
+echo "Остановка SceneEngine..."
 docker compose down
-echo "Остановлено!"
+echo "Остановлено."

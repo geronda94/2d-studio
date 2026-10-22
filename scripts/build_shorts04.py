@@ -192,7 +192,7 @@ def main():
         ok += 1
 
     print(f"\nDone: {ok}/{len(SLIDES)} slides. Failed: {fail}")
-    print(f"Preview: http://localhost:5174/p/{pres_id}")
+    print(f"Preview: http://localhost:5175/p/{pres_id}")
 
 
 if __name__ == "__main__":

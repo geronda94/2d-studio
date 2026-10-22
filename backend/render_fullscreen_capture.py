@@ -321,6 +321,17 @@ def _record(url: str, seconds: float, width: int, height: int,
                 pass
             time.sleep(0.3)
 
+            # Scene handshake: fonts, images, GSAP and the scene's first seek
+            # must be ready before we start capturing. Otherwise the first
+            # seconds of the video can contain a blank/partial scene.
+            try:
+                page.wait_for_function(
+                    "window.__sceneReady === true || window.__sceneExpected === false",
+                    timeout=30000,
+                )
+            except Exception:
+                print("Warning: scene not ready before capture", flush=True)
+
             # --- Start ffmpeg (after page loaded, no loading screens captured) ---
             # Direct capture, then trim the 1-2px window-edge borders left by
             # openbox/Chromium: symmetric micro-crop TRIM px per side + scale
@@ -476,7 +487,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Realtime x11grab render.")
     parser.add_argument("--job-id", type=int, required=True)
     parser.add_argument("--presentation-id", type=int, required=True)
-    parser.add_argument("--url", default="http://localhost:5174/p/11")
+    parser.add_argument("--url", default="http://localhost:5175/p/1")
     parser.add_argument("--seconds", type=float, default=20)
     parser.add_argument("--output", default="render_realtime.mp4")
     parser.add_argument("--width", type=int, default=1920)

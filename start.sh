@@ -1,4 +1,6 @@
 #!/bin/bash
-echo "Запуск инфраструктуры презентаций..."
+echo "Запуск SceneEngine..."
 docker compose up -d
-echo "Готово! Приложение доступно на http://localhost:5174"
+echo "Frontend: http://localhost:5175"
+echo "Backend:  http://localhost:8002"
+echo "Postgres: localhost:5436"

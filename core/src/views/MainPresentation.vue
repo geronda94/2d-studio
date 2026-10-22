@@ -39,21 +39,35 @@
         :key="slide.id"
         :index="index"
         :folder="currentFolder"
-        :title="slide.title"
-        :subtitle="slide.subtitle"
+        :title="isSceneSlide(slide) ? '' : slide.title"
+        :subtitle="isSceneSlide(slide) ? '' : slide.subtitle"
         :layout="slide.layout"
         :clicks="slide.clicks"
         :startTime="slide.start_time || slide.startTime || 0"
+        :bare="isSceneSlide(slide)"
       >
         <template #default="{ clicks }">
-          <!-- We use a dynamic component based on componentsMap -->
+          <!-- Сцена: свободный HTML/CSS/JS, детерминированный seek(t) -->
+          <SceneHost
+            v-if="isSceneSlide(slide)"
+            :code="scenePayload(slide).code"
+            :scene-props="scenePayload(slide).props"
+            :start-time="slide.start_time || slide.startTime || 0"
+            :duration="scenePayload(slide).duration"
+            :format="sceneFormat"
+          />
+          <!-- Легаси-слайд (на случай старых записей) -->
           <component
+            v-else-if="componentsMap[slide.component]"
             :is="componentsMap[slide.component]"
             :mobile="isMobile"
             :clicks="clicks"
             :slide-start-time="slide.start_time || slide.startTime || 0"
             v-bind="resolvedPayload(slide)"
           />
+          <div v-else class="text-text-muted text-sm font-mono">
+            Unknown scene: {{ slide.component }}
+          </div>
         </template>
       </Slide>
     </SlidePresentation>
@@ -70,28 +84,12 @@
       </p>
     </div>
 
-    <SlideEditorModal
-      ref="editorModalRef"
+    <SceneEditor
       :isOpen="showEditorModal"
-      :isFullscreen="isFullscreen"
-      :slide="editingSlide"
-      :previousSlide="editingSlidePrevious"
-      :nextSlide="editingSlideNext"
-      :save-warnings="saveWarnings"
-      :preset-info="editorPreset"
-      :project-defaults="editingSlide ? defaultsFor(editingSlide.component) : {}"
+      :scene="editingSlide"
       @close="handleCloseEditor"
-      @update-style="handleUpdateStyle"
       @save="handleSaveSlide"
       @delete="handleDeleteSlide"
-      @live-update="handleLiveUpdate"
-      @open-media-library="openMediaLibrary('select')"
-    />
-
-    <ComponentSelectModal
-      :isOpen="showComponentSelectModal"
-      @close="showComponentSelectModal = false"
-      @select="handleComponentSelect"
     />
 
     <MediaLibraryModal
@@ -172,8 +170,6 @@ import { Icon } from "@iconify/vue";
 
 import SlidePresentation from "../components/engine/SlidePresentation.vue";
 import Slide from "../components/engine/Slide.vue";
-import SlideEditorModal from "../components/ui/SlideEditorModal.vue";
-import ComponentSelectModal from "../components/ui/ComponentSelectModal.vue";
 import MediaLibraryModal from "../components/ui/MediaLibraryModal.vue";
 import AIVoiceModal from "../components/ui/AIVoiceModal.vue";
 import RenderManagerModal from "../components/ui/RenderManagerModal.vue";
@@ -186,6 +182,9 @@ import {
   updateSlide,
   createSlide,
   deleteSlide,
+  updateScene,
+  createScene,
+  deleteScene,
   updatePresentation,
   uploadMedia,
   fetchPresets,
@@ -194,12 +193,16 @@ import {
   fetchPresentationAccess,
   fetchPresentationConfig,
   fetchPresentation,
+  fetchSceneTemplate,
 } from "../services/api";
 import { useAudioRecorder } from "../composables/useAudioRecorder.js";
 import { useAuth } from "../composables/useAuth";
 
 import { componentsMap } from "../config/componentsRegistry.js";
 import { useMobile } from "../composables/useMobile";
+import SceneHost from "../scenes/SceneHost.vue";
+import SceneEditor from "../scenes/SceneEditor.vue";
+import { DEMO_SCENE, normalizeScenePayload } from "../scenes/demoScene.js";
 
 const { isMobile } = useMobile();
 const { startRecording } = useScreenRecorder();
@@ -216,6 +219,17 @@ const renderWidth = urlParams.get("w") ? parseInt(urlParams.get("w"), 10) : null
 const renderHeight = urlParams.get("h") ? parseInt(urlParams.get("h"), 10) : null;
 
 const activeFolderData = ref(null);
+
+// Render handshake: does this presentation contain scenes at all?
+watch(
+  activeFolderData,
+  (v) => {
+    if (typeof window !== "undefined") {
+      window.__sceneExpected = !!v?.slides?.some((s) => s.component === "__scene__");
+    }
+  },
+  { immediate: true },
+);
 
 // AUTH_PLAN Ф2: режим просмотра. При AUTH_MODE=on редактор доступен только
 // owner/editor презентации; иначе (off) — как раньше, всем.
@@ -266,6 +280,78 @@ const resolvedPayload = (slide) => {
   }
   return out;
 };
+
+// --- Scene engine ---------------------------------------------------------
+const isSceneSlide = (slide) => slide?.component === "__scene__";
+
+// All timeline writes go through these three helpers. Scenes use /scenes,
+// legacy items (EndMarker) use /slides. The player/timeline stay unchanged.
+const updateTimelineItem = (item, payload) =>
+  isSceneSlide(item) ? updateScene(item.id, payload) : updateSlide(item.id, payload);
+const createTimelineItem = (presentationId, payload) =>
+  payload?.component === "__scene__"
+    ? createScene(presentationId, payload)
+    : createSlide(presentationId, payload);
+const deleteTimelineItem = (item) =>
+  isSceneSlide(item) ? deleteScene(item.id) : deleteSlide(item.id);
+
+// Duration model: the end of the presentation is max(start + duration) over all
+// non-marker items. EndMarkerSlide is only a renderer anchor and is kept in sync.
+const sceneEndMs = (items = null) => {
+  const list = items || activeFolderData.value?.slides || [];
+  let max = 0;
+  for (const s of list) {
+    if (s.component === "EndMarkerSlide") continue;
+    const start = Number(s.start_time) || 0;
+    const dur = Number(s.duration) || (isSceneSlide(s) ? 5000 : 0);
+    max = Math.max(max, start + dur);
+  }
+  return max;
+};
+
+const syncEndMarker = async () => {
+  if (!activeFolderData.value) return;
+  const maxEnd = sceneEndMs();
+  if (maxEnd <= 0) return;
+  const target = maxEnd + 1000;
+  const end = activeFolderData.value.slides.find((s) => s.component === "EndMarkerSlide");
+  if (end) {
+    if (Math.abs((end.start_time || 0) - target) > 1) {
+      end.start_time = target;
+      await updateSlide(end.id, { ...slideToPayload(end), start_time: target });
+    }
+  } else {
+    const created = await createSlide(activeFolderData.value.id, {
+      slide_id: `slide_${Date.now()}_end`,
+      component: "EndMarkerSlide",
+      start_time: target,
+      title: "Конец презентации",
+      subtitle: null,
+      layout: "col",
+      order_index: activeFolderData.value.slides.length,
+      data: { payload: {} },
+      events: [],
+    });
+    activeFolderData.value.slides.push(created);
+  }
+};
+
+const scenePayload = (slide) => {
+  const p = slide?.data?.payload || {};
+  return normalizeScenePayload({
+    code: slide?.code || p.code || {},
+    props: slide?.props || p.props || {},
+    props_schema: slide?.props_schema || p.props_schema || {},
+    duration: slide?.duration ?? p.duration,
+  });
+};
+
+const sceneFormat = computed(() => {
+  const w = Number(renderWidth) || (typeof window !== "undefined" ? window.innerWidth : 0);
+  const h = Number(renderHeight) || (typeof window !== "undefined" ? window.innerHeight : 0);
+  return h > w ? "portrait" : "landscape";
+});
+
 provide(
   "canEdit",
   computed(() => (authMode.value !== "on" ? true : !!accessInfo.value.can_edit)),
@@ -485,8 +571,8 @@ const loadCurrent = async (slug) => {
           const acc = await fetchPresentationAccess(folder.id);
           if (!acc.can_edit) return;
         }
-        const lastSlide = folder.slides[folder.slides.length - 1];
-        const endTime = lastSlide ? (lastSlide.start_time || 0) + 5000 : 5000;
+        const maxEnd = sceneEndMs(folder.slides);
+        const endTime = maxEnd > 0 ? maxEnd + 1000 : 5000;
         const endMarker = await createSlide(folder.id, {
           slide_id: `slide_${Date.now()}_end`,
           component: "EndMarkerSlide",
@@ -921,13 +1007,14 @@ const handleUpdateTiming = async (slideIndex, newTime) => {
       data: s.data ? { payload: s.data.payload || {} } : { payload: {} },
       events: s.events || [],
     };
-    promises.push(updateSlide(s.id, payload));
+    promises.push(updateTimelineItem(s, payload));
   }
 
   try {
     await Promise.all(promises);
+    await syncEndMarker();
   } catch (err) {
-    console.error("Failed to update slide timings", err);
+    console.error("Failed to update scene timings", err);
   }
 };
 
@@ -951,7 +1038,7 @@ const handleUpdateLocalTiming = async (slideIndex) => {
 
   // No need to sync editor here, it's synced during drag
   try {
-    await updateSlide(s.id, payload);
+    await updateTimelineItem(s, payload);
   } catch (err) {
     console.error("Failed to update local slide timing", err);
   }
@@ -1085,11 +1172,17 @@ const handleAudioRecorded = async ({ trackId, file, startTime }) => {
 const { isRecording, recordingTrackId, toggleRecording } =
   useAudioRecorder(handleAudioRecorded);
 
-const handleAddSlide = () => {
-  showComponentSelectModal.value = true;
-};
+const demoScenePayload = () => ({
+  kind: "scene",
+  code: { ...DEMO_SCENE.code },
+  props: { ...DEMO_SCENE.props },
+  props_schema: {},
+  duration: DEMO_SCENE.duration,
+});
 
-const handleComponentSelect = async (componentSchema) => {
+// Новая сцена: без библиотеки компонентов. Стартовый шаблон можно заменить
+// в редакторе или сгенерировать агентом.
+const handleAddSlide = async () => {
   if (!activeFolderData.value) return;
   const presentationId = activeFolderData.value.id;
 
@@ -1101,21 +1194,19 @@ const handleComponentSelect = async (componentSchema) => {
 
   if (endMarkerIndex !== -1) {
     const endMarker = activeFolderData.value.slides[endMarkerIndex];
-    const lastRealSlide = activeFolderData.value.slides[endMarkerIndex - 1];
-    newStartTime = lastRealSlide ? (lastRealSlide.start_time || 0) + 2000 : 0;
+    newStartTime = sceneEndMs() > 0 ? sceneEndMs() + 2000 : 0;
     orderIndex =
       endMarker.order_index !== undefined && endMarker.order_index !== null
         ? endMarker.order_index
         : activeFolderData.value.slides.length;
 
-    // Push end marker forward
     endMarker.start_time = Math.max(
       endMarker.start_time || 0,
       newStartTime + 3000,
     );
     endMarker.order_index = orderIndex + 1;
 
-    const endMarkerPayload = {
+    await updateSlide(endMarker.id, {
       slide_id: endMarker.slide_id || `slide_${Date.now()}_end`,
       component: endMarker.component || "EndMarkerSlide",
       start_time: endMarker.start_time,
@@ -1123,51 +1214,59 @@ const handleComponentSelect = async (componentSchema) => {
       subtitle: endMarker.subtitle || null,
       layout: endMarker.layout || null,
       order_index: endMarker.order_index,
-      data: endMarker.data
-        ? { payload: endMarker.data.payload || {} }
-        : { payload: {} },
+      data: endMarker.data ? { payload: endMarker.data.payload || {} } : { payload: {} },
       events: endMarker.events || [],
-    };
-    await updateSlide(endMarker.id, endMarkerPayload);
+    });
   } else if (activeFolderData.value.slides.length > 0) {
-    const lastSlide =
-      activeFolderData.value.slides[activeFolderData.value.slides.length - 1];
-    newStartTime = (lastSlide.start_time || 0) + 2000;
+    newStartTime = sceneEndMs() > 0 ? sceneEndMs() + 2000 : 0;
   }
 
+  let tpl = null;
+  try { tpl = await fetchSceneTemplate("forest-drive"); } catch (e) { /* local fallback */ }
+  const code = tpl?.code || DEMO_SCENE.code;
+  const sceneProps = tpl?.default_props || DEMO_SCENE.props;
+  const sceneSchema = tpl?.props_schema || {};
+  const sceneDuration = Number(tpl?.duration) || DEMO_SCENE.duration;
+  const payload = {
+    kind: "scene",
+    code,
+    props: sceneProps,
+    props_schema: sceneSchema,
+    duration: sceneDuration,
+  };
+
   const newSlidePayload = {
-    slide_id: `slide-${Date.now()}`,
-    title: componentSchema.title || "Новый Слайд",
+    slide_id: `scene-${Date.now()}`,
+    title: tpl?.title || "Новая сцена",
     subtitle: "",
     start_time: newStartTime,
-    component: componentSchema.slug,
+    component: "__scene__",
+    kind: "scene",
+    duration: sceneDuration,
+    code,
+    props: sceneProps,
+    props_schema: sceneSchema,
+    track: "main",
+    z_index: 0,
     layout: "col",
     order_index: orderIndex,
-    data: {
-      payload: componentSchema.default_payload || {},
-    },
+    data: { payload },
   };
 
   try {
-    const newSlide = await createSlide(presentationId, newSlidePayload);
-    showComponentSelectModal.value = false;
-
-    // Refresh to get proper DB IDs and order (напрямую по id — список скоупится)
+    const newSlide = await createTimelineItem(presentationId, newSlidePayload);
     const found = await fetchPresentation(Number(currentFolder.value)).catch(() => null);
     if (found) {
       found.slides = found.slides || [];
-      // Sort by start_time just to be safe
-      found.slides.sort((a, b) => a.start_time - b.start_time);
+      found.slides.sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
       activeFolderData.value = found;
-
-      // Open editor for the newly created slide
       const newIdx = found.slides.findIndex((s) => s.id === newSlide.id);
-      if (newIdx !== -1) {
-        handleEditSlide(newIdx);
-      }
+      if (newIdx !== -1) handleEditSlide(newIdx);
+      await syncEndMarker();
     }
   } catch (err) {
-    console.error("Failed to create slide", err);
+    console.error("Failed to create scene", err);
+    showToast("Не удалось создать сцену.");
   }
 };
 
@@ -1361,7 +1460,7 @@ const handleSaveSlide = async (payload) => {
               })),
             };
 
-      promises.push(updateSlide(s.id, slidePayload));
+      promises.push(updateTimelineItem(s, slidePayload));
     }
 
     const results = await Promise.all(promises);
@@ -1381,6 +1480,7 @@ const handleSaveSlide = async (payload) => {
 
     originalEditingSlideData.value = null;
     await reloadPresentation();
+    await syncEndMarker();
     if (saveWarnings.value.length === 0) {
       showEditorModal.value = false;
       editingSlide.value = null;
@@ -1405,7 +1505,7 @@ const handleSaveSlide = async (payload) => {
       }));
       showToast(inner?.message || `Ошибка валидации (${rawErrors.length})`);
     } else {
-      showToast("Не удалось сохранить слайд.");
+      showToast("Не удалось сохранить сцену.");
     }
   }
 };
@@ -1418,6 +1518,13 @@ const slideToPayload = (s) => ({
   subtitle: s.subtitle || null,
   layout: s.layout || null,
   order_index: s.order_index,
+  kind: s.kind || (s.component === "__scene__" ? "scene" : "legacy"),
+  duration: s.duration ?? null,
+  code: s.code ?? null,
+  props: s.props ?? null,
+  props_schema: s.props_schema ?? null,
+  track: s.track || "main",
+  z_index: s.z_index ?? 0,
   data: s.data ? { payload: s.data.payload || {} } : { payload: {} },
   events: (s.events || []).map((ev) => ({
     time: ev.time,
@@ -1431,7 +1538,7 @@ const handleRenameSlide = async ({ index, title }) => {
   const s = activeFolderData.value?.slides?.[index];
   if (!s) return;
   try {
-    await updateSlide(s.id, { ...slideToPayload(s), title });
+    await updateTimelineItem(s, { ...slideToPayload(s), title });
     await reloadPresentation();
   } catch (err) {
     console.error("Failed to rename slide:", err);
@@ -1448,7 +1555,7 @@ const handleDuplicateSlide = async (index) => {
     const promises = [];
     for (let i = index + 1; i < slides.length; i++) {
       const s = slides[i];
-      promises.push(updateSlide(s.id, {
+      promises.push(updateTimelineItem(s, {
         ...slideToPayload(s),
         start_time: (s.start_time || 0) + GAP,
         order_index: (s.order_index ?? i) + 1,
@@ -1463,7 +1570,7 @@ const handleDuplicateSlide = async (index) => {
       order_index: (src.order_index ?? index) + 1,
       data: { payload },
     };
-    promises.push(createSlide(activeFolderData.value.id, copy));
+    promises.push(createTimelineItem(activeFolderData.value.id, copy));
     await Promise.all(promises);
     await reloadPresentation();
   } catch (err) {
@@ -1473,12 +1580,13 @@ const handleDuplicateSlide = async (index) => {
 
 const handleDeleteSlideIndex = async (index) => {
   const s = activeFolderData.value?.slides?.[index];
-  if (!s || !confirm(`Удалить слайд «${(s.title || "").replace(/<[^>]*>/g, "") || s.component}»?`)) return;
+  if (!s || !confirm(`Удалить сцену «${(s.title || "").replace(/<[^>]*>/g, "") || s.component}»?`)) return;
   try {
-    await deleteSlide(s.id);
+    await deleteTimelineItem(s);
     await reloadPresentation();
+    await syncEndMarker();
   } catch (err) {
-    console.error("Failed to delete slide:", err);
+    console.error("Failed to delete scene:", err);
   }
 };
 
@@ -1489,7 +1597,7 @@ const handleSlideVariant = async ({ index, variant }) => {
     const payload = JSON.parse(JSON.stringify(s.data?.payload || {}));
     if (variant) payload.variant = variant;
     else delete payload.variant;
-    await updateSlide(s.id, { ...slideToPayload(s), data: { payload } });
+    await updateTimelineItem(s, { ...slideToPayload(s), data: { payload } });
     await reloadPresentation();
   } catch (err) {
     console.error("Failed to set slide variant:", err);
@@ -1500,14 +1608,15 @@ const handleDeleteSlide = async () => {
   if (!editingSlide.value) return;
 
   try {
-    await deleteSlide(editingSlide.value.id);
+    await deleteTimelineItem(editingSlide.value);
     originalEditingSlideData.value = null; // clear so it doesn't revert
     await reloadPresentation();
+    await syncEndMarker();
     showEditorModal.value = false;
     editingSlide.value = null;
   } catch (err) {
     console.error("Failed to delete slide:", err);
-    showToast("Не удалось удалить слайд.");
+    showToast("Не удалось удалить сцену.");
   }
 };
 

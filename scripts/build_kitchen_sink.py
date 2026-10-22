@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import requests  # noqa: E402
 from scripts import _api_auth  # noqa: F401,E402
 
-BASE = os.environ.get("API_BASE", "http://localhost:8001")
+BASE = os.environ.get("API_BASE", "http://localhost:8002")
 TITLE = "QA: kitchen-sink (все компоненты)"
 FOLDER_ID = 3
 STEP_MS = 6000

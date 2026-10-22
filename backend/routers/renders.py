@@ -62,8 +62,11 @@ def _presentation_duration_seconds(presentation) -> float:
                 return max(5.0, end_marker_ms / 1000.0 + 0.5)
 
     # Fallback (маркера нет): слайды + аудио + 1.5с
-    # Duration from slides
-    last_slide_time = max(float(getattr(s, "start_time", 0) or 0) for s in slides)
+    # Duration from scenes: start + explicit duration (scenes), else start (legacy)
+    last_slide_time = max(
+        float(getattr(s, "start_time", 0) or 0) + float(getattr(s, "duration", 0) or 0)
+        for s in slides
+    )
 
     # Duration from audio timeline (may be longer than slide start_time)
     last_audio_time = 0

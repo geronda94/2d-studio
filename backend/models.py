@@ -370,6 +370,12 @@ class MediaFile(Base):
     presentation = relationship("Presentation", back_populates="media_files")
 
 class Slide(Base):
+    """Timeline item. For SceneEngine a scene is a Slide with component='__scene__'.
+
+    The table name is kept as `slides` for now so the existing player, audio
+    timeline and renderer keep working. Scene-specific data lives in explicit
+    columns (not hidden in payload). A later migration can rename the table.
+    """
     __tablename__ = "slides"
     id = Column(Integer, primary_key=True, index=True)
     presentation_id = Column(Integer, ForeignKey("presentations.id"))
@@ -380,6 +386,15 @@ class Slide(Base):
     subtitle = Column(String, nullable=True)
     layout = Column(String, nullable=True)
     order_index = Column(Integer)
+
+    # --- Scene fields -----------------------------------------------------
+    kind = Column(String, default="legacy")          # 'scene' | 'legacy'
+    duration = Column(Float, nullable=True)          # ms; scene window length
+    code = Column(JSON, nullable=True)               # { html, css, js }
+    props = Column(JSON, nullable=True)              # editable scene parameters
+    props_schema = Column(JSON, nullable=True)       # form schema for props
+    track = Column(String, default="main")           # future multi-track
+    z_index = Column(Integer, default=0)             # future overlays
     
     presentation = relationship("Presentation", back_populates="slides")
     data = relationship("SlideData", back_populates="slide", uselist=False, cascade="all, delete-orphan")

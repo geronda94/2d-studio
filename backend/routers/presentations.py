@@ -36,6 +36,20 @@ def _validate_slide_payload(component_slug: str, payload: dict, db: Session):
         )
 
 
+def _validate_scene(scene: schemas.SlideCreate):
+    """Scene payload guard. Scenes are code, not component JSON."""
+    if scene.component != "__scene__":
+        return
+    code = scene.code or {}
+    if not isinstance(code, dict):
+        raise HTTPException(status_code=422, detail={"message": "scene.code must be an object", "errors": [{"path": "code", "type": "type", "message": "expected object"}]})
+    for key in ("html", "css", "js"):
+        if code.get(key) is not None and not isinstance(code[key], str):
+            raise HTTPException(status_code=422, detail={"message": f"scene.code.{key} must be a string", "errors": [{"path": f"code.{key}", "type": "type", "message": "expected string"}]})
+    if scene.duration is not None and float(scene.duration) <= 0:
+        raise HTTPException(status_code=422, detail={"message": "scene.duration must be > 0", "errors": [{"path": "duration", "type": "range", "message": "must be > 0"}]})
+
+
 def _bump_presentation_version(db: Session, presentation_id: int):
     """ENTERPRISE Ф2: инкремент версии презентации на контентную мутацию."""
     if not presentation_id:
@@ -53,7 +67,10 @@ def _snapshot_slides(db: Session, presentation_id: int) -> list:
         payload = s.data.payload if s.data else {}
         out.append({"slide_id": s.slide_id, "component": s.component, "start_time": s.start_time,
                     "title": s.title, "subtitle": s.subtitle, "layout": s.layout,
-                    "order_index": s.order_index, "payload": payload})
+                    "order_index": s.order_index, "payload": payload,
+                    "kind": s.kind, "duration": s.duration, "code": s.code,
+                    "props": s.props, "props_schema": s.props_schema,
+                    "track": s.track, "z_index": s.z_index})
     return out
 
 
@@ -956,6 +973,7 @@ def update_presentation(presentation_id: int, presentation: schemas.Presentation
 def create_slide_for_presentation(
     presentation_id: int, slide: schemas.SlideCreate, db: Session = Depends(get_db)
 ):
+    _validate_scene(slide)
     _validate_slide_payload(slide.component, slide.data.payload if slide.data else None, db)
     _enforce_preset_lock(db, presentation_id, slide.component,
                          slide.data.payload if slide.data else None, slide.title)
@@ -968,7 +986,14 @@ def create_slide_for_presentation(
         title=slide.title,
         subtitle=slide.subtitle,
         layout=slide.layout,
-        order_index=slide.order_index
+        order_index=slide.order_index,
+        kind=slide.kind or ("scene" if slide.component == "__scene__" else "legacy"),
+        duration=slide.duration,
+        code=slide.code,
+        props=slide.props,
+        props_schema=slide.props_schema,
+        track=slide.track or "main",
+        z_index=slide.z_index or 0,
     )
     db.add(db_slide)
     _bump_presentation_version(db, presentation_id)
@@ -1004,6 +1029,7 @@ def update_slide(slide_id: int, slide: schemas.SlideCreate, db: Session = Depend
     if not db_slide:
         raise HTTPException(status_code=404, detail="Slide not found")
 
+    _validate_scene(slide)
     _validate_slide_payload(slide.component, slide.data.payload if slide.data else None, db)
     if db_slide.presentation_id:
         _enforce_preset_lock(db, db_slide.presentation_id, slide.component,
@@ -1016,6 +1042,19 @@ def update_slide(slide_id: int, slide: schemas.SlideCreate, db: Session = Depend
     db_slide.subtitle = slide.subtitle
     db_slide.layout = slide.layout
     db_slide.order_index = slide.order_index
+    db_slide.kind = slide.kind or ("scene" if slide.component == "__scene__" else db_slide.kind)
+    if slide.duration is not None:
+        db_slide.duration = slide.duration
+    if slide.code is not None:
+        db_slide.code = slide.code
+    if slide.props is not None:
+        db_slide.props = slide.props
+    if slide.props_schema is not None:
+        db_slide.props_schema = slide.props_schema
+    if slide.track is not None:
+        db_slide.track = slide.track
+    if slide.z_index is not None:
+        db_slide.z_index = slide.z_index
     
     if db_slide.data:
         db.delete(db_slide.data)
@@ -1317,3 +1356,41 @@ def delete_presentation(presentation_id: int, db: Session = Depends(get_db)):
     db_presentation.is_archived = True
     db.commit()
     return {"ok": True}
+
+
+# ─── SceneEngine aliases ────────────────────────────────────────────────────
+# Scenes are the public domain name. Internally they are timeline items in the
+# `slides` table (kept for render/audio compatibility).
+
+@router.get("/{presentation_id}/scenes", response_model=List[schemas.Slide])
+def read_scenes(presentation_id: int, db: Session = Depends(get_db)):
+    return (
+        db.query(models.Slide)
+        .filter(
+            models.Slide.presentation_id == presentation_id,
+            models.Slide.component == "__scene__",
+        )
+        .order_by(models.Slide.start_time)
+        .all()
+    )
+
+
+@router.post("/{presentation_id}/scenes", response_model=schemas.Slide)
+def create_scene_for_presentation(
+    presentation_id: int, scene: schemas.SlideCreate, db: Session = Depends(get_db)
+):
+    scene.component = "__scene__"
+    scene.kind = "scene"
+    return create_slide_for_presentation(presentation_id, scene, db)
+
+
+@router.put("/scenes/{scene_id}", response_model=schemas.Slide)
+def update_scene(scene_id: int, scene: schemas.SlideCreate, db: Session = Depends(get_db)):
+    scene.component = "__scene__"
+    scene.kind = "scene"
+    return update_slide(scene_id, scene, db)
+
+
+@router.delete("/scenes/{scene_id}", response_model=dict)
+def delete_scene(scene_id: int, db: Session = Depends(get_db)):
+    return delete_slide(scene_id, db)

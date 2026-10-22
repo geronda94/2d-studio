@@ -27,10 +27,10 @@ def _in_container() -> bool:
 
 
 def _fix_url(url):
-    """Внутри контейнера localhost:8001 недоступен → переписываем на 8000."""
+    """Внутри контейнера localhost:8002 недоступен → переписываем на 8000."""
     u = str(url or "")
-    if _in_container() and _is_local(u) and ":8001" in u:
-        return u.replace(":8001", ":8000")
+    if _in_container() and _is_local(u) and ":8002" in u:
+        return u.replace(":8002", ":8000")
     return url
 
 

@@ -57,6 +57,14 @@ class SlideBase(BaseModel):
     subtitle: Optional[str] = None
     layout: Optional[str] = None
     order_index: int
+    # Scene fields (SceneEngine). Legacy slides leave them empty.
+    kind: Optional[str] = None
+    duration: Optional[float] = None
+    code: Optional[dict] = None
+    props: Optional[dict] = None
+    props_schema: Optional[dict] = None
+    track: Optional[str] = None
+    z_index: Optional[int] = None
 
 class SlideCreate(SlideBase):
     data: Optional[SlideDataCreate] = None

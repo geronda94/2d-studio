@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import requests  # noqa: E402
 from scripts import _api_auth  # noqa: F401,E402
 
-BASE = os.environ.get("API_BASE", "http://localhost:8001")
+BASE = os.environ.get("API_BASE", "http://localhost:8002")
 TITLE = "Демо: Персонаж со статами (Diademas)"
 
 GROUP = {

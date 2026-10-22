@@ -23,7 +23,7 @@ except Exception:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import agent_auth  # noqa: E402,F401  (патчит requests: авторизация + CSRF)
 
-BASE = "http://localhost:8001"
+BASE = "http://localhost:8002"
 FOLDER_LONG = 1
 SCENARIO_MD = "/root/projects/YouTube Channel/готовые_сценарии/Месяц_1/Длинное_02 — Что ИИ-агент реально умеет в продажах без маркетинговых обещаний.md"
 TITLE = "02 - Что ИИ-агент реально умеет в продажах"

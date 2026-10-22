@@ -123,7 +123,7 @@ def main():
         print(f"  OK {sid:<9} {starts[sid]:>6.0f}ms  {comp}")
         ok += 1
     print(f"\nDone: {ok}/{len(SLIDES)}. Failed: {fail}")
-    print(f"Preview: http://localhost:5174/p/{pres_id}")
+    print(f"Preview: http://localhost:5175/p/{pres_id}")
 
 
 if __name__ == "__main__":

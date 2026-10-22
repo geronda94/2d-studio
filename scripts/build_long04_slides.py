@@ -286,7 +286,7 @@ def main():
         ok += 1
     normalize_bgm_track(PRES_ID)
     print(f"\nDone: {ok}/{len(SLIDES)}. Failed: {fail}")
-    print(f"Preview: http://localhost:5174/p/{PRES_ID}")
+    print(f"Preview: http://localhost:5175/p/{PRES_ID}")
 
 
 if __name__ == "__main__":

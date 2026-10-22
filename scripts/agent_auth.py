@@ -13,7 +13,7 @@ import sys
 
 import requests
 
-BASE = os.environ.get("PRES_BASE", "http://localhost:8001")
+BASE = os.environ.get("PRES_BASE", "http://localhost:8002")
 _ENV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 
 
