@@ -1,6 +1,7 @@
 <template>
   <div ref="hostEl" class="scene-host absolute inset-0 w-full h-full overflow-hidden">
     <iframe
+      :key="frameKey"
       ref="frameEl"
       :srcdoc="doc"
       sandbox="allow-scripts"
@@ -44,6 +45,7 @@ const { currentTime } = useDirector()
 
 const hostEl = ref(null)
 const frameEl = ref(null)
+const frameKey = ref(0)
 const doc = ref('')
 const ready = ref(false)
 const error = ref('')
@@ -101,6 +103,7 @@ async function rebuild() {
     gsapSource,
     kitSource,
   })
+  frameKey.value += 1
 }
 
 function postSeek(t, { force = false } = {}) {

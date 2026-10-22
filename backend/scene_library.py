@@ -1,3 +1,4 @@
+import re
 """Built-in 2D world library: environments, physical objects, scene templates.
 
 Not UI cards. This is a content factory primitive:
@@ -711,6 +712,9 @@ for _e in ENVIRONMENTS:
     _e.update(ENV_META.get(_e["slug"], {}))
 for _o in OBJECTS:
     _o.update(OBJ_META.get(_o["slug"], {}))
+for _o in OBJECTS:
+    if _o["slug"] in ("character", "person"):
+        _o["hidden"] = True
 
 # Time-of-day / lighting views. The host puts `view-<name>` on <body>, so a scene
 # can switch the whole world without rotating every object (that would be 3D).
@@ -755,13 +759,15 @@ def objects_for_environment(env_slug: str):
         return []
     out = []
     for o in OBJECTS:
+        if o.get("hidden"):
+            continue
         allowed = o.get("environments") or []
         if allowed:
             if env_slug in allowed:
                 out.append(o)
         elif env.get("domain") in (o.get("domain") or []):
             out.append(o)
-    return out
+    return sorted(out, key=lambda o: (0 if o.get("category") == "character" else 1, o.get("cast_order", 50), o.get("title", "")))
 
 
 def environments_for_object(obj_slug: str):
@@ -810,25 +816,34 @@ def _obj(slug):
     return next(o for o in OBJECTS if o["slug"] == slug)
 
 
-def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None, extra_css='', extra_html=''):
+def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None, extra_css='', extra_html='', slug=None, object_styles=None):
     env = _env(env_slug)
     objs = [_obj(s) for s in obj_slugs]
+    def _with_style(o):
+        html = o["html"]
+        extra = (object_styles or {}).get(o["slug"], "")
+        if not extra:
+            return html
+        if 'style="' in html:
+            return re.sub(r'style="([^"]*)"', lambda m: f'style="{m.group(1)};{extra}"', html, count=1)
+        return re.sub(r'(<div class="obj-[^"]*")', r'\1 style="' + extra + '"', html, count=1)
+
     actors = [o for o in objs if o.get("category") == "character"]
     props = [o for o in objs if o.get("category") != "character"]
     html = (
         '<div class="scene">\n'
         + '<div class="layer layer-world" data-layer="world">\n' + env["html"] + '\n</div>\n'
         + '<div class="layer layer-objects" data-layer="objects">\n'
-        + "\n".join(o["html"] for o in props)
+        + "\n".join(_with_style(o) for o in props)
         + '\n</div>\n'
         + ('<div class="layer layer-actors" data-layer="actors">\n'
-           + "\n".join(o["html"] for o in actors) + '\n</div>\n' if actors else '')
+           + "\n".join(_with_style(o) for o in actors) + '\n</div>\n' if actors else '')
         + ('<div class="layer layer-overlay" data-layer="overlay">' + extra_html + '</div>' if extra_html else '')
         + '</div>'
     )
     css = (BASE_CSS + "\n" + env["css"] + "\n" + "\n".join(o["css"] for o in objs) + "\n" + extra_css).strip()
     return {
-        "slug": title.lower().replace(" ", "-"),
+        "slug": slug or title.lower().replace(" ", "-"),
         "title": title,
         "description": description,
         "tags": tags,
@@ -1153,8 +1168,17 @@ def get_template(slug: str):
 
 
 def list_objects():
-    return OBJECTS
+    items = [o for o in OBJECTS if not o.get("hidden")]
+    return sorted(items, key=lambda o: (0 if o.get("category") == "character" else 1, o.get("cast_order", 50), o.get("title", "")))
 
 
 def get_object(slug: str):
     return next((o for o in OBJECTS if o["slug"] == slug), None)
+
+
+# ── Pravoslavie channel content pack ────────────────────────────────────────
+try:
+    from . import pravoslavie_library
+    pravoslavie_library.install(ENVIRONMENTS, OBJECTS, TEMPLATES, _compose)
+except Exception as _exc:  # pragma: no cover
+    print(f"pravoslavie_library install skipped: {_exc}", flush=True)

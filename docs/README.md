@@ -17,6 +17,8 @@
 | `LEARNINGS.md` | Реестр ошибок и правил (обучаемый процесс) |
 | `ANIMATION.md` | Принципы красивой анимации: камера, параллакс, вес, оптика, звук, итерация |
 | `HUMAN_AI_STUDIO.md` | Human+AI продукт: роли, ворота качества, интерфейс, best practices 2026 |
+| `CHANNEL_PRAVOSLAVIE.md` | Канал «Механизм»: каст, миры, формулы сцен |
+| `AGENT_ROLES.md` | Роли ИИ: Script Analyst, Storyboard, Scene Builder, QA |
 | `CHARACTERS.md` | Персонажи: SVG-риг, Rive/Spine, visemes, липсинк |
 | `WORKLOG.md` | Что делалось, какие были ошибки и как исправляли |
 | `DECISIONS.md` | ADR: почему архитектура такая |

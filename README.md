@@ -34,6 +34,8 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 - `docs/PROCESSES.md` — контент-пайплайн
 - `docs/ANIMATION.md` — принципы анимации
 - `docs/HUMAN_AI_STUDIO.md` — human+AI интерфейс
+- `docs/CHANNEL_PRAVOSLAVIE.md` — контент канала
+- `docs/AGENT_ROLES.md` — роли ИИ
 - `docs/CHARACTERS.md` — персонажи и липсинк
 - `docs/WORKLOG.md` — история и ошибки
 - `docs/DECISIONS.md` — архитектурные решения

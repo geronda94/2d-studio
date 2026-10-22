@@ -98,6 +98,22 @@
 - `docs/SCENE_MODES.md`: code vs composite; переиспользование — опция, а не ограничение.
 - Персонажи/миры — основные кандидаты на переиспользование; сцены можно писать с нуля.
 
+## PRAVOSLAVIE content pack (2026-10-22)
+
+- Проект `pravoslavie`, демо `/p/2`, эпизод `/p/3`.
+- 6 миров: studio-prav, church, ancient-rus, empire, soviet, modern-city-day.
+- Исторические миры — SVG-иллюстрации (лес/река/храм, улицы, кирпичные дома).
+- Историческая массовка — 4 SVG-силуэта (крестьянка, воин, монах, рабочий).
+- 9 персонажей (Open Peeps CC0): host, cohost, priest, historian, sociologist,
+  peasant, warrior, monk, worker.
+- 9 шаблонов: prav-studio-host/panel/sociologist, empire/ancient/soviet,
+  timeline, church quote, outro.
+- Студия: foreground-стол, монитор, книги, постер, растение, lower third,
+  canvas-пыль.
+- Редактор: iframe пересоздаётся по key (фикс пустого превью), позиции
+  объектов в inline style (слайдеры совпадают), CodeMirror.
+- Learnings: 16 записей.
+
 ## Что ещё не сделано
 
 1. **Рендер не проверен end-to-end** после перехода на сцены. Realtime-захват

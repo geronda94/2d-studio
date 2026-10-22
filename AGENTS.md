@@ -11,6 +11,7 @@ Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`d
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
 Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
 Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.
+Канал: **`docs/CHANNEL_PRAVOSLAVIE.md`**. Роли ИИ: **`docs/AGENT_ROLES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 
 ---
