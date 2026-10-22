@@ -31,6 +31,7 @@ const props = defineProps({
   // Manual time for the editor preview. When set, the global director is ignored.
   time: { type: Number, default: null },
   format: { type: String, default: '' },
+  view: { type: String, default: '' },
   showErrors: { type: Boolean, default: false },
   // Preview hosts (editor) must not own the global render handshake.
   preview: { type: Boolean, default: false },
@@ -93,6 +94,7 @@ async function rebuild() {
     sceneProps: props.sceneProps || {},
     themeCss: collectThemeVars(hostEl.value),
     format: format.value,
+    view: props.view,
     gsapSource,
     kitSource,
   })

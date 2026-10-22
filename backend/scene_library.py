@@ -622,6 +622,133 @@ MOON = {
 OBJECTS = [CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CLASSIFICATION / COMPATIBILITY / VIEWS
+# ─────────────────────────────────────────────────────────────────────────────
+# domain: outdoor | indoor | stage
+# surface: ground | road | sky | wall | desk | ceiling
+# environments: explicit allow-list (empty = all in the same domain)
+# views: object variants (side/front/...) — optional, default is the first one.
+# Environments expose `views` for lighting/time-of-day (day/sunset/night/...).
+
+ENV_META = {
+    "forest":    {"domain": "outdoor", "views": ["day", "sunset", "night"], "default_view": "day", "perspective": "side"},
+    "city":      {"domain": "outdoor", "views": ["night", "dusk"], "default_view": "night", "perspective": "side"},
+    "mountains": {"domain": "outdoor", "views": ["dawn", "day"], "default_view": "dawn", "perspective": "side"},
+    "office":    {"domain": "indoor",  "views": ["day", "evening"], "default_view": "day", "perspective": "front"},
+    "studio":    {"domain": "stage",   "views": ["dark", "blue"], "default_view": "dark", "perspective": "front"},
+}
+
+OBJ_META = {
+    "car":           {"domain": ["outdoor"], "environments": ["forest", "city", "mountains"], "surface": "road", "views": ["side", "front"], "default_view": "side"},
+    "road":          {"domain": ["outdoor"], "environments": ["forest", "city", "mountains"], "surface": "road", "views": ["straight"], "default_view": "straight"},
+    "tree":          {"domain": ["outdoor"], "environments": ["forest", "mountains", "city"], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "pine":          {"domain": ["outdoor"], "environments": ["forest", "mountains"], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "cloud":         {"domain": ["outdoor"], "environments": ["forest", "city", "mountains"], "surface": "sky", "views": ["side"], "default_view": "side"},
+    "bird":          {"domain": ["outdoor"], "environments": ["forest", "city", "mountains"], "surface": "sky", "views": ["side"], "default_view": "side"},
+    "street-lamp":   {"domain": ["outdoor"], "environments": ["city", "forest"], "surface": "ground", "views": ["side"], "default_view": "side"},
+    "building":      {"domain": ["outdoor"], "environments": ["city"], "surface": "ground", "views": ["front", "corner"], "default_view": "front"},
+    "desk":          {"domain": ["indoor"], "environments": ["office"], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "monitor":       {"domain": ["indoor"], "environments": ["office"], "surface": "desk", "views": ["front"], "default_view": "front"},
+    "coffee":        {"domain": ["indoor"], "environments": ["office"], "surface": "desk", "views": ["side"], "default_view": "side"},
+    "plant":         {"domain": ["indoor", "stage"], "environments": ["office", "studio"], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "person":        {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "side"], "default_view": "front"},
+    "traffic-light": {"domain": ["outdoor"], "environments": ["city"], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "sun":           {"domain": ["outdoor"], "environments": ["forest", "mountains", "city"], "surface": "sky", "views": ["front"], "default_view": "front"},
+    "moon":          {"domain": ["outdoor"], "environments": ["city", "forest"], "surface": "sky", "views": ["front"], "default_view": "front"},
+}
+
+for _e in ENVIRONMENTS:
+    _e.update(ENV_META.get(_e["slug"], {}))
+for _o in OBJECTS:
+    _o.update(OBJ_META.get(_o["slug"], {}))
+
+# Time-of-day / lighting views. The host puts `view-<name>` on <body>, so a scene
+# can switch the whole world without rotating every object (that would be 3D).
+VIEWS_ENV_CSS = """
+.view-sunset .env-forest .sky { background:linear-gradient(180deg,#2A1B3D 0%,#7A3B4A 45%,#D97745 75%,#F2B36B 100%); }
+.view-sunset .env-forest .sun { left:76%; top:34%; background:radial-gradient(circle,#FFE0A3 0%,#FF8C42 40%,rgba(255,140,66,0) 72%); }
+.view-night .env-forest .sky { background:linear-gradient(180deg,#040814 0%,#0A1730 55%,#0E2430 100%); }
+.view-night .env-forest .sun { opacity:0; }
+.view-night .env-forest .pines-far, .view-night .env-forest .pines-near { filter:brightness(.55) saturate(.75); }
+.view-dusk .env-city .sky { background:linear-gradient(180deg,#1A1030 0%,#4B2450 55%,#C25A4A 100%); }
+.view-dusk .env-city .moon { opacity:.35; }
+.view-dusk .env-city .stars { opacity:.25; }
+.view-day .env-mountains .sky { background:linear-gradient(180deg,#1B2A4A 0%,#4A6A8A 45%,#9BC0D6 75%,#E8D9B8 100%); }
+.view-day .env-mountains .sun { top:18%; background:radial-gradient(circle,#FFF9D9 0%,#FFE08A 36%,rgba(255,224,138,0) 70%); }
+.view-evening .env-office .wall { background:linear-gradient(180deg,#D9C6B0,#B79A7E); }
+.view-evening .env-office .window-sky { background:linear-gradient(180deg,#5B4A6B 0%,#C77B5A 70%,#E8B07A 100%); }
+.view-evening .env-office .floor { background:linear-gradient(180deg,#9A7A58,#6B4E36); }
+.view-blue .env-studio .beam { background:linear-gradient(180deg,rgba(120,170,255,.55),rgba(120,170,255,0) 78%); }
+.view-blue .env-studio .backdrop { background:radial-gradient(circle at 50% 38%,#16264A 0%,#08101F 46%,#03060B 100%); }
+"""
+
+VIEWS_OBJ_CSS = """
+.obj-car.view-front { width:20vmin; }
+.obj-car.view-front .car-body { left:1.6vmin; right:1.6vmin; height:6.4vmin; border-radius:2vmin; }
+.obj-car.view-front .car-cabin { left:6vmin; width:8vmin; bottom:8.4vmin; }
+.obj-car.view-front .car-window { left:7vmin; width:6vmin; height:3vmin; }
+.obj-car.view-front .wheel { display:none; }
+.obj-building.view-corner { clip-path:polygon(0 0,78% 6%,100% 18%,100% 100%,0 100%); }
+.obj-person.view-side { transform:scaleX(.72); }
+"""
+
+for _e in ENVIRONMENTS:
+    _e["css"] = _e.get("css", "") + "\n" + VIEWS_ENV_CSS
+for _o in OBJECTS:
+    if _o["slug"] in ("car", "building", "person"):
+        _o["css"] = _o.get("css", "") + "\n" + VIEWS_OBJ_CSS
+
+
+def objects_for_environment(env_slug: str):
+    env = get_environment(env_slug)
+    if not env:
+        return []
+    out = []
+    for o in OBJECTS:
+        allowed = o.get("environments") or []
+        if allowed:
+            if env_slug in allowed:
+                out.append(o)
+        elif env.get("domain") in (o.get("domain") or []):
+            out.append(o)
+    return out
+
+
+def environments_for_object(obj_slug: str):
+    obj = get_object(obj_slug)
+    if not obj:
+        return []
+    allowed = obj.get("environments") or []
+    if allowed:
+        return [e for e in ENVIRONMENTS if e["slug"] in allowed]
+    return [e for e in ENVIRONMENTS if e.get("domain") in (obj.get("domain") or [])]
+
+
+def compatibility_matrix():
+    return {
+        "environments": {
+            e["slug"]: [o["slug"] for o in objects_for_environment(e["slug"])]
+            for e in ENVIRONMENTS
+        },
+        "objects": {
+            o["slug"]: [e["slug"] for e in environments_for_object(o["slug"])]
+            for o in OBJECTS
+        },
+    }
+
+
+def validate_composition(environment: str, object_slugs: list):
+    env = get_environment(environment)
+    if not env:
+        return {"valid": False, "errors": [{"path": "environment", "message": "Unknown environment"}]}
+    allowed = {o["slug"] for o in objects_for_environment(environment)}
+    errors = []
+    for slug in object_slugs or []:
+        if slug not in allowed:
+            errors.append({"path": f"objects.{slug}", "message": f"{slug} is not allowed in {environment}"})
+    return {"valid": not errors, "errors": errors}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # TEMPLATES
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -636,7 +763,13 @@ def _obj(slug):
 def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None):
     env = _env(env_slug)
     objs = [_obj(s) for s in obj_slugs]
-    html = env["html"] + "\n" + "\n".join(o["html"] for o in objs)
+    html = (
+        '<div class="scene">\n'
+        + env["html"]
+        + "\n"
+        + "\n".join(o["html"] for o in objs)
+        + "\n</div>"
+    )
     css = (BASE_CSS + "\n" + env["css"] + "\n" + "\n".join(o["css"] for o in objs)).strip()
     return {
         "slug": title.lower().replace(" ", "-"),
@@ -645,6 +778,7 @@ def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, pro
         "tags": tags,
         "duration": duration,
         "environment": env_slug,
+        "view": env.get("default_view", ""),
         "objects": obj_slugs,
         "props_schema": props_schema or {},
         "default_props": default_props or {},
@@ -661,6 +795,7 @@ const dashes = root.querySelector('.obj-road .road-dashes');
 const pines = root.querySelectorAll('[data-depth]');
 const clouds = root.querySelectorAll('.obj-cloud');
 if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
+SceneKit.views(root, p.views || { car: 'side' });
 const base = Number(p.cruise_speed) || 1.4;
 const cues = SceneKit.cues([
   { at: 0,    set: { speed: base, brake: false } },
@@ -693,6 +828,7 @@ const wheels = root.querySelectorAll('[data-wheel]');
 const dashes = root.querySelector('.obj-road .road-dashes');
 const layers = root.querySelectorAll('[data-depth]');
 if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
+SceneKit.views(root, p.views || { car: 'side' });
 const base = Number(p.cruise_speed) || 1.2;
 const cues = SceneKit.cues([
   { at: 0,    set: { speed: base } },
@@ -790,7 +926,7 @@ TEMPLATES = [
             "car_color": {"type": "color", "label": "Цвет машины"},
             "cruise_speed": {"type": "number", "label": "Скорость"},
         },
-        default_props={"car_color": "#E4572E", "cruise_speed": 1.4},
+        default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "views": {"car": "side"}},
     ),
     _compose(
         "city", ["road", "car", "street-lamp", "building"],
@@ -803,7 +939,7 @@ TEMPLATES = [
             "car_color": {"type": "color", "label": "Цвет машины"},
             "cruise_speed": {"type": "number", "label": "Скорость"},
         },
-        default_props={"car_color": "#38BDF8", "cruise_speed": 1.2},
+        default_props={"car_color": "#38BDF8", "cruise_speed": 1.2, "views": {"car": "side"}},
     ),
     _compose(
         "mountains", ["bird", "cloud", "sun"],

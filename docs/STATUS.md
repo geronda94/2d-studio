@@ -50,6 +50,20 @@
 - `docs/SERVER.md` — деплой на сервер.
 - `AGENTS.md` — правила для ИИ.
 
+## Классификация, views, слои (добавлено 2026-10-22)
+
+- `ENV_META` / `OBJ_META` в `backend/scene_library.py`.
+- API совместимости:
+  - `GET /scene-library/environments/{slug}/objects`
+  - `GET /scene-library/objects?environment=forest`
+  - `GET /scene-library/compatibility`
+  - `POST /scene-library/validate-composition`
+- Редактор: выбранный мир фильтрует Objects; несовместимые — с предупреждением.
+- Views: `view` сцены → `<body class="view-...">`; time-of-day для миров;
+  per-object views через `SceneKit.views(root, { car: 'front' })`.
+- Вкладка `Layers`: парсит `.obj-*` из HTML, даёт left/bottom/width/height/
+  z-index/transform/view, duplicate/delete.
+
 ## Что ещё не сделано
 
 1. **Рендер не проверен end-to-end** после перехода на сцены. Realtime-захват

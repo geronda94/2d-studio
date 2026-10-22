@@ -25,6 +25,9 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 - `docs/STATUS.md` — текущий этап
 - `docs/ROADMAP_2D.md` — вектор развития
 - `docs/PROCESSES.md` — контент-пайплайн
+- `docs/ANIMATION.md` — принципы анимации
+- `docs/WORKLOG.md` — история и ошибки
+- `docs/DECISIONS.md` — архитектурные решения
 - `docs/DEV.md` — порты
 - `docs/SERVER.md` — сервер
 - `AGENTS.md` — правила для ИИ

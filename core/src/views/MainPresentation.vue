@@ -54,6 +54,7 @@
             :scene-props="scenePayload(slide).props"
             :start-time="slide.start_time || slide.startTime || 0"
             :duration="scenePayload(slide).duration"
+            :view="scenePayload(slide).view"
             :format="sceneFormat"
           />
           <!-- Легаси-слайд (на случай старых записей) -->
@@ -343,6 +344,7 @@ const scenePayload = (slide) => {
     props: slide?.props || p.props || {},
     props_schema: slide?.props_schema || p.props_schema || {},
     duration: slide?.duration ?? p.duration,
+    view: slide?.view || p.view || '',
   });
 };
 

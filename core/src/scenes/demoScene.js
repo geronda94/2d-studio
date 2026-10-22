@@ -174,5 +174,6 @@ export function normalizeScenePayload(payload) {
     props: p.props || {},
     props_schema: p.props_schema || {},
     duration: Number(p.duration) || DEMO_SCENE.duration,
+    view: p.view || '',
   }
 }

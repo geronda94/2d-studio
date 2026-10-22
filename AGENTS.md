@@ -5,6 +5,8 @@
 
 Главный документ: **`docs/SCENES.md`**. Порты и запуск: **`docs/DEV.md`**.
 Текущий этап: **`docs/STATUS.md`**. Вектор: **`docs/ROADMAP_2D.md`**.
+Анимация: **`docs/ANIMATION.md`**. Ошибки/решения: **`docs/WORKLOG.md`**.
+Решения: **`docs/DECISIONS.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 
 ---

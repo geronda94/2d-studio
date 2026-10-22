@@ -39,6 +39,7 @@
               :start-time="0"
               :duration="form.duration"
               :time="previewTime"
+              :view="form.view"
               :show-errors="true"
               preview
               @error="previewError = $event"
@@ -114,18 +115,99 @@
 
           <div v-else-if="activeTab === 'objects'" class="h-full overflow-y-auto space-y-2 pr-1">
             <p v-if="libraryError" class="text-xs text-red-300">{{ libraryError }}</p>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-[10px] uppercase tracking-wide text-text-muted">
+                Мир: {{ activeEnvData?.title || 'не выбран' }}
+              </p>
+              <label class="flex items-center gap-1 text-[10px] text-text-muted">
+                <input v-model="showAllObjects" type="checkbox" class="accent-brand-blue" />
+                все
+              </label>
+            </div>
+            <p v-if="compatWarning" class="rounded-md border border-amber-400/40 bg-amber-950/40 px-2 py-1.5 text-[10px] text-amber-200">
+              {{ compatWarning }}
+            </p>
             <button
-              v-for="o in objects" :key="o.slug"
+              v-for="o in visibleObjects" :key="o.slug"
               class="w-full text-left rounded-lg border border-text-muted/30 bg-bg-base px-3 py-2.5 hover:border-brand-green/60 transition-colors"
               @click="insertObject(o)"
             >
               <div class="text-sm font-bold text-text-primary">{{ o.title }}</div>
               <div class="mt-0.5 text-[11px] leading-snug text-text-secondary">{{ o.description }}</div>
               <div class="mt-1 text-[9px] font-mono uppercase tracking-wide text-brand-green">
-                + {{ (o.tags || []).join(' · ') }}
+                + {{ (o.domain || []).join(' · ') }}{{ o.surface ? ' / ' + o.surface : '' }}
+              </div>
+              <div v-if="(o.views || []).length > 1" class="mt-0.5 text-[9px] font-mono text-text-muted">
+                views: {{ o.views.join(' / ') }}
               </div>
             </button>
             <p v-if="!objects.length && !libraryError" class="text-xs text-text-muted">Загрузка…</p>
+          </div>
+
+          <div v-else-if="activeTab === 'layers'" class="h-full flex flex-col gap-2">
+            <div class="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1">
+              <button
+                v-for="l in layerList" :key="l.index"
+                class="w-full text-left rounded-md border px-2.5 py-2 text-xs transition-colors"
+                :class="selectedLayer === l.index
+                  ? 'border-brand-blue bg-brand-blue/15 text-text-primary'
+                  : 'border-text-muted/30 bg-bg-base text-text-secondary hover:border-brand-blue/40'"
+                @click="selectedLayer = l.index"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-mono">{{ l.slug }}</span>
+                  <span class="text-[9px] text-text-muted">#{{ l.index }}</span>
+                </div>
+                <div v-if="l.view" class="text-[9px] font-mono text-brand-light-blue">view: {{ l.view }}</div>
+              </button>
+              <p v-if="!layerList.length" class="text-xs text-text-muted py-4">
+                В сцене нет объектов. Добавь мир и объект во вкладках Worlds / Objects.
+              </p>
+            </div>
+
+            <div v-if="selectedLayerMeta" class="shrink-0 rounded-lg border border-text-muted/30 bg-bg-base p-2.5 space-y-2">
+              <div class="text-[10px] font-mono uppercase tracking-wide text-brand-light-blue">
+                {{ selectedLayerMeta.slug }} #{{ selectedLayerMeta.index }}
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="text-[9px] text-text-muted">left
+                  <input :value="styleValue(selectedLayerMeta.style, 'left')" @change="updateLayerStyle('left', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="12%" />
+                </label>
+                <label class="text-[9px] text-text-muted">bottom
+                  <input :value="styleValue(selectedLayerMeta.style, 'bottom')" @change="updateLayerStyle('bottom', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="18%" />
+                </label>
+                <label class="text-[9px] text-text-muted">width
+                  <input :value="styleValue(selectedLayerMeta.style, 'width')" @change="updateLayerStyle('width', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="38vmin" />
+                </label>
+                <label class="text-[9px] text-text-muted">height
+                  <input :value="styleValue(selectedLayerMeta.style, 'height')" @change="updateLayerStyle('height', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="16vmin" />
+                </label>
+                <label class="text-[9px] text-text-muted">z-index
+                  <input :value="styleValue(selectedLayerMeta.style, 'z-index')" @change="updateLayerStyle('z-index', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="10" />
+                </label>
+                <label class="text-[9px] text-text-muted">scale
+                  <input :value="styleValue(selectedLayerMeta.style, 'transform')" @change="updateLayerStyle('transform', $event.target.value)"
+                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="scale(1)" />
+                </label>
+              </div>
+              <label v-if="(selectedLayerObject?.views || []).length > 1" class="block text-[9px] text-text-muted">
+                view
+                <select :value="selectedLayerMeta.view" @change="updateLayerView($event.target.value)"
+                  class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary">
+                  <option value="">default</option>
+                  <option v-for="v in selectedLayerObject.views" :key="v" :value="v">{{ v }}</option>
+                </select>
+              </label>
+              <div class="flex gap-2 pt-1">
+                <button class="flex-1 rounded border border-text-muted/40 px-2 py-1 text-[10px] text-text-secondary hover:bg-bg-surface" @click="duplicateLayer">Дублировать</button>
+                <button class="flex-1 rounded border border-red-400/40 px-2 py-1 text-[10px] text-red-300 hover:bg-red-500/10" @click="removeLayer">Удалить</button>
+              </div>
+            </div>
           </div>
 
           <textarea v-else-if="activeTab === 'html'" v-model="form.code.html" spellcheck="false"
@@ -153,6 +235,13 @@
             <div><span class="text-text-muted">Порядок:</span> {{ scene?.order_index }}</div>
             <div><span class="text-text-muted">Старт:</span> {{ form.start_time }} мс</div>
             <div><span class="text-text-muted">Длительность:</span> {{ form.duration }} мс</div>
+            <div v-if="(activeEnvData?.views || []).length" class="flex items-center gap-2 pt-1">
+              <span class="text-text-muted">Вид мира:</span>
+              <select v-model="form.view" class="rounded-md border border-text-muted/40 bg-bg-base px-2 py-1 text-xs text-text-primary">
+                <option v-for="v in activeEnvData.views" :key="v" :value="v">{{ v }}</option>
+              </select>
+            </div>
+            <div><span class="text-text-muted">Мир:</span> {{ activeEnvData?.title || '—' }}</div>
             <div class="pt-2 text-[10px] leading-relaxed text-text-muted">
               Контракт: <code class="text-brand-light-blue">window.scene.seek(t)</code>.
               Никаких requestAnimationFrame, Date.now и бесконечных CSS-анимаций.
@@ -208,6 +297,7 @@ const tabs = [
   { id: 'templates', label: 'Scenes' },
   { id: 'environments', label: 'Worlds' },
   { id: 'objects', label: 'Objects' },
+  { id: 'layers', label: 'Layers' },
   { id: 'html', label: 'HTML' },
   { id: 'css', label: 'CSS' },
   { id: 'js', label: 'JS' },
@@ -225,6 +315,10 @@ const templates = ref([])
 const environments = ref([])
 const objects = ref([])
 const libraryError = ref('')
+const activeEnvironment = ref('')
+const showAllObjects = ref(false)
+const compatWarning = ref('')
+const selectedLayer = ref(0)
 
 const form = ref({
   title: '',
@@ -232,6 +326,7 @@ const form = ref({
   duration: 5000,
   code: { html: '', css: '', js: '' },
   props_schema: {},
+  view: '',
 })
 
 let previewTimer = null
@@ -250,13 +345,17 @@ function resetFromScene(scene) {
     duration: Number(p.duration) || DEMO_SCENE.duration,
     code: { ...p.code },
     props_schema: scene?.props_schema || p.props_schema || {},
+    view: scene?.view || p.view || '',
   }
   propsText.value = JSON.stringify(p.props || {}, null, 2)
+  const envMatch = String(p.code.html || '').match(/env-([a-z-]+)/)
+  activeEnvironment.value = envMatch ? envMatch[1] : ''
   previewTime.value = Math.min(1200, form.value.duration)
   previewPlaying.value = false
   previewError.value = ''
   jsonError.value = ''
   activeTab.value = 'html'
+  selectedLayer.value = 0
   stopPreview()
 }
 
@@ -265,6 +364,106 @@ watch(() => props.isOpen, (open) => {
   if (!open) { stopPreview(); previewPlaying.value = false }
   else if (!templates.value.length || libraryError.value) loadLibrary()
 })
+
+const activeEnvData = computed(() =>
+  environments.value.find((e) => e.slug === activeEnvironment.value) || null,
+)
+
+const compatibleObjects = computed(() => {
+  if (!activeEnvironment.value) return objects.value
+  const domain = activeEnvData.value?.domain
+  return objects.value.filter((o) => {
+    if (Array.isArray(o.environments) && o.environments.length) {
+      return o.environments.includes(activeEnvironment.value)
+    }
+    return Array.isArray(o.domain) && domain ? o.domain.includes(domain) : true
+  })
+})
+
+const visibleObjects = computed(() =>
+  showAllObjects.value ? objects.value : compatibleObjects.value,
+)
+
+function sceneObjects() {
+  try {
+    const doc = new DOMParser().parseFromString(form.value.code.html || '', 'text/html')
+    return Array.from(doc.body.querySelectorAll('*')).filter((el) =>
+      Array.from(el.classList || []).some((c) => c.startsWith('obj-')),
+    )
+  } catch (e) {
+    return []
+  }
+}
+
+const layerList = computed(() => {
+  const els = sceneObjects()
+  return els.map((el, i) => {
+    const cls = Array.from(el.classList || [])
+    return {
+      index: i,
+      slug: (cls.find((c) => c.startsWith('obj-')) || 'obj').replace('obj-', ''),
+      view: (cls.find((c) => c.startsWith('view-')) || '').replace('view-', ''),
+      style: el.getAttribute('style') || '',
+    }
+  })
+})
+
+const selectedLayerMeta = computed(() => layerList.value[selectedLayer.value] || null)
+
+const selectedLayerObject = computed(() =>
+  selectedLayerMeta.value ? objects.value.find((o) => o.slug === selectedLayerMeta.value.slug) : null,
+)
+
+function styleValue(style, key) {
+  const m = String(style || '').match(new RegExp('(?:^|;)\\s*' + key + '\\s*:\\s*([^;]+)'))
+  return m ? m[1].trim() : ''
+}
+
+function mutateLayer(fn) {
+  const doc = new DOMParser().parseFromString(form.value.code.html || '', 'text/html')
+  const els = Array.from(doc.body.querySelectorAll('*')).filter((el) =>
+    Array.from(el.classList || []).some((c) => c.startsWith('obj-')),
+  )
+  const el = els[selectedLayer.value]
+  if (!el) return
+  fn(el, doc)
+  form.value.code.html = doc.body.innerHTML
+}
+
+function updateLayerStyle(key, value) {
+  mutateLayer((el) => {
+    if (value === '' || value === null || value === undefined) el.style.removeProperty(key)
+    else el.style.setProperty(key, String(value))
+  })
+}
+
+function updateLayerScale(value) {
+  mutateLayer((el) => {
+    if (value === '' || Number(value) === 1) el.style.removeProperty('transform')
+    else el.style.setProperty('transform', `scale(${Number(value) || 1})`)
+  })
+}
+
+function updateLayerView(view) {
+  mutateLayer((el) => {
+    Array.from(el.classList || [])
+      .filter((c) => c.startsWith('view-'))
+      .forEach((c) => el.classList.remove(c))
+    if (view) el.classList.add(`view-${view}`)
+  })
+}
+
+function removeLayer() {
+  mutateLayer((el) => el.remove())
+  selectedLayer.value = Math.max(0, Math.min(selectedLayer.value, layerList.value.length - 1))
+}
+
+function duplicateLayer() {
+  mutateLayer((el) => {
+    const clone = el.cloneNode(true)
+    if (el.parentNode) el.parentNode.appendChild(clone)
+  })
+}
 
 const parsedProps = computed(() => {
   try {
@@ -310,6 +509,8 @@ function applyTemplate(t) {
   form.value.code = { ...(t.code || {}) }
   form.value.duration = Number(t.duration) || form.value.duration
   form.value.props_schema = t.props_schema || {}
+  activeEnvironment.value = t.environment || ''
+  form.value.view = t.view || activeEnvData.value?.default_view || ''
   propsText.value = JSON.stringify(t.default_props || {}, null, 2)
   previewTime.value = Math.min(1200, form.value.duration)
   previewError.value = ''
@@ -324,6 +525,9 @@ function applyEnvironment(e) {
   }
   form.value.duration = 5000
   form.value.props_schema = {}
+  activeEnvironment.value = e.slug || ''
+  form.value.view = e.default_view || ''
+  compatWarning.value = ''
   propsText.value = '{}'
   previewTime.value = 1200
   previewError.value = ''
@@ -332,6 +536,10 @@ function applyEnvironment(e) {
 
 function insertObject(o) {
   if (!o) return
+  compatWarning.value = ''
+  if (activeEnvironment.value && !compatibleObjects.value.some((x) => x.slug === o.slug)) {
+    compatWarning.value = `${o.title} не предназначен для мира «${activeEnvData.value?.title || activeEnvironment.value}». Вставлено принудительно.`
+  }
   form.value.code.html = (form.value.code.html || '') + '\n' + (o.html || '')
   form.value.code.css = (form.value.code.css || '') + '\n' + (o.css || '')
   form.value.code.js = (form.value.code.js || '') + '\n' + (o.js || '')
@@ -386,6 +594,7 @@ function save() {
     code: { ...form.value.code },
     props: p,
     props_schema: form.value.props_schema || {},
+    view: form.value.view || '',
     track: props.scene.track || 'main',
     z_index: props.scene.z_index ?? 0,
     data: {
@@ -394,6 +603,7 @@ function save() {
         code: { ...form.value.code },
         props: p,
         props_schema: form.value.props_schema || {},
+        view: form.value.view || '',
         duration: Number(form.value.duration) || 5000,
       },
     },

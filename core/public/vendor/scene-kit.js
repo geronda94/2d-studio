@@ -70,6 +70,21 @@
     }
   }
 
+  // Per-object view switching: { car: 'front', building: 'corner' }.
+  // Objects opt in with CSS classes like .obj-car.view-front.
+  function applyViews(root, map) {
+    const entries = Object.entries(map || {})
+    for (const [slug, view] of entries) {
+      const nodes = root.querySelectorAll('.obj-' + slug)
+      nodes.forEach((el) => {
+        Array.from(el.classList)
+          .filter((c) => c.indexOf('view-') === 0)
+          .forEach((c) => el.classList.remove(c))
+        if (view) el.classList.add('view-' + view)
+      })
+    }
+  }
+
   // Композиция механизмов: удобно отдавать в window.scene.seek.
   function compose(...items) {
     return {
@@ -81,5 +96,5 @@
     }
   }
 
-  window.SceneKit = { cues, mechanism, parallax, compose }
+  window.SceneKit = { cues, mechanism, parallax, compose, views: applyViews }
 })()

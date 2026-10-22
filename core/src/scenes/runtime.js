@@ -48,7 +48,7 @@ function escapeStyle(code) {
   return String(code || '').replace(/<\/style/gi, '<\\/style')
 }
 
-export function buildSceneDoc({ code = {}, sceneProps = {}, themeCss = '', format = 'landscape', gsapSource = '', kitSource = '' }) {
+export function buildSceneDoc({ code = {}, sceneProps = {}, themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '' }) {
   const html = String(code.html || '')
   const css = escapeStyle(code.css || '')
   const js = escapeScript(code.js || '')
@@ -78,7 +78,7 @@ export function buildSceneDoc({ code = {}, sceneProps = {}, themeCss = '', forma
 ${gsapSource ? `<script>${escapeScript(gsapSource)}</script>` : ''}
 ${kitSource ? `<script>${escapeScript(kitSource)}</script>` : ''}
 </head>
-<body>
+<body class="view-${view || 'default'}">
 ${html}
 <script>
   window.__sceneProps = ${propsJson};
