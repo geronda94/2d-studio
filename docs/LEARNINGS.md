@@ -38,6 +38,15 @@
 2. Прочитать правила категории.
 3. Учесть в коде/сцене.
 
+### Статусы
+- `proposed` — предложено ИИ, ещё не правило.
+- `active` — утверждено человеком, используется.
+- `archived` — устарело.
+
+`POST /scene-library/learnings` с `source=ai` создаёт `proposed`.
+Человек утверждает: `POST /scene-library/learnings/{id}/approve`.
+Архив: `POST /scene-library/learnings/{id}/archive`.
+
 ### После QA / ревью
 1. Найти ошибку.
 2. Исправить.

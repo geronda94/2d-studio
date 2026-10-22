@@ -70,6 +70,43 @@
     }
   }
 
+  // Deterministic scatter: clone an object N times with seeded positions/scales.
+  // Solves "100 identical trees" without hand-duplicating layers.
+  function mulberry32(seed) {
+    let a = seed >>> 0
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0
+      let t = Math.imul(a ^ (a >>> 15), 1 | a)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+  }
+
+  function scatter(root, opts) {
+    if (!root || !root.parentNode) return []
+    const o = opts || {}
+    const count = Math.max(1, Number(o.count) || 1)
+    const x = o.x || [0.05, 0.95]
+    const y = o.y || [0.1, 0.35]
+    const scale = o.scale || [0.7, 1.3]
+    const rotate = o.rotate || [-4, 4]
+    const rand = mulberry32(Number(o.seed) || 1)
+    const out = []
+    for (let i = 0; i < count; i++) {
+      const el = i === 0 ? root : root.cloneNode(true)
+      if (i > 0) root.parentNode.appendChild(el)
+      const xv = x[0] + (x[1] - x[0]) * rand()
+      const yv = y[0] + (y[1] - y[0]) * rand()
+      const sv = scale[0] + (scale[1] - scale[0]) * rand()
+      const rv = rotate[0] + (rotate[1] - rotate[0]) * rand()
+      el.style.left = (xv * 100).toFixed(2) + '%'
+      el.style.bottom = (yv * 100).toFixed(2) + '%'
+      el.style.transform = 'scale(' + sv.toFixed(3) + ') rotate(' + rv.toFixed(1) + 'deg)'
+      out.push(el)
+    }
+    return out
+  }
+
   // Per-object view switching: { car: 'front', building: 'corner' }.
   // Objects opt in with CSS classes like .obj-car.view-front.
   function applyViews(root, map) {
@@ -96,5 +133,5 @@
     }
   }
 
-  window.SceneKit = { cues, mechanism, parallax, compose, views: applyViews }
+  window.SceneKit = { cues, mechanism, parallax, compose, views: applyViews, scatter, mulberry32 }
 })()

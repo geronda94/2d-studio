@@ -230,3 +230,22 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 - `POST /scene-library/learnings` → создаёт запись (тестовая удалена).
 - `POST /scene-library/validate-composition` → корректные ошибки.
 - `npm run build` — OK.
+
+
+---
+
+## 2026-10-22 — слои, CodeMirror, scatter, Object Studio
+
+- HTML-контракт слоёв: `layer-world / layer-objects / layer-actors / layer-fx / layer-overlay`.
+- `_compose` раскладывает мир/объекты/персонажей по слоям.
+- CodeMirror 6 для HTML/CSS/JS (async chunk).
+- `SceneKit.scatter` + seeded PRNG; forest-drive генерирует деревья/сосны, mountain-flight — птиц.
+- Learnings: AI-записи создаются как `proposed`, человек утверждает.
+- `docs/OBJECT_STUDIO.md` — создание объектов по тексту/фото.
+- `docs/ENGINE.md`, `docs/API.md`, `docs/EDITOR.md`, `docs/ASSETS.md`.
+
+### Ошибка 11. CodeMirror раздул основной бандл
+**Симптом:** MainPresentation вырос до ~759 KB.
+**Причина:** статический импорт CodeMirror.
+**Решение:** `defineAsyncComponent(() => import('./CodeEditor.vue'))` → отдельный chunk.
+**Урок:** тяжёлые редакторы подключать лениво.

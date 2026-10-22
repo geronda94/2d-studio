@@ -37,6 +37,42 @@ const els = [...doc.body.querySelectorAll('*')].filter(el =>
 2. шлют `postMessage({ type: 'patch-style', id, styles })` в iframe,
    чтобы превью менялось без пересоздания iframe.
 
+## 2.5. Подсветка синтаксиса
+
+HTML/CSS/JS редактируются через CodeMirror 6 (`CodeEditor.vue`).
+Подключён лениво (async component), чтобы не раздувать основной бандл.
+Тема — oneDark.
+
+## 2.6. Слои сцены (HTML-контракт)
+
+Сцена размечается слоями:
+
+```html
+<div class="scene">
+  <div class="layer layer-world" data-layer="world">...</div>
+  <div class="layer layer-objects" data-layer="objects">...</div>
+  <div class="layer layer-actors" data-layer="actors">...</div>
+  <div class="layer layer-fx" data-layer="fx">...</div>
+  <div class="layer layer-overlay" data-layer="overlay">...</div>
+</div>
+```
+
+Правила:
+- мир — только `layer-world`;
+- объекты — `layer-objects`;
+- персонажи — `layer-actors`;
+- эффекты — `layer-fx` (pointer-events:none);
+- текст/оверлеи — `layer-overlay` (pointer-events:none).
+- Каждый объект имеет `class="obj-<slug>"` и `data-layer-id`.
+
+Это даёт ИИ и редактору однозначную иерархию.
+
+## 2.7. Процедурная генерация
+
+`SceneKit.scatter(root, { count, x, y, scale, rotate, seed })` детерминированно
+клонирует объект (деревья, птицы, кусты) с разбросом. Никакого `Math.random` —
+только seeded PRNG. Параметры задаются в props (`tree_count`, `pine_count`, ...).
+
 ## 3. Ключи (Cues)
 
 `form.cues = [{ at, set: { speed: 3, brake: true } }]`.
@@ -78,7 +114,8 @@ const cues = SceneKit.cues(cueList)
 - [ ] Approve/Request changes/Reject.
 - [ ] Audit trail.
 
-### Phase D — ассеты
+### Phase D — Object Studio / ассеты
+- [ ] Object Studio: создание объекта по промпту/фото (`OBJECT_STUDIO.md`).
 - [ ] Asset library (см. `ASSETS.md`).
 - [ ] Thumbnails.
 - [ ] Варианты объектов/миров.

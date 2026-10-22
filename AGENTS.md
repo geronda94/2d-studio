@@ -10,6 +10,7 @@
 Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
 Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
+Object Studio: **`docs/OBJECT_STUDIO.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 
 ---
@@ -104,6 +105,25 @@ GET http://localhost:8002/scene-library/objects/{slug}
 
 ---
 
+## 3.5. HTML-слои сцены (обязательно)
+
+```html
+<div class="scene">
+  <div class="layer layer-world" data-layer="world">...</div>
+  <div class="layer layer-objects" data-layer="objects">...</div>
+  <div class="layer layer-actors" data-layer="actors">...</div>
+  <div class="layer layer-fx" data-layer="fx">...</div>
+  <div class="layer layer-overlay" data-layer="overlay">...</div>
+</div>
+```
+
+- мир → `layer-world`;
+- объекты → `layer-objects`;
+- персонажи → `layer-actors`;
+- эффекты → `layer-fx`;
+- текст/оверлеи → `layer-overlay`.
+- каждый объект: `class="obj-<slug>"`, `data-layer-id`.
+
 ## 4. Модель 2D-сцены
 
 ```
@@ -114,6 +134,7 @@ Environment + Objects + Mechanisms + Cues = Scene
 - Объект — `.obj-<slug>`, крючки `data-wheel`, `data-depth`, ...
 - Механизм — функция фазы от `t` (колёса, качание, пар, светофор).
 - Ключ — `{ at, set }` на локальном таймлайне.
+- Массовые объекты (деревья/птицы) — `SceneKit.scatter(...)`, не дублировать вручную.
 
 Пример:
 

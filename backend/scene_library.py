@@ -13,6 +13,12 @@ BASE_CSS = """
 .scene { position:absolute; inset:0; overflow:hidden; background:var(--bg-base);
   color:var(--text-primary); font-family:var(--font-sans); }
 .scene * { box-sizing:border-box; }
+.scene > .layer { position:absolute; inset:0; }
+.layer-world { z-index:0; }
+.layer-objects { z-index:10; }
+.layer-actors { z-index:20; }
+.layer-fx { z-index:30; pointer-events:none; }
+.layer-overlay { z-index:40; pointer-events:none; }
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -807,12 +813,17 @@ def _obj(slug):
 def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None):
     env = _env(env_slug)
     objs = [_obj(s) for s in obj_slugs]
+    actors = [o for o in objs if o.get("category") == "character"]
+    props = [o for o in objs if o.get("category") != "character"]
     html = (
         '<div class="scene">\n'
-        + env["html"]
-        + "\n"
-        + "\n".join(o["html"] for o in objs)
-        + "\n</div>"
+        + '<div class="layer layer-world" data-layer="world">\n' + env["html"] + '\n</div>\n'
+        + '<div class="layer layer-objects" data-layer="objects">\n'
+        + "\n".join(o["html"] for o in props)
+        + '\n</div>\n'
+        + ('<div class="layer layer-actors" data-layer="actors">\n'
+           + "\n".join(o["html"] for o in actors) + '\n</div>\n' if actors else '')
+        + '</div>'
     )
     css = (BASE_CSS + "\n" + env["css"] + "\n" + "\n".join(o["css"] for o in objs)).strip()
     return {
@@ -836,6 +847,10 @@ const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
 const car = root.querySelector('.obj-car');
 const wheels = root.querySelectorAll('[data-wheel]');
+const tree = root.querySelector('.obj-tree');
+const pine = root.querySelector('.obj-pine');
+if (tree) SceneKit.scatter(tree, { count: Number(p.tree_count) || 4, x: [0.05, 0.95], y: [0.16, 0.32], scale: [0.6, 1.4], seed: 11 });
+if (pine) SceneKit.scatter(pine, { count: Number(p.pine_count) || 5, x: [0.02, 0.98], y: [0.12, 0.34], scale: [0.6, 1.5], seed: 23 });
 const dashes = root.querySelector('.obj-road .road-dashes');
 const pines = root.querySelectorAll('[data-depth]');
 const clouds = root.querySelectorAll('.obj-cloud');
@@ -872,6 +887,10 @@ const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
 const car = root.querySelector('.obj-car');
 const wheels = root.querySelectorAll('[data-wheel]');
+const tree = root.querySelector('.obj-tree');
+const pine = root.querySelector('.obj-pine');
+if (tree) SceneKit.scatter(tree, { count: Number(p.tree_count) || 4, x: [0.05, 0.95], y: [0.16, 0.32], scale: [0.6, 1.4], seed: 11 });
+if (pine) SceneKit.scatter(pine, { count: Number(p.pine_count) || 5, x: [0.02, 0.98], y: [0.12, 0.34], scale: [0.6, 1.5], seed: 23 });
 const dashes = root.querySelector('.obj-road .road-dashes');
 const layers = root.querySelectorAll('[data-depth]');
 if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
@@ -903,6 +922,8 @@ window.scene = { seek };
 MOUNTAIN_FLIGHT_JS = """
 const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
+const bird = root.querySelector('.obj-bird');
+if (bird) SceneKit.scatter(bird, { count: Number(p.bird_count) || 3, x: [0.1, 0.9], y: [0.2, 0.4], scale: [0.7, 1.4], seed: 5 });
 const birds = root.querySelectorAll('.obj-bird');
 const clouds = root.querySelectorAll('.obj-cloud');
 const layers = root.querySelectorAll('[data-depth]');
@@ -974,8 +995,10 @@ TEMPLATES = [
         props_schema={
             "car_color": {"type": "color", "label": "Цвет машины"},
             "cruise_speed": {"type": "number", "label": "Скорость"},
+            "tree_count": {"type": "integer", "label": "Деревьев"},
+            "pine_count": {"type": "integer", "label": "Сосен"},
         },
-        default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "views": {"car": "side"}},
+        default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "tree_count": 4, "pine_count": 5, "views": {"car": "side"}},
         cues=[{"at": 0, "set": {"speed": 1.4, "brake": False}}, {"at": 2200, "set": {"speed": 2.9}}, {"at": 4600, "set": {"speed": 0.35, "brake": True}}],
     ),
     _compose(
@@ -988,6 +1011,8 @@ TEMPLATES = [
         props_schema={
             "car_color": {"type": "color", "label": "Цвет машины"},
             "cruise_speed": {"type": "number", "label": "Скорость"},
+            "tree_count": {"type": "integer", "label": "Деревьев"},
+            "pine_count": {"type": "integer", "label": "Сосен"},
         },
         default_props={"car_color": "#38BDF8", "cruise_speed": 1.2, "views": {"car": "side"}},
         cues=[{"at": 0, "set": {"speed": 1.2}}, {"at": 1800, "set": {"speed": 2.16}}, {"at": 4200, "set": {"speed": 0.42}}],

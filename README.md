@@ -25,6 +25,7 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 - `docs/SCENES.md` — контракт сцены
 - `docs/API.md` — API
 - `docs/EDITOR.md` — редактор
+- `docs/OBJECT_STUDIO.md` — создание объектов
 - `docs/ASSETS.md` — DAM
 - `docs/LEARNINGS.md` — ошибки и правила
 - `docs/STATUS.md` — текущий этап

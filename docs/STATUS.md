@@ -82,6 +82,15 @@
 - Добавлены `docs/ENGINE.md`, `docs/API.md`, `docs/EDITOR.md`, `docs/ASSETS.md`,
   `docs/HUMAN_AI_STUDIO.md`.
 
+## Редактор: подсветка, слои, scatter (2026-10-22)
+
+- CodeMirror 6 для HTML/CSS/JS (ленивый chunk).
+- HTML-контракт слоёв: world/objects/actors/fx/overlay.
+- `SceneKit.scatter` для деревьев/птиц с seeded PRNG.
+- Learnings: `proposed` для ИИ, approve/archive.
+- `docs/OBJECT_STUDIO.md` — создание объектов по промпту/фото.
+- `docs/ENGINE.md`, `API.md`, `EDITOR.md`, `ASSETS.md`.
+
 ## Что ещё не сделано
 
 1. **Рендер не проверен end-to-end** после перехода на сцены. Realtime-захват

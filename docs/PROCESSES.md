@@ -94,6 +94,36 @@ curl -X POST http://localhost:8002/presentations/1/scenes \
   }'
 ```
 
+## 3.5. HTML-слои сцены
+
+Любая сцена строится по контракту:
+
+```html
+<div class="scene">
+  <div class="layer layer-world" data-layer="world">...</div>
+  <div class="layer layer-objects" data-layer="objects">...</div>
+  <div class="layer layer-actors" data-layer="actors">...</div>
+  <div class="layer layer-overlay" data-layer="overlay">...</div>
+</div>
+```
+
+`_compose()` в `scene_library.py` уже раскладывает мир/объекты/персонажей по слоям.
+Новый объект получает `class="obj-<slug>"`, новый персонаж — `category: "character"`.
+
+## 3.6. Процедурная генерация
+
+Для деревьев/птиц/кустов не дублируй слои вручную:
+
+```js
+SceneKit.scatter(root.querySelector('.obj-tree'), {
+  count: p.tree_count || 6,
+  x: [0.05, 0.95], y: [0.16, 0.32],
+  scale: [0.6, 1.4], seed: 11,
+})
+```
+
+`scatter` использует seeded PRNG → детерминизм сохраняется.
+
 ## 4. Добавить новый мир
 
 1. В `backend/scene_library.py` добавить объект в `ENVIRONMENTS`:

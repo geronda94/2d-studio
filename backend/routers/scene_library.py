@@ -110,8 +110,34 @@ def read_learnings(
 
 @router.post("/learnings", response_model=schemas.SceneLearning)
 def create_learning(payload: schemas.SceneLearningCreate, db: Session = Depends(get_db)):
-    row = models.SceneLearning(**payload.dict())
+    data = payload.dict()
+    # AI proposals never go straight into the active rulebook.
+    if data.get("source") == "ai" and (not data.get("status") or data.get("status") == "active"):
+        data["status"] = "proposed"
+    row = models.SceneLearning(**data)
     db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.post("/learnings/{learning_id}/approve", response_model=schemas.SceneLearning)
+def approve_learning(learning_id: int, db: Session = Depends(get_db)):
+    row = db.query(models.SceneLearning).filter(models.SceneLearning.id == learning_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Learning not found")
+    row.status = "active"
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.post("/learnings/{learning_id}/archive", response_model=schemas.SceneLearning)
+def archive_learning(learning_id: int, db: Session = Depends(get_db)):
+    row = db.query(models.SceneLearning).filter(models.SceneLearning.id == learning_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Learning not found")
+    row.status = "archived"
     db.commit()
     db.refresh(row)
     return row

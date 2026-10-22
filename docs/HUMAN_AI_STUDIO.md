@@ -259,6 +259,14 @@ diff, аудит, пороги риска.
 
 ---
 
+## 8.5. Object Studio и ворота
+
+- **Object Studio:** создание объекта по промпту/фото прямо в редакторе
+  (`OBJECT_STUDIO.md`). Фото → sprite/cutout/vector/ref; не риг.
+- **Ворота:** storyboard + scene обязательны. Отдельный approve на
+  animation/cues — опционально; по умолчанию человек может точечно править.
+- **Learnings:** ИИ добавляет `proposed`, человек утверждает в `active`.
+
 ## 9. Roadmap (следующие фазы)
 
 ### Phase A — управление (сейчас)

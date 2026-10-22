@@ -276,17 +276,11 @@
             </div>
           </div>
 
-          <textarea v-else-if="activeTab === 'html'" v-model="form.code.html" spellcheck="false"
-            class="h-full w-full resize-none rounded-lg border border-text-muted/30 bg-bg-base p-3 font-mono text-[12px] leading-relaxed text-text-primary outline-none focus:border-brand-blue"
-            placeholder="<div class='scene'>...</div>"></textarea>
+          <CodeEditor v-else-if="activeTab === 'html'" v-model="form.code.html" language="html" />
 
-          <textarea v-else-if="activeTab === 'css'" v-model="form.code.css" spellcheck="false"
-            class="h-full w-full resize-none rounded-lg border border-text-muted/30 bg-bg-base p-3 font-mono text-[12px] leading-relaxed text-text-primary outline-none focus:border-brand-blue"
-            placeholder=".scene { position:absolute; inset:0; }"></textarea>
+          <CodeEditor v-else-if="activeTab === 'css'" v-model="form.code.css" language="css" />
 
-          <textarea v-else-if="activeTab === 'js'" v-model="form.code.js" spellcheck="false"
-            class="h-full w-full resize-none rounded-lg border border-text-muted/30 bg-bg-base p-3 font-mono text-[12px] leading-relaxed text-text-primary outline-none focus:border-brand-blue"
-            placeholder="const tl = gsap.timeline({ paused: true });&#10;window.scene = { seek(t) { tl.seek(t / 1000) } };"></textarea>
+          <CodeEditor v-else-if="activeTab === 'js'" v-model="form.code.js" language="js" />
 
           <div v-else-if="activeTab === 'props'" class="h-full flex flex-col gap-2">
             <textarea v-model="propsText" spellcheck="false"
@@ -327,8 +321,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import SceneHost from './SceneHost.vue'
+const CodeEditor = defineAsyncComponent(() => import('./CodeEditor.vue'))
 import { DEMO_SCENE, normalizeScenePayload } from './demoScene'
 import { fetchSceneEnvironments, fetchSceneObjects, fetchSceneTemplates, fetchSceneTemplate } from '../services/api'
 
