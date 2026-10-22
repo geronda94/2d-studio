@@ -1,0 +1,218 @@
+/* Шрифты грузятся динамически из токена `font_link` (useTheme.applyFontLink), не хранятся здесь. */
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Глобальные переменные фирменного стиля (дефолт IT2B) */
+:root {
+  /* Colors - Backgrounds (Clean Light Mode) */
+  --bg-base: #F3F4F6;
+  --bg-base-rgb: 243 244 246;
+  --bg-surface: #FFFFFF;
+  --bg-surface-rgb: 255 255 255;
+  --bg-surface-hover: #F9FAFB;
+  --bg-surface-hover-rgb: 249 250 251;
+
+  /* Colors - Brand */
+  --brand-blue: #2563EB;
+  --brand-blue-rgb: 37 99 235;
+  --brand-light-blue: #3B82F6;
+  --brand-light-blue-rgb: 59 130 246;
+  --brand-green: #10B981;
+  --brand-green-rgb: 16 185 129;
+  --brand-amber: #F59E0B;
+  --brand-amber-rgb: 245 158 11;
+  --brand-orange: #EA580C;
+  --brand-orange-rgb: 234 88 12;
+
+  /* Semantic Colors for Tailwind aliases */
+  --color-primary: var(--brand-blue);
+  --color-primary-rgb: var(--brand-blue-rgb);
+  --color-secondary: var(--brand-light-blue);
+  --color-secondary-rgb: var(--brand-light-blue-rgb);
+  --color-success: var(--brand-green);
+  --color-success-rgb: var(--brand-green-rgb);
+  --color-warning: var(--brand-amber);
+  --color-warning-rgb: var(--brand-amber-rgb);
+  --color-accent: var(--brand-orange);
+  --color-accent-rgb: var(--brand-orange-rgb);
+
+  /* Colors - Text (Dark for light mode) */
+  --text-primary: #111827;
+  --text-primary-rgb: 17 24 39;
+  --text-secondary: #4B5563;
+  --text-secondary-rgb: 75 85 99;
+  --text-muted: #9CA3AF;
+  --text-muted-rgb: 156 163 175;
+
+  /* Fonts */
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+/* Фолбэк темы слайдов (зеркало GLOBAL_TOKENS = IT2B dark).
+   Токены из БД прилетают асинхронно и ПЕРЕЗАПИСЫВАЮТ эти значения на
+   .slides-container. Без фолбэка первый кадр рисуется на светлых :root-
+   значениях (белые/прозрачные поверхности), а стекло/блюр «вщёлкиваются»
+   с запозданием. При расхождении с БД — сверяться с scripts/seed_tokens.py. */
+.slides-container {
+  --bg-base: #0B1322;
+  --bg-base-rgb: 11 19 34;
+  --bg-surface: #152033;
+  --bg-surface-rgb: 21 32 51;
+  --bg-surface-hover: #1F2D44;
+  --bg-hover: #1F2D44;
+  --text-primary: #F8FAFC;
+  --text-primary-rgb: 248 250 252;
+  --text-secondary: #94A3B8;
+  --text-secondary-rgb: 148 163 184;
+  --text-muted: #64748B;
+  --text-muted-rgb: 100 116 139;
+  --brand-blue: #2563EB;
+  --brand-blue-rgb: 37 99 235;
+  --brand-light-blue: #38BDF8;
+  --brand-light-blue-rgb: 56 189 248;
+  --brand-green: #10B981;
+  --brand-green-rgb: 16 185 129;
+  --brand-amber: #F59E0B;
+  --brand-amber-rgb: 245 158 11;
+  --brand-orange: #EA580C;
+  --brand-orange-rgb: 234 88 12;
+  --color-primary: #2563EB;
+  --color-primary-rgb: 37 99 235;
+  --color-secondary: #38BDF8;
+  --color-secondary-rgb: 56 189 248;
+  --color-success: #10B981;
+  --color-accent: #F97316;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-danger: #EF4444;
+  --color-danger-rgb: 239 68 68;
+  --color-info: #38BDF8;
+  --color-info-rgb: 56 189 248;
+  --item-accent-1: #38BDF8;
+  --item-accent-1-rgb: 56 189 248;
+  --item-accent-2: #10B981;
+  --item-accent-2-rgb: 16 185 129;
+  --item-accent-3: #F59E0B;
+  --item-accent-3-rgb: 245 158 11;
+  --item-accent-4: #8B5CF6;
+  --item-accent-4-rgb: 139 92 246;
+  --slide-bg-1: #0B1322;
+  --slide-bg-1-rgb: 11 19 34;
+  --slide-bg-2: #0F1D33;
+  --slide-bg-2-rgb: 15 29 51;
+  --slide-bg-3: #121E32;
+  --slide-bg-3-rgb: 18 30 50;
+  --slide-bg-4: #1C2A42;
+  --slide-bg-4-rgb: 28 42 66;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+}
+
+/* Стилизация заголовков (Clean SaaS) */
+h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+h2, h3, h4 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Выделение внутри заголовков — градиент из токенов ПАЛИТРЫ (глобально, не зависит
+   от варианта: смена classic/industrial/... не должна «сплющивать» градиент в сплошной).
+   ВАЖНО (разделение осей): варианты НЕ задают цвета — только материал/форму/линии.
+   Жёсткие хью (как старый `.variant-classic em { color: brand-orange }`) запрещены —
+   иначе смена варианта перекрашивает палитру. */
+h1 span, h1 em, h2 span, h2 em, h3 span, h3 em {
+  background: linear-gradient(90deg, var(--brand-light-blue) 0%, var(--brand-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+}
+
+/* Кастомный красивый скроллбар */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary); 
+}
+
+/* Base UI Utilities (без blur: размытие запрещено в компонентах — только через конфиг варианта) */
+
+
+/* Custom Transition: brand-blur (элегантное скольжение; blur вырезан — только transform+opacity) */
+body.is-seeking .brand-blur-leave-active,
+body.is-seeking .brand-blur-enter-active {
+  transition: none !important;
+}
+
+.brand-blur-leave-active,
+.brand-blur-enter-active {
+  transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+.brand-blur-enter-from {
+  opacity: 0;
+  transform: translateX(40px) scale(0.97);
+}
+.brand-blur-leave-to {
+  opacity: 0;
+  transform: translateX(-40px) scale(0.97);
+}
+
+/* Глобальный читатель CSS-переменных варианта для backdropFilter.
+   Применяется к карточкам/нодам в компонентах через класс .variant-item.
+   --item-backdrop устанавливается useVariant через itemVars на родителе компонента. */
+.variant-item {
+  backdrop-filter: var(--item-backdrop, none);
+  -webkit-backdrop-filter: var(--item-backdrop, none);
+}
+.variant-item-primary {
+  backdrop-filter: var(--item-primary-backdrop, none);
+  -webkit-backdrop-filter: var(--item-primary-backdrop, none);
+}
+
+/* Mobile (MOBILE_PLAN M0): единицы видимой области с fallback.
+   `100vh` на телефоне больше видимой области (адресная строка) → переполнение.
+   `dvh`/`dvw` учитывают её; vh/vw — fallback для старых браузеров. */
+.viewport-h { height: 100vh; height: 100dvh; }
+.viewport-w { width: 100vw; width: 100dvw; }
+.safe-pad {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Mobile: убираем задержку 300мс и двойной тап-зум на элементах управления.
+   Zoom страницы пользователем не запрещаем (доступность). */
+button, a, [role="button"] { touch-action: manipulation; }

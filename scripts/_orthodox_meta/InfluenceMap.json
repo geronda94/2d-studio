@@ -1,0 +1,26 @@
+{
+  "slug": "InfluenceMap",
+  "title": "Карта влияний",
+  "description": "Граф влияний: кто на кого повлиял и через что.",
+  "manifest": "Подходит: показать преемство идей и личных влияний между мыслителями и святыми. Не использовать: для линейной хронологии (→ TimelineSlide), для организационной структуры (→ OrgChart), для экосистемы с центром (→ ChurchAsBody).",
+  "categories": ["ui"],
+  "required": ["nodes", "edges"],
+  "payload": {
+    "variant": "diademas",
+    "source_note": "Влияния: «Исповедь» VIII; Ансельм, «Proslogion»; Фома, «Сумма теологии» I–II",
+    "nodes": [
+      { "id": "aug", "label": "Блаженный Августин", "icon": "lucide:feather", "color": "var(--color-accent)", "is_main": true, "start_time": 0 },
+      { "id": "amb", "label": "Свт. Амвросий Медиоланский", "icon": "lucide:church", "color": "var(--color-secondary)", "start_time": 1000 },
+      { "id": "plot", "label": "Плотин", "icon": "lucide:brain", "color": "var(--color-warning)", "start_time": 2000 },
+      { "id": "ans", "label": "Ансельм Кентерберийский", "icon": "lucide:scale", "color": "var(--color-success)", "start_time": 3000 },
+      { "id": "aqu", "label": "Фома Аквинский", "icon": "lucide:book-open", "color": "var(--color-accent)", "start_time": 4000 }
+    ],
+    "edges": [
+      { "from": "amb", "to": "aug", "label": "крещение и наставление", "start_time": 500 },
+      { "from": "plot", "to": "aug", "label": "неоплатонизм", "start_time": 1500 },
+      { "from": "aug", "to": "ans", "label": "вера и разум", "start_time": 2500 },
+      { "from": "aug", "to": "aqu", "label": "учение о благодати", "start_time": 3500 },
+      { "from": "ans", "to": "aqu", "label": "схоластический метод", "start_time": 4500 }
+    ]
+  }
+}

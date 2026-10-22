@@ -1,0 +1,16 @@
+{
+  "slug": "SaintQuote",
+  "title": "Изречение святого",
+  "description": "Изречение святого с портретом, именем и источником.",
+  "manifest": "Подходит: одна фраза подвижника крупно, с образом и указанием источника. Не использовать: для длинного текста/абзаца (→ VerseFocus), для списка цитат (→ PremiumChecklist), для биографии по годам (→ TimelineSlide).",
+  "categories": ["ui"],
+  "required": ["quote", "author"],
+  "payload": {
+    "variant": "diademas",
+    "quote": "Слава Богу за всё!",
+    "author": "Святитель Иоанн Златоуст",
+    "author_title": "Архиепископ Константинопольский, ок. 347–407",
+    "image": "/media/saints/ioann-zlatoust.jpg",
+    "source": "Предсмертные слова, 407 г."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "slug": "AsceticFeats",
+  "title": "Подвиги подвижника",
+  "description": "Подвиги (пост, молитва, бдение, нестяжание) как уровни с иконками.",
+  "manifest": "Подходит: показать состав аскетических подвигов и степень их освоения (уровень 1–5) с пояснением. Не использовать: для сравнения двух профилей (→ VirtuesRadar), для этапов процесса (→ ProcessFunnel), для цитаты (→ SaintQuote).",
+  "categories": ["stats"],
+  "required": ["feats"],
+  "payload": {
+    "variant": "diademas",
+    "max_level": 5,
+    "feats": [
+      {
+        "name": "Пост",
+        "icon": "lucide:utensils",
+        "level": 4,
+        "note": "Воздержание ради Бога",
+        "color": "var(--color-primary)",
+        "start_time": 0
+      },
+      {
+        "name": "Молитва",
+        "icon": "lucide:flame",
+        "level": 5,
+        "note": "Непрестанное обращение к Богу",
+        "color": "var(--color-warning)",
+        "start_time": 1100
+      },
+      {
+        "name": "Бдение",
+        "icon": "lucide:moon-star",
+        "level": 3,
+        "note": "Ночная молитва и трезвение",
+        "color": "var(--color-secondary)",
+        "start_time": 2200
+      },
+      {
+        "name": "Нестяжание",
+        "icon": "lucide:hand-heart",
+        "level": 4,
+        "note": "Свобода от имения",
+        "color": "var(--color-success)",
+        "start_time": 3300
+      }
+    ],
+    "source_note": "Практика подвижничества по «Лествице» прп. Иоанна (ср. 2 Кор. 11:27)"
+  }
+}

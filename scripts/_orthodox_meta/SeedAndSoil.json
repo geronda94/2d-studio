@@ -1,0 +1,50 @@
+{
+  "slug": "SeedAndSoil",
+  "title": "Притча о сеятеле",
+  "description": "Четыре почвы притчи как модель: почва → человек → плод.",
+  "manifest": "Подходит: разобрать притчу о сеятеле (Мф. 13) через четыре типа почвы и их плод. Не использовать: для произвольной воронки (→ ProcessFunnel), для лестницы восхождения (→ LadderOfVirtues), для одного стиха крупно (→ VerseFocus).",
+  "categories": ["ui"],
+  "required": ["soils"],
+  "payload": {
+    "variant": "diademas",
+    "soils": [
+      {
+        "type": "При дороге",
+        "icon": "lucide:route",
+        "outcome": "Слово похищено врагом",
+        "level": 0.15,
+        "yield": "—",
+        "color": "var(--color-warning)",
+        "start_time": 0
+      },
+      {
+        "type": "На камне",
+        "icon": "lucide:mountain",
+        "outcome": "Сохнет без корня в скорби",
+        "level": 0.3,
+        "yield": "—",
+        "color": "var(--color-accent)",
+        "start_time": 1100
+      },
+      {
+        "type": "В тернии",
+        "icon": "lucide:trees",
+        "outcome": "Заглушено заботами века",
+        "level": 0.5,
+        "yield": "—",
+        "color": "var(--color-secondary)",
+        "start_time": 2200
+      },
+      {
+        "type": "Добрая земля",
+        "icon": "lucide:wheat",
+        "outcome": "Приносит плод в терпении",
+        "level": 1,
+        "yield": "во сто крат",
+        "color": "var(--color-success)",
+        "start_time": 3300
+      }
+    ],
+    "reference": "Мф. 13:3–9, 18–23; Лк. 8:5–15"
+  }
+}

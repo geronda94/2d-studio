@@ -1,0 +1,21 @@
+{
+  "slug": "ChurchAsBody",
+  "title": "Церковь как тело",
+  "description": "Христос — глава, а служения и дары — члены одного тела, соединённые любовью.",
+  "manifest": "Подходит: экклезиология, дары и служения, единство Церкви, тема Тела Христова. Не использовать: для светской оргструктуры (OrgChart), для списка приходов без центрального образа.",
+  "categories": ["stats"],
+  "required": ["center", "nodes"],
+  "payload": {
+    "variant": "diademas",
+    "source_note": "Христос — глава Церкви · Еф. 1:22–23; 1 Кор. 12:12–27; Еф. 4:11–16",
+    "center": { "label": "Христос", "icon": "lucide:cross" },
+    "nodes": [
+      { "label": "Апостолы", "icon": "lucide:compass", "color": "var(--color-accent)", "start_time": 1000 },
+      { "label": "Пророки", "icon": "lucide:scroll-text", "color": "var(--color-secondary)", "start_time": 2000 },
+      { "label": "Евангелисты", "icon": "lucide:book-open", "color": "var(--color-success)", "start_time": 3000 },
+      { "label": "Пастыри", "icon": "lucide:heart-handshake", "color": "var(--color-warning)", "start_time": 4000 },
+      { "label": "Учители", "icon": "lucide:graduation-cap", "color": "var(--color-accent)", "start_time": 5000 },
+      { "label": "Диаконы", "icon": "lucide:hand-heart", "color": "var(--color-secondary)", "start_time": 6000 }
+    ]
+  }
+}

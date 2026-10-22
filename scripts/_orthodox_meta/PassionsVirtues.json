@@ -1,0 +1,20 @@
+{
+  "slug": "PassionsVirtues",
+  "title": "Страсти и добродетели",
+  "description": "Парные шкалы: страсть и противоположная ей добродетель с уровнем продвижения.",
+  "manifest": "Подходит: показать пары «страсть ↔ добродетель» (восемь главных страстей по свт. Игнатию) как шкалы, где уровень = мера стяжания добродетели. Не использовать: для одной метрики без пары (MetricScales), для непсихологических метрик, для этапов/процессов.",
+  "categories": ["stats"],
+  "required": ["pairs"],
+  "payload": {
+    "variant": "diademas",
+    "source": "Свт. Игнатий Брянчанинов, «Слово о страстях и добродетелях»; прп. Иоанн Кассиан, «Собеседования», кн. 5",
+    "pairs": [
+      { "passion": "Чревоугодие", "virtue": "Воздержание", "level": 35, "icon": "lucide:utensils", "start_time": 0 },
+      { "passion": "Блуд", "virtue": "Целомудрие", "level": 45, "icon": "lucide:flame", "start_time": 1000 },
+      { "passion": "Сребролюбие", "virtue": "Нестяжание", "level": 50, "icon": "lucide:coins", "start_time": 2000 },
+      { "passion": "Гнев", "virtue": "Кротость", "level": 60, "icon": "lucide:zap", "start_time": 3000 },
+      { "passion": "Уныние", "virtue": "Трезвение", "level": 40, "icon": "lucide:cloud-rain", "start_time": 4000 },
+      { "passion": "Гордость", "virtue": "Смирение", "level": 55, "icon": "lucide:crown", "start_time": 5000 }
+    ]
+  }
+}

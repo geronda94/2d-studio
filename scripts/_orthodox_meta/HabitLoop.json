@@ -1,0 +1,18 @@
+{
+  "slug": "HabitLoop",
+  "title": "Петля привычки",
+  "description": "Замкнутый цикл привычки (сигнал → желание → действие → награда) и духовная замена каждого звена.",
+  "manifest": "Подходит: показать петлю привычки/зависимости и духовную замену на каждом звене. Не использовать: для линейных процессов (ProcessFunnel), для страстей без цикла (PassionsVirtues), для простых схем (SoulStructure).",
+  "categories": ["ui"],
+  "required": ["loop"],
+  "payload": {
+    "variant": "diademas",
+    "source": "Прп. Иоанн Кассиан, «Собеседования», кн. 5; прп. Никодим Святогорец, «Невидимая брань»",
+    "loop": [
+      { "stage": "Сигнал", "spiritual": "Молитва Иисусова", "icon": "lucide:bell", "status": "warn", "start_time": 0 },
+      { "stage": "Желание", "spiritual": "Трезвение помыслов", "icon": "lucide:brain", "status": "warn", "start_time": 1000 },
+      { "stage": "Действие", "spiritual": "Пост и воздержание", "icon": "lucide:footprints", "status": "warn", "start_time": 2000 },
+      { "stage": "Награда", "spiritual": "Мир души и благодать", "icon": "lucide:gem", "status": "info", "start_time": 3000 }
+    ]
+  }
+}

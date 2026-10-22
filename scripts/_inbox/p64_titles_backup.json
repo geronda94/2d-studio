@@ -1,0 +1,800 @@
+[
+ {
+  "order_index": 0,
+  "slide_id": "ks-64-AbcXyzMatrix",
+  "component": "AbcXyzMatrix",
+  "title": "ABC/XYZ-матрица"
+ },
+ {
+  "order_index": 1,
+  "slide_id": "ks-64-AdvancedVideoSlide",
+  "component": "AdvancedVideoSlide",
+  "title": "Скринкаст"
+ },
+ {
+  "order_index": 2,
+  "slide_id": "ks-64-AnimatedStatsSlide",
+  "component": "AnimatedStatsSlide",
+  "title": "Анимированная статистика"
+ },
+ {
+  "order_index": 3,
+  "slide_id": "ks-64-ApologeticsQA",
+  "component": "ApologeticsQA",
+  "title": "Апологетика: вопрос и ответ"
+ },
+ {
+  "order_index": 4,
+  "slide_id": "ks-64-ArchaeologyConfirms",
+  "component": "ArchaeologyConfirms",
+  "title": "Археология и Писание"
+ },
+ {
+  "order_index": 5,
+  "slide_id": "ks-64-ArchitectureDiagram",
+  "component": "ArchitectureDiagram",
+  "title": "Диаграмма архитектуры"
+ },
+ {
+  "order_index": 6,
+  "slide_id": "ks-64-ArgumentStructure",
+  "component": "ArgumentStructure",
+  "title": "Структура аргумента"
+ },
+ {
+  "order_index": 7,
+  "slide_id": "ks-64-AsceticFeats",
+  "component": "AsceticFeats",
+  "title": "Подвиги подвижника"
+ },
+ {
+  "order_index": 8,
+  "slide_id": "ks-64-AssessmentBlueprint",
+  "component": "AssessmentBlueprint",
+  "title": "Спецификация теста"
+ },
+ {
+  "order_index": 9,
+  "slide_id": "ks-64-BeforeAfterSlide",
+  "component": "BeforeAfterSlide",
+  "title": "До / После"
+ },
+ {
+  "order_index": 10,
+  "slide_id": "ks-64-BentoGridGallery",
+  "component": "BentoGridGallery",
+  "title": "Bento Галерея"
+ },
+ {
+  "order_index": 11,
+  "slide_id": "ks-64-BloomLadder",
+  "component": "BloomLadder",
+  "title": "Лестница Блума"
+ },
+ {
+  "order_index": 12,
+  "slide_id": "ks-64-BoqSmeta",
+  "component": "BoqSmeta",
+  "title": "Ведомость объёмов работ"
+ },
+ {
+  "order_index": 13,
+  "slide_id": "ks-64-BrowserMockup",
+  "component": "BrowserMockup",
+  "title": "Браузер"
+ },
+ {
+  "order_index": 14,
+  "slide_id": "ks-64-ChangeOrderLog",
+  "component": "ChangeOrderLog",
+  "title": "Журнал изменений"
+ },
+ {
+  "order_index": 15,
+  "slide_id": "ks-64-CharacterStats",
+  "component": "CharacterStats",
+  "title": "Персонаж со статами"
+ },
+ {
+  "order_index": 16,
+  "slide_id": "ks-64-ChatMockupSlide",
+  "component": "ChatMockupSlide",
+  "title": "Чат (на весь экран)"
+ },
+ {
+  "order_index": 17,
+  "slide_id": "ks-64-ChristianityImpact",
+  "component": "ChristianityImpact",
+  "title": "Влияние христианства"
+ },
+ {
+  "order_index": 18,
+  "slide_id": "ks-64-ChurchAsBody",
+  "component": "ChurchAsBody",
+  "title": "Церковь как тело"
+ },
+ {
+  "order_index": 19,
+  "slide_id": "ks-64-CircularGauge",
+  "component": "CircularGauge",
+  "title": "Круговая метрика"
+ },
+ {
+  "order_index": 20,
+  "slide_id": "ks-64-CivilizationCycle",
+  "component": "CivilizationCycle",
+  "title": "Цикл цивилизации"
+ },
+ {
+  "order_index": 21,
+  "slide_id": "ks-64-CodeComparisonSlide",
+  "component": "CodeComparisonSlide",
+  "title": "Сравнение кода"
+ },
+ {
+  "order_index": 22,
+  "slide_id": "ks-64-CodeExplain",
+  "component": "CodeExplain",
+  "title": "Объяснение кода"
+ },
+ {
+  "order_index": 23,
+  "slide_id": "ks-64-CohortGrid",
+  "component": "CohortGrid",
+  "title": "Когортная таблица"
+ },
+ {
+  "order_index": 24,
+  "slide_id": "ks-64-CohortRetention",
+  "component": "CohortRetention",
+  "title": "Когортное удержание"
+ },
+ {
+  "order_index": 25,
+  "slide_id": "ks-64-CommandmentBoard",
+  "component": "CommandmentBoard",
+  "title": "Заповеди и блаженства"
+ },
+ {
+  "order_index": 26,
+  "slide_id": "ks-64-ComparisonTable",
+  "component": "ComparisonTable",
+  "title": "Таблица сравнения"
+ },
+ {
+  "order_index": 27,
+  "slide_id": "ks-64-ConceptDiptych",
+  "component": "ConceptDiptych",
+  "title": "Диптих понятий"
+ },
+ {
+  "order_index": 28,
+  "slide_id": "ks-64-ControlChart",
+  "component": "ControlChart",
+  "title": "Контрольная карта"
+ },
+ {
+  "order_index": 29,
+  "slide_id": "ks-64-CosmologyGenesis",
+  "component": "CosmologyGenesis",
+  "title": "Большой взрыв и Дни творения"
+ },
+ {
+  "order_index": 30,
+  "slide_id": "ks-64-CrmCardSlide",
+  "component": "CrmCardSlide",
+  "title": "CRM Карточка"
+ },
+ {
+  "order_index": 31,
+  "slide_id": "ks-64-CurriculumMap",
+  "component": "CurriculumMap",
+  "title": "Карта учебной программы"
+ },
+ {
+  "order_index": 32,
+  "slide_id": "ks-64-DefinitionBlock",
+  "component": "DefinitionBlock",
+  "title": "Определение"
+ },
+ {
+  "order_index": 33,
+  "slide_id": "ks-64-EcosystemSlide",
+  "component": "EcosystemSlide",
+  "title": "Экосистема"
+ },
+ {
+  "order_index": 34,
+  "slide_id": "ks-64-EmotionHealing",
+  "component": "EmotionHealing",
+  "title": "Исцеление чувств"
+ },
+ {
+  "order_index": 35,
+  "slide_id": "ks-64-FamilyOrder",
+  "component": "FamilyOrder",
+  "title": "Порядок семьи"
+ },
+ {
+  "order_index": 36,
+  "slide_id": "ks-64-FigureCard",
+  "component": "FigureCard",
+  "title": "Карточка личности"
+ },
+ {
+  "order_index": 37,
+  "slide_id": "ks-64-FineTuningScales",
+  "component": "FineTuningScales",
+  "title": "Тонкая настройка констант"
+ },
+ {
+  "order_index": 38,
+  "slide_id": "ks-64-FlashCards",
+  "component": "FlashCards",
+  "title": "Флэш-карточки"
+ },
+ {
+  "order_index": 39,
+  "slide_id": "ks-64-FloorPlanZones",
+  "component": "FloorPlanZones",
+  "title": "План с зонами"
+ },
+ {
+  "order_index": 40,
+  "slide_id": "ks-64-GanttChart",
+  "component": "GanttChart",
+  "title": "Диаграмма Ганта"
+ },
+ {
+  "order_index": 41,
+  "slide_id": "ks-64-GenealogyTree",
+  "component": "GenealogyTree",
+  "title": "Родословие"
+ },
+ {
+  "order_index": 42,
+  "slide_id": "ks-64-HabitLoop",
+  "component": "HabitLoop",
+  "title": "Петля привычки"
+ },
+ {
+  "order_index": 43,
+  "slide_id": "ks-64-HandoverMatrix",
+  "component": "HandoverMatrix",
+  "title": "Матрица сдачи"
+ },
+ {
+  "order_index": 44,
+  "slide_id": "ks-64-HeatmapMatrix",
+  "component": "HeatmapMatrix",
+  "title": "Матрица рисков"
+ },
+ {
+  "order_index": 45,
+  "slide_id": "ks-64-HistoricalCompare",
+  "component": "HistoricalCompare",
+  "title": "Сравнение эпох"
+ },
+ {
+  "order_index": 46,
+  "slide_id": "ks-64-InfluenceMap",
+  "component": "InfluenceMap",
+  "title": "Карта влияний"
+ },
+ {
+  "order_index": 47,
+  "slide_id": "ks-64-InfographicCards",
+  "component": "InfographicCards",
+  "title": "Инфографика"
+ },
+ {
+  "order_index": 48,
+  "slide_id": "ks-64-InteractiveArchitecture",
+  "component": "InteractiveArchitecture",
+  "title": "Интерактивная архитектура"
+ },
+ {
+  "order_index": 49,
+  "slide_id": "ks-64-ItemAnalysis",
+  "component": "ItemAnalysis",
+  "title": "Анализ тестовых заданий"
+ },
+ {
+  "order_index": 50,
+  "slide_id": "ks-64-JourneyMap",
+  "component": "JourneyMap",
+  "title": "Карта клиентского пути"
+ },
+ {
+  "order_index": 51,
+  "slide_id": "ks-64-KnowledgeGraph",
+  "component": "KnowledgeGraph",
+  "title": "Граф знаний"
+ },
+ {
+  "order_index": 52,
+  "slide_id": "ks-64-KpiDashboard",
+  "component": "KpiDashboard",
+  "title": "KPI-дашборд"
+ },
+ {
+  "order_index": 53,
+  "slide_id": "ks-64-LadderOfVirtues",
+  "component": "LadderOfVirtues",
+  "title": "Лествица добродетелей"
+ },
+ {
+  "order_index": 54,
+  "slide_id": "ks-64-LawParallel",
+  "component": "LawParallel",
+  "title": "Закон и духовный принцип"
+ },
+ {
+  "order_index": 55,
+  "slide_id": "ks-64-LearningObjectives",
+  "component": "LearningObjectives",
+  "title": "Цели обучения (ABCD)"
+ },
+ {
+  "order_index": 56,
+  "slide_id": "ks-64-LessonArc",
+  "component": "LessonArc",
+  "title": "Ход урока"
+ },
+ {
+  "order_index": 57,
+  "slide_id": "ks-64-LoveTypes",
+  "component": "LoveTypes",
+  "title": "Виды любви"
+ },
+ {
+  "order_index": 58,
+  "slide_id": "ks-64-MachineStatusBoard",
+  "component": "MachineStatusBoard",
+  "title": "Статусы оборудования"
+ },
+ {
+  "order_index": 59,
+  "slide_id": "ks-64-MaintenanceBoard",
+  "component": "MaintenanceBoard",
+  "title": "Доска ТОиР"
+ },
+ {
+  "order_index": 60,
+  "slide_id": "ks-64-MapVisualization",
+  "component": "MapVisualization",
+  "title": "Карта"
+ },
+ {
+  "order_index": 61,
+  "slide_id": "ks-64-MarketSizing",
+  "component": "MarketSizing",
+  "title": "Объём рынка (TAM/SAM/SOM)"
+ },
+ {
+  "order_index": 62,
+  "slide_id": "ks-64-MediaSlide",
+  "component": "MediaSlide",
+  "title": "Медиа-контент"
+ },
+ {
+  "order_index": 63,
+  "slide_id": "ks-64-MetricScales",
+  "component": "MetricScales",
+  "title": "Метрики и шкалы"
+ },
+ {
+  "order_index": 64,
+  "slide_id": "ks-64-ModernTable",
+  "component": "ModernTable",
+  "title": "Современная таблица"
+ },
+ {
+  "order_index": 65,
+  "slide_id": "ks-64-MoralDecline",
+  "component": "MoralDecline",
+  "title": "Деградация морали"
+ },
+ {
+  "order_index": 66,
+  "slide_id": "ks-64-NetworkWaterfall",
+  "component": "NetworkWaterfall",
+  "title": "Сетевой водопад"
+ },
+ {
+  "order_index": 67,
+  "slide_id": "ks-64-NodeFlow",
+  "component": "NodeFlow",
+  "title": "Поток узлов"
+ },
+ {
+  "order_index": 68,
+  "slide_id": "ks-64-NotationTable",
+  "component": "NotationTable",
+  "title": "Иерархическая таблица"
+ },
+ {
+  "order_index": 69,
+  "slide_id": "ks-64-ObjectPassport",
+  "component": "ObjectPassport",
+  "title": "Паспорт объекта"
+ },
+ {
+  "order_index": 70,
+  "slide_id": "ks-64-OeeDashboard",
+  "component": "OeeDashboard",
+  "title": "OEE-дашборд"
+ },
+ {
+  "order_index": 71,
+  "slide_id": "ks-64-OrgChart",
+  "component": "OrgChart",
+  "title": "Оргструктура"
+ },
+ {
+  "order_index": 72,
+  "slide_id": "ks-64-OrganicGrid",
+  "component": "OrganicGrid",
+  "title": "Органическая сетка"
+ },
+ {
+  "order_index": 73,
+  "slide_id": "ks-64-OutroSlide",
+  "component": "OutroSlide",
+  "title": "Завершающая заставка"
+ },
+ {
+  "order_index": 74,
+  "slide_id": "ks-64-PaceBoard",
+  "component": "PaceBoard",
+  "title": "Андон-табло темпа"
+ },
+ {
+  "order_index": 75,
+  "slide_id": "ks-64-ParableExplainer",
+  "component": "ParableExplainer",
+  "title": "Разбор притчи"
+ },
+ {
+  "order_index": 76,
+  "slide_id": "ks-64-ParetoChart",
+  "component": "ParetoChart",
+  "title": "Диаграмма Парето"
+ },
+ {
+  "order_index": 77,
+  "slide_id": "ks-64-PassionsVirtues",
+  "component": "PassionsVirtues",
+  "title": "Страсти и добродетели"
+ },
+ {
+  "order_index": 78,
+  "slide_id": "ks-64-PersecutionWaves",
+  "component": "PersecutionWaves",
+  "title": "Волны гонений"
+ },
+ {
+  "order_index": 79,
+  "slide_id": "ks-64-PipelineBoard",
+  "component": "PipelineBoard",
+  "title": "Воронка пайплайна"
+ },
+ {
+  "order_index": 80,
+  "slide_id": "ks-64-PortraitLampSlide",
+  "component": "PortraitLampSlide",
+  "title": "Портрет с лампадкой"
+ },
+ {
+  "order_index": 81,
+  "slide_id": "ks-64-PremiumChecklist",
+  "component": "PremiumChecklist",
+  "title": "Премиум чеклист"
+ },
+ {
+  "order_index": 82,
+  "slide_id": "ks-64-PricingTable",
+  "component": "PricingTable",
+  "title": "Тарифы"
+ },
+ {
+  "order_index": 83,
+  "slide_id": "ks-64-ProcessFunnel",
+  "component": "ProcessFunnel",
+  "title": "Воронка процессов"
+ },
+ {
+  "order_index": 84,
+  "slide_id": "ks-64-ProductCard",
+  "component": "ProductCard",
+  "title": "Карточки"
+ },
+ {
+  "order_index": 85,
+  "slide_id": "ks-64-ProgressScalesSlide",
+  "component": "ProgressScalesSlide",
+  "title": "Шкалы прогресса"
+ },
+ {
+  "order_index": 86,
+  "slide_id": "ks-64-ProphecyFulfillment",
+  "component": "ProphecyFulfillment",
+  "title": "Пророчество и исполнение"
+ },
+ {
+  "order_index": 87,
+  "slide_id": "ks-64-QuadrantMatrix",
+  "component": "QuadrantMatrix",
+  "title": "Матрица 2×2"
+ },
+ {
+  "order_index": 88,
+  "slide_id": "ks-64-QuizSlide",
+  "component": "QuizSlide",
+  "title": "Викторина"
+ },
+ {
+  "order_index": 89,
+  "slide_id": "ks-64-QuoteCard",
+  "component": "QuoteCard",
+  "title": "Цитата"
+ },
+ {
+  "order_index": 90,
+  "slide_id": "ks-64-RadarProfile",
+  "component": "RadarProfile",
+  "title": "Профиль компетенций"
+ },
+ {
+  "order_index": 91,
+  "slide_id": "ks-64-ReceiptCard",
+  "component": "ReceiptCard",
+  "title": "Карточка чека"
+ },
+ {
+  "order_index": 92,
+  "slide_id": "ks-64-ReconciliationPath",
+  "component": "ReconciliationPath",
+  "title": "Путь примирения"
+ },
+ {
+  "order_index": 93,
+  "slide_id": "ks-64-RelicsMap",
+  "component": "RelicsMap",
+  "title": "География святынь"
+ },
+ {
+  "order_index": 94,
+  "slide_id": "ks-64-RevenueWaterfall",
+  "component": "RevenueWaterfall",
+  "title": "Мост выручки"
+ },
+ {
+  "order_index": 95,
+  "slide_id": "ks-64-Roadmap",
+  "component": "Roadmap",
+  "title": "Дорожная карта"
+ },
+ {
+  "order_index": 96,
+  "slide_id": "ks-64-RoiCalculatorSlide",
+  "component": "RoiCalculatorSlide",
+  "title": "ROI Калькулятор"
+ },
+ {
+  "order_index": 97,
+  "slide_id": "ks-64-RulerCompare",
+  "component": "RulerCompare",
+  "title": "Сравнение правителей"
+ },
+ {
+  "order_index": 98,
+  "slide_id": "ks-64-SCurve",
+  "component": "SCurve",
+  "title": "S-кривая (EVM)"
+ },
+ {
+  "order_index": 99,
+  "slide_id": "ks-64-SacredNumbers",
+  "component": "SacredNumbers",
+  "title": "Священные числа"
+ },
+ {
+  "order_index": 100,
+  "slide_id": "ks-64-SafetyDashboard",
+  "component": "SafetyDashboard",
+  "title": "Охрана труда"
+ },
+ {
+  "order_index": 101,
+  "slide_id": "ks-64-SaintQuote",
+  "component": "SaintQuote",
+  "title": "Изречение святого"
+ },
+ {
+  "order_index": 102,
+  "slide_id": "ks-64-ScienceFaithParallel",
+  "component": "ScienceFaithParallel",
+  "title": "Наука и Писание"
+ },
+ {
+  "order_index": 103,
+  "slide_id": "ks-64-ScriptureParallel",
+  "component": "ScriptureParallel",
+  "title": "Параллельные места"
+ },
+ {
+  "order_index": 104,
+  "slide_id": "ks-64-SeedAndSoil",
+  "component": "SeedAndSoil",
+  "title": "Притча о сеятеле"
+ },
+ {
+  "order_index": 105,
+  "slide_id": "ks-64-ShiftHandover",
+  "component": "ShiftHandover",
+  "title": "Сменный отчёт"
+ },
+ {
+  "order_index": 106,
+  "slide_id": "ks-64-SiteLogisticsMap",
+  "component": "SiteLogisticsMap",
+  "title": "Стройгенплан и логистика"
+ },
+ {
+  "order_index": 107,
+  "slide_id": "ks-64-SnagBoard",
+  "component": "SnagBoard",
+  "title": "Реестр замечаний"
+ },
+ {
+  "order_index": 108,
+  "slide_id": "ks-64-SoulStructure",
+  "component": "SoulStructure",
+  "title": "Структура души"
+ },
+ {
+  "order_index": 109,
+  "slide_id": "ks-64-SpecTable",
+  "component": "SpecTable",
+  "title": "Таблица спецификаций"
+ },
+ {
+  "order_index": 110,
+  "slide_id": "ks-64-StagesOfSin",
+  "component": "StagesOfSin",
+  "title": "Развитие греха"
+ },
+ {
+  "order_index": 111,
+  "slide_id": "ks-64-StatsBarChart",
+  "component": "StatsBarChart",
+  "title": "Столбчатая диаграмма"
+ },
+ {
+  "order_index": 112,
+  "slide_id": "ks-64-StepByStep",
+  "component": "StepByStep",
+  "title": "Пошаговый процесс"
+ },
+ {
+  "order_index": 113,
+  "slide_id": "ks-64-StudentGrowth",
+  "component": "StudentGrowth",
+  "title": "Динамика роста ученика"
+ },
+ {
+  "order_index": 114,
+  "slide_id": "ks-64-SustainabilityTimeline",
+  "component": "SustainabilityTimeline",
+  "title": "Шкала устойчивости"
+ },
+ {
+  "order_index": 115,
+  "slide_id": "ks-64-TeamGrid",
+  "component": "TeamGrid",
+  "title": "Команда"
+ },
+ {
+  "order_index": 116,
+  "slide_id": "ks-64-TechStackSlide",
+  "component": "TechStackSlide",
+  "title": "Технологический стек"
+ },
+ {
+  "order_index": 117,
+  "slide_id": "ks-64-TerminalMockup",
+  "component": "TerminalMockup",
+  "title": "Терминал"
+ },
+ {
+  "order_index": 118,
+  "slide_id": "ks-64-TheologicalSchools",
+  "component": "TheologicalSchools",
+  "title": "Богословские школы"
+ },
+ {
+  "order_index": 119,
+  "slide_id": "ks-64-TimelineEras",
+  "component": "TimelineEras",
+  "title": "Хронология эпох"
+ },
+ {
+  "order_index": 120,
+  "slide_id": "ks-64-TimelineSlide",
+  "component": "TimelineSlide",
+  "title": "Линия времени"
+ },
+ {
+  "order_index": 121,
+  "slide_id": "ks-64-TimetableGrid",
+  "component": "TimetableGrid",
+  "title": "Сетка расписания"
+ },
+ {
+  "order_index": 122,
+  "slide_id": "ks-64-UnitEconomics",
+  "component": "UnitEconomics",
+  "title": "Юнит-экономика"
+ },
+ {
+  "order_index": 123,
+  "slide_id": "ks-64-UseOfFunds",
+  "component": "UseOfFunds",
+  "title": "Распределение инвестиций"
+ },
+ {
+  "order_index": 124,
+  "slide_id": "ks-64-ValueStreamMap",
+  "component": "ValueStreamMap",
+  "title": "Карта потока создания ценности"
+ },
+ {
+  "order_index": 125,
+  "slide_id": "ks-64-ValuesOfEpochs",
+  "component": "ValuesOfEpochs",
+  "title": "Ценности эпох"
+ },
+ {
+  "order_index": 126,
+  "slide_id": "ks-64-ValuesTable",
+  "component": "ValuesTable",
+  "title": "Таблица ценностей"
+ },
+ {
+  "order_index": 127,
+  "slide_id": "ks-64-VerseFocus",
+  "component": "VerseFocus",
+  "title": "Фокус на стихе"
+ },
+ {
+  "order_index": 128,
+  "slide_id": "ks-64-VirtuesRadar",
+  "component": "VirtuesRadar",
+  "title": "Профиль добродетелей"
+ },
+ {
+  "order_index": 129,
+  "slide_id": "ks-64-WaterfallChart",
+  "component": "WaterfallChart",
+  "title": "Водопад изменений"
+ },
+ {
+  "order_index": 130,
+  "slide_id": "ks-64-WorldviewMatrix",
+  "component": "WorldviewMatrix",
+  "title": "Матрица мировоззрений"
+ },
+ {
+  "order_index": 131,
+  "slide_id": "ks-64-YamazumiBalance",
+  "component": "YamazumiBalance",
+  "title": "Балансировка линии"
+ },
+ {
+  "order_index": 9999,
+  "slide_id": "ks-64-end",
+  "component": "EndMarkerSlide",
+  "title": ""
+ }
+]

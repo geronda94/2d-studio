@@ -1,0 +1,54 @@
+{
+  "slug": "PersecutionWaves",
+  "title": "Волны гонений",
+  "description": "Волны гонений на христиан: период, масштаб и место.",
+  "manifest": "Подходит: история гонений, жития мучеников, хронология эпох давления на Церковь. Не использовать: для ценностей эпох (ValuesOfEpochs) или цикла цивилизации (CivilizationCycle).",
+  "categories": [
+    "ui"
+  ],
+  "required": [
+    "waves"
+  ],
+  "payload": {
+    "variant": "diademas",
+    "source_note": "Источник: Евсевий Памфил, «Церковная история»; «История Русской Церкви».",
+    "waves": [
+      {
+        "id": "w1",
+        "period": "64–313",
+        "place": "Рим, Лион, Карфаген",
+        "icon": "lucide:flame",
+        "color": "var(--color-danger)",
+        "start_time": 0,
+        "scope": "Римские гонения"
+      },
+      {
+        "id": "w2",
+        "period": "303–313",
+        "place": "Никомидия, Египет, Палестина",
+        "icon": "lucide:sword",
+        "color": "var(--color-warning)",
+        "start_time": 1000,
+        "scope": "Великое гонение"
+      },
+      {
+        "id": "w3",
+        "period": "XIV–XV вв.",
+        "place": "Малая Азия, Балканы",
+        "icon": "lucide:shield-off",
+        "color": "var(--color-secondary)",
+        "start_time": 2000,
+        "scope": "Османское иго"
+      },
+      {
+        "id": "w4",
+        "period": "1917–1939",
+        "place": "Россия, Соловки, Казахстан",
+        "icon": "lucide:cross",
+        "color": "var(--color-accent)",
+        "start_time": 3000,
+        "scope": "Советские гонения"
+      }
+    ]
+  }
+}
