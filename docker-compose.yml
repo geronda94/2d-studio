@@ -1,17 +1,17 @@
-name: presentation-saas
+name: scene-saas
 
 services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: presentation_user
-      POSTGRES_PASSWORD: presentation_password
-      POSTGRES_DB: presentation_db
+      POSTGRES_USER: scene_user
+      POSTGRES_PASSWORD: scene_password
+      POSTGRES_DB: scene_db
     volumes:
-      - saas_postgres_data:/var/lib/postgresql/data
+      - scene_postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5435:5432"
+      - "5436:5432"
     restart: unless-stopped
 
   backend:
@@ -20,9 +20,9 @@ services:
       dockerfile: backend/Dockerfile
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://presentation_user:presentation_password@db:5432/presentation_db
+      - DATABASE_URL=postgresql://scene_user:scene_password@db:5432/scene_db
     ports:
-      - "8001:8000"
+      - "8002:8000"
     volumes:
       - ./backend:/app/backend
       - ./scripts:/app/scripts
@@ -40,11 +40,10 @@ services:
     environment:
       - BACKEND_URL=http://backend:8000
     ports:
-      - "5174:5173"
+      - "5175:5173"
     command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
 
 volumes:
-  saas_postgres_data:
-  media_uploads:
+  scene_postgres_data:
