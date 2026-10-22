@@ -175,5 +175,6 @@ export function normalizeScenePayload(payload) {
     props_schema: p.props_schema || {},
     duration: Number(p.duration) || DEMO_SCENE.duration,
     view: p.view || '',
+    cues: Array.isArray(p.cues) ? p.cues : [],
   }
 }

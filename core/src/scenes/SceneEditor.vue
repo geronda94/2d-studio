@@ -34,8 +34,10 @@
         <div class="flex-1 min-h-0 flex items-center justify-center p-4">
           <div class="relative w-full max-w-[1100px] aspect-video overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl">
             <SceneHost
+              ref="sceneHostRef"
               :code="form.code"
               :scene-props="parsedProps"
+              :cues="form.cues"
               :start-time="0"
               :duration="form.duration"
               :time="previewTime"
@@ -169,31 +171,53 @@
               <div class="text-[10px] font-mono uppercase tracking-wide text-brand-light-blue">
                 {{ selectedLayerMeta.slug }} #{{ selectedLayerMeta.index }}
               </div>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="text-[9px] text-text-muted">left
-                  <input :value="styleValue(selectedLayerMeta.style, 'left')" @change="updateLayerStyle('left', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="12%" />
+              <div class="space-y-2">
+                <label class="block">
+                  <div class="flex justify-between text-[9px] text-text-muted"><span>X</span><span>{{ layerNum('left', 12, '%') }}{{ layerUnit('left', '%') }}</span></div>
+                  <input type="range" min="-20" max="100" step="0.5" :value="layerNum('left', 12, '%')"
+                    @input="setLayerNum('left', $event.target.value, '%')" class="w-full accent-brand-blue" />
                 </label>
-                <label class="text-[9px] text-text-muted">bottom
-                  <input :value="styleValue(selectedLayerMeta.style, 'bottom')" @change="updateLayerStyle('bottom', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="18%" />
+                <label class="block">
+                  <div class="flex justify-between text-[9px] text-text-muted"><span>Y / bottom</span><span>{{ layerNum('bottom', 18, '%') }}{{ layerUnit('bottom', '%') }}</span></div>
+                  <input type="range" min="-20" max="100" step="0.5" :value="layerNum('bottom', 18, '%')"
+                    @input="setLayerNum('bottom', $event.target.value, '%')" class="w-full accent-brand-blue" />
                 </label>
-                <label class="text-[9px] text-text-muted">width
-                  <input :value="styleValue(selectedLayerMeta.style, 'width')" @change="updateLayerStyle('width', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="38vmin" />
-                </label>
-                <label class="text-[9px] text-text-muted">height
-                  <input :value="styleValue(selectedLayerMeta.style, 'height')" @change="updateLayerStyle('height', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="16vmin" />
-                </label>
-                <label class="text-[9px] text-text-muted">z-index
-                  <input :value="styleValue(selectedLayerMeta.style, 'z-index')" @change="updateLayerStyle('z-index', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="10" />
-                </label>
-                <label class="text-[9px] text-text-muted">scale
-                  <input :value="styleValue(selectedLayerMeta.style, 'transform')" @change="updateLayerStyle('transform', $event.target.value)"
-                    class="mt-0.5 w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-xs text-text-primary" placeholder="scale(1)" />
-                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Ширина</span><span>{{ layerNum('width', 38, 'vmin') }}{{ layerUnit('width', 'vmin') }}</span></div>
+                    <input type="range" min="2" max="100" step="1" :value="layerNum('width', 38, 'vmin')"
+                      @input="setLayerNum('width', $event.target.value, 'vmin')" class="w-full accent-brand-blue" />
+                  </label>
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Высота</span><span>{{ layerNum('height', 16, 'vmin') }}{{ layerUnit('height', 'vmin') }}</span></div>
+                    <input type="range" min="2" max="100" step="1" :value="layerNum('height', 16, 'vmin')"
+                      @input="setLayerNum('height', $event.target.value, 'vmin')" class="w-full accent-brand-blue" />
+                  </label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Масштаб</span><span>{{ layerScale.toFixed(2) }}</span></div>
+                    <input type="range" min="0.2" max="3" step="0.05" :value="layerScale"
+                      @input="setLayerScale($event.target.value)" class="w-full accent-brand-blue" />
+                  </label>
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Поворот</span><span>{{ layerRotate }}°</span></div>
+                    <input type="range" min="-180" max="180" step="1" :value="layerRotate"
+                      @input="setLayerRotate($event.target.value)" class="w-full accent-brand-blue" />
+                  </label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Прозрачность</span><span>{{ Number(styleValue(selectedLayerMeta.style, 'opacity') || 1).toFixed(2) }}</span></div>
+                    <input type="range" min="0" max="1" step="0.01" :value="Number(styleValue(selectedLayerMeta.style, 'opacity') || 1)"
+                      @input="setLayerOpacity($event.target.value)" class="w-full accent-brand-blue" />
+                  </label>
+                  <label class="block">
+                    <div class="flex justify-between text-[9px] text-text-muted"><span>Z-index</span><span>{{ layerNum('z-index', 10, '') }}</span></div>
+                    <input type="range" min="0" max="100" step="1" :value="layerNum('z-index', 10, '')"
+                      @input="setLayerNum('z-index', $event.target.value, '')" class="w-full accent-brand-blue" />
+                  </label>
+                </div>
               </div>
               <label v-if="(selectedLayerObject?.views || []).length > 1" class="block text-[9px] text-text-muted">
                 view
@@ -207,6 +231,48 @@
                 <button class="flex-1 rounded border border-text-muted/40 px-2 py-1 text-[10px] text-text-secondary hover:bg-bg-surface" @click="duplicateLayer">Дублировать</button>
                 <button class="flex-1 rounded border border-red-400/40 px-2 py-1 text-[10px] text-red-300 hover:bg-red-500/10" @click="removeLayer">Удалить</button>
               </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeTab === 'cues'" class="h-full flex flex-col gap-2">
+            <div class="relative h-10 shrink-0 rounded-md border border-text-muted/30 bg-bg-base cursor-crosshair" @click="seekFromCueBar">
+              <div class="absolute top-0 bottom-0 w-px bg-white/50" :style="{ left: previewPercent + '%' }"></div>
+              <div
+                v-for="(c, i) in form.cues" :key="i"
+                class="absolute top-1 bottom-1 w-1.5 -translate-x-1/2 rounded-full cursor-pointer"
+                :class="selectedCue === i ? 'bg-brand-light-blue' : 'bg-brand-blue/70'"
+                :style="{ left: cuePercent(c) + '%' }"
+                @click.stop="selectedCue = i"
+              ></div>
+            </div>
+
+            <div class="flex items-center justify-between shrink-0">
+              <p class="text-[10px] text-text-muted">Ключей: {{ form.cues.length }} · время сцены {{ form.duration }} мс</p>
+              <button class="rounded-md bg-brand-blue px-2.5 py-1 text-[10px] font-bold text-white" @click="addCue">+ ключ</button>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+              <div
+                v-for="(c, i) in form.cues" :key="i"
+                class="rounded-lg border bg-bg-base p-2 space-y-1.5"
+                :class="selectedCue === i ? 'border-brand-blue/60' : 'border-text-muted/30'"
+                @click="selectedCue = i"
+              >
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="font-mono text-text-muted">#{{ i + 1 }}</span>
+                  <span class="font-mono text-brand-light-blue">{{ c.at }} ms</span>
+                  <button class="text-red-300 hover:text-red-200 px-1" @click.stop="removeCue(i)">×</button>
+                </div>
+                <input type="range" min="0" :max="Math.max(1, form.duration)" step="50" :value="c.at"
+                  @input="setCueTime(i, $event.target.value)" class="w-full accent-brand-blue" />
+                <input :value="cueSetText(c)" @input="setCueSet(i, $event.target.value)"
+                  placeholder="speed=3, brake=true"
+                  class="w-full rounded border border-text-muted/30 bg-bg-surface px-2 py-1 font-mono text-[11px] text-text-primary" />
+              </div>
+              <p v-if="!form.cues.length" class="text-xs text-text-muted py-4">
+                Нет ключей. Сцена использует значения по умолчанию из своего JS.
+                Добавь ключ, чтобы включить/ускорить/остановить механизм.
+              </p>
             </div>
           </div>
 
@@ -233,8 +299,14 @@
             <div><span class="text-text-muted">ID:</span> {{ scene?.slide_id }}</div>
             <div><span class="text-text-muted">Компонент:</span> __scene__</div>
             <div><span class="text-text-muted">Порядок:</span> {{ scene?.order_index }}</div>
-            <div><span class="text-text-muted">Старт:</span> {{ form.start_time }} мс</div>
-            <div><span class="text-text-muted">Длительность:</span> {{ form.duration }} мс</div>
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px]"><span class="text-text-muted">Старт сцены</span><span>{{ form.start_time }} мс</span></div>
+              <input type="range" min="0" max="120000" step="100" v-model.number="form.start_time" class="w-full accent-brand-blue" />
+            </div>
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px]"><span class="text-text-muted">Длительность</span><span>{{ form.duration }} мс</span></div>
+              <input type="range" min="500" max="20000" step="100" v-model.number="form.duration" class="w-full accent-brand-blue" />
+            </div>
             <div v-if="(activeEnvData?.views || []).length" class="flex items-center gap-2 pt-1">
               <span class="text-text-muted">Вид мира:</span>
               <select v-model="form.view" class="rounded-md border border-text-muted/40 bg-bg-base px-2 py-1 text-xs text-text-primary">
@@ -298,6 +370,7 @@ const tabs = [
   { id: 'environments', label: 'Worlds' },
   { id: 'objects', label: 'Objects' },
   { id: 'layers', label: 'Layers' },
+  { id: 'cues', label: 'Cues' },
   { id: 'html', label: 'HTML' },
   { id: 'css', label: 'CSS' },
   { id: 'js', label: 'JS' },
@@ -319,6 +392,8 @@ const activeEnvironment = ref('')
 const showAllObjects = ref(false)
 const compatWarning = ref('')
 const selectedLayer = ref(0)
+const selectedCue = ref(0)
+const sceneHostRef = ref(null)
 
 const form = ref({
   title: '',
@@ -327,6 +402,7 @@ const form = ref({
   code: { html: '', css: '', js: '' },
   props_schema: {},
   view: '',
+  cues: [],
 })
 
 let previewTimer = null
@@ -346,7 +422,9 @@ function resetFromScene(scene) {
     code: { ...p.code },
     props_schema: scene?.props_schema || p.props_schema || {},
     view: scene?.view || p.view || '',
+    cues: Array.isArray(p.cues) ? p.cues.map((c) => ({ at: Number(c.at) || 0, set: { ...(c.set || {}) } })) : [],
   }
+  form.value.code.html = ensureLayerIds(form.value.code.html)
   propsText.value = JSON.stringify(p.props || {}, null, 2)
   const envMatch = String(p.code.html || '').match(/env-([a-z-]+)/)
   activeEnvironment.value = envMatch ? envMatch[1] : ''
@@ -356,6 +434,7 @@ function resetFromScene(scene) {
   jsonError.value = ''
   activeTab.value = 'html'
   selectedLayer.value = 0
+  selectedCue.value = 0
   stopPreview()
 }
 
@@ -401,6 +480,7 @@ const layerList = computed(() => {
     const cls = Array.from(el.classList || [])
     return {
       index: i,
+      id: el.dataset.layerId || `layer-${i}`,
       slug: (cls.find((c) => c.startsWith('obj-')) || 'obj').replace('obj-', ''),
       view: (cls.find((c) => c.startsWith('view-')) || '').replace('view-', ''),
       style: el.getAttribute('style') || '',
@@ -419,6 +499,21 @@ function styleValue(style, key) {
   return m ? m[1].trim() : ''
 }
 
+function ensureLayerIds(html) {
+  try {
+    const doc = new DOMParser().parseFromString(html || '', 'text/html')
+    const els = Array.from(doc.body.querySelectorAll('*')).filter((el) =>
+      Array.from(el.classList || []).some((c) => c.startsWith('obj-')),
+    )
+    els.forEach((el, i) => {
+      if (!el.dataset.layerId) el.dataset.layerId = `layer-${i}`
+    })
+    return doc.body.innerHTML
+  } catch (e) {
+    return html
+  }
+}
+
 function mutateLayer(fn) {
   const doc = new DOMParser().parseFromString(form.value.code.html || '', 'text/html')
   const els = Array.from(doc.body.querySelectorAll('*')).filter((el) =>
@@ -427,21 +522,69 @@ function mutateLayer(fn) {
   const el = els[selectedLayer.value]
   if (!el) return
   fn(el, doc)
+  els.forEach((item, i) => {
+    if (!item.dataset.layerId) item.dataset.layerId = `layer-${i}`
+  })
   form.value.code.html = doc.body.innerHTML
 }
 
-function updateLayerStyle(key, value) {
+function patchLayer(styles) {
+  const id = selectedLayerMeta.value?.id
   mutateLayer((el) => {
-    if (value === '' || value === null || value === undefined) el.style.removeProperty(key)
-    else el.style.setProperty(key, String(value))
+    for (const [key, value] of Object.entries(styles || {})) {
+      if (value === '' || value === null || value === undefined) el.style.removeProperty(key)
+      else el.style.setProperty(key, String(value))
+    }
   })
+  if (id && sceneHostRef.value?.patchObject) sceneHostRef.value.patchObject(id, styles)
 }
 
-function updateLayerScale(value) {
-  mutateLayer((el) => {
-    if (value === '' || Number(value) === 1) el.style.removeProperty('transform')
-    else el.style.setProperty('transform', `scale(${Number(value) || 1})`)
-  })
+function updateLayerStyle(key, value) {
+  patchLayer({ [key]: value })
+}
+
+function styleParts(style, key, fallback, defaultUnit) {
+  const raw = styleValue(style, key)
+  const m = raw.match(/^(-?[\d.]+)\s*([a-z%]*)$/i)
+  return {
+    num: m ? Number(m[1]) : fallback,
+    unit: m ? (m[2] || defaultUnit || '') : (defaultUnit || ''),
+  }
+}
+
+function layerNum(key, fallback, unit) {
+  return styleParts(selectedLayerMeta.value?.style, key, fallback, unit).num
+}
+
+function layerUnit(key, unit) {
+  return styleParts(selectedLayerMeta.value?.style, key, 0, unit).unit || unit
+}
+
+function setLayerNum(key, value, unit) {
+  const suffix = unit === '%' || unit === 'vmin' ? (layerUnit(key, unit) || unit) : ''
+  patchLayer({ [key]: `${value}${suffix}` })
+}
+
+const layerTransform = computed(() => styleValue(selectedLayerMeta.value?.style, 'transform'))
+const layerScale = computed(() => {
+  const m = layerTransform.value.match(/scale\(([^)]+)\)/)
+  return m ? Number(m[1]) || 1 : 1
+})
+const layerRotate = computed(() => {
+  const m = layerTransform.value.match(/rotate\(([-\d.]+)deg\)/)
+  return m ? Number(m[1]) || 0 : 0
+})
+
+function setLayerScale(value) {
+  patchLayer({ transform: `scale(${Number(value) || 1}) rotate(${layerRotate.value}deg)` })
+}
+
+function setLayerRotate(value) {
+  patchLayer({ transform: `scale(${layerScale.value}) rotate(${Number(value) || 0}deg)` })
+}
+
+function setLayerOpacity(value) {
+  patchLayer({ opacity: String(value) })
 }
 
 function updateLayerView(view) {
@@ -463,6 +606,58 @@ function duplicateLayer() {
     const clone = el.cloneNode(true)
     if (el.parentNode) el.parentNode.appendChild(clone)
   })
+}
+
+const previewPercent = computed(() =>
+  Math.max(0, Math.min(100, (previewTime.value / Math.max(1, form.value.duration)) * 100)),
+)
+
+function cuePercent(cue) {
+  return Math.max(0, Math.min(100, (Number(cue.at) || 0) / Math.max(1, form.value.duration) * 100))
+}
+
+function cueSetText(cue) {
+  return Object.entries(cue.set || {})
+    .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
+    .join(', ')
+}
+
+function parseSet(text) {
+  const out = {}
+  String(text || '').split(',').forEach((part) => {
+    const idx = part.indexOf('=')
+    if (idx <= 0) return
+    const key = part.slice(0, idx).trim()
+    let value = part.slice(idx + 1).trim()
+    try { value = JSON.parse(value) } catch (e) { /* keep string */ }
+    if (key) out[key] = value
+  })
+  return out
+}
+
+function setCueSet(index, text) {
+  if (form.value.cues[index]) form.value.cues[index].set = parseSet(text)
+}
+
+function setCueTime(index, value) {
+  if (form.value.cues[index]) form.value.cues[index].at = Number(value) || 0
+}
+
+function addCue() {
+  form.value.cues.push({ at: Math.round(previewTime.value), set: { speed: 1 } })
+  form.value.cues.sort((a, b) => (a.at || 0) - (b.at || 0))
+  selectedCue.value = form.value.cues.length - 1
+}
+
+function removeCue(index) {
+  form.value.cues.splice(index, 1)
+  selectedCue.value = Math.max(0, Math.min(selectedCue.value, form.value.cues.length - 1))
+}
+
+function seekFromCueBar(event) {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)))
+  previewTime.value = Math.round(ratio * form.value.duration)
 }
 
 const parsedProps = computed(() => {
@@ -507,10 +702,12 @@ function stopPreview() {
 function applyTemplate(t) {
   if (!t) return
   form.value.code = { ...(t.code || {}) }
+  form.value.code.html = ensureLayerIds(form.value.code.html)
   form.value.duration = Number(t.duration) || form.value.duration
   form.value.props_schema = t.props_schema || {}
   activeEnvironment.value = t.environment || ''
   form.value.view = t.view || activeEnvData.value?.default_view || ''
+  form.value.cues = Array.isArray(t.cues) ? t.cues.map((c) => ({ at: Number(c.at) || 0, set: { ...(c.set || {}) } })) : []
   propsText.value = JSON.stringify(t.default_props || {}, null, 2)
   previewTime.value = Math.min(1200, form.value.duration)
   previewError.value = ''
@@ -523,10 +720,12 @@ function applyEnvironment(e) {
     css: e.css || '',
     js: 'window.scene = { seek(t) {} };',
   }
+  form.value.code.html = ensureLayerIds(form.value.code.html)
   form.value.duration = 5000
   form.value.props_schema = {}
   activeEnvironment.value = e.slug || ''
   form.value.view = e.default_view || ''
+  form.value.cues = []
   compatWarning.value = ''
   propsText.value = '{}'
   previewTime.value = 1200
@@ -595,6 +794,7 @@ function save() {
     props: p,
     props_schema: form.value.props_schema || {},
     view: form.value.view || '',
+    cues: form.value.cues,
     track: props.scene.track || 'main',
     z_index: props.scene.z_index ?? 0,
     data: {
@@ -604,6 +804,7 @@ function save() {
         props: p,
         props_schema: form.value.props_schema || {},
         view: form.value.view || '',
+        cues: form.value.cues,
         duration: Number(form.value.duration) || 5000,
       },
     },

@@ -21,11 +21,18 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 
 ## Документация
 
+- `docs/ENGINE.md` — обзор движка
 - `docs/SCENES.md` — контракт сцены
+- `docs/API.md` — API
+- `docs/EDITOR.md` — редактор
+- `docs/ASSETS.md` — DAM
+- `docs/LEARNINGS.md` — ошибки и правила
 - `docs/STATUS.md` — текущий этап
 - `docs/ROADMAP_2D.md` — вектор развития
 - `docs/PROCESSES.md` — контент-пайплайн
 - `docs/ANIMATION.md` — принципы анимации
+- `docs/HUMAN_AI_STUDIO.md` — human+AI интерфейс
+- `docs/CHARACTERS.md` — персонажи и липсинк
 - `docs/WORKLOG.md` — история и ошибки
 - `docs/DECISIONS.md` — архитектурные решения
 - `docs/DEV.md` — порты

@@ -448,3 +448,26 @@ class RenderJob(RenderJobBase):
 
     class Config:
         orm_mode = True
+
+
+class SceneLearningBase(BaseModel):
+    category: str
+    symptom: str
+    cause: Optional[str] = None
+    fix: Optional[str] = None
+    rule: Optional[str] = None
+    scene_ref: Optional[str] = None
+    tags: Optional[list] = None
+    status: Optional[str] = "active"
+    source: Optional[str] = "human"
+
+
+class SceneLearningCreate(SceneLearningBase):
+    pass
+
+
+class SceneLearning(SceneLearningBase):
+    id: int
+    created_at: Optional[datetime.datetime] = None
+    class Config:
+        orm_mode = True

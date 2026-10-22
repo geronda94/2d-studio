@@ -7,6 +7,9 @@
 Текущий этап: **`docs/STATUS.md`**. Вектор: **`docs/ROADMAP_2D.md`**.
 Анимация: **`docs/ANIMATION.md`**. Ошибки/решения: **`docs/WORKLOG.md`**.
 Решения: **`docs/DECISIONS.md`**.
+Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
+Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
+Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 
 ---

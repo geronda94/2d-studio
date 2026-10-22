@@ -48,7 +48,7 @@ function escapeStyle(code) {
   return String(code || '').replace(/<\/style/gi, '<\\/style')
 }
 
-export function buildSceneDoc({ code = {}, sceneProps = {}, themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '' }) {
+export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '' }) {
   const html = String(code.html || '')
   const css = escapeStyle(code.css || '')
   const js = escapeScript(code.js || '')
@@ -82,6 +82,7 @@ ${kitSource ? `<script>${escapeScript(kitSource)}</script>` : ''}
 ${html}
 <script>
   window.__sceneProps = ${propsJson};
+  window.__sceneCues = ${JSON.stringify(cues || []).replace(/</g, '\\u003c')};
   window.__sceneSend = function (type, data) {
     try { parent.postMessage(Object.assign({ type: type, __scene: true }, data || {}), '*'); } catch (e) {}
   };
@@ -97,6 +98,19 @@ ${html}
   (function () {
     window.addEventListener('message', async function (e) {
       var msg = e.data || {};
+      if (msg.type === 'patch-style') {
+        try {
+          var el = document.querySelector('[data-layer-id="' + msg.id + '"]');
+          if (el && msg.styles) {
+            Object.keys(msg.styles).forEach(function (k) {
+              var v = msg.styles[k];
+              if (v === null || v === undefined || v === '') el.style.removeProperty(k);
+              else el.style.setProperty(k, String(v));
+            });
+          }
+        } catch (e) { window.__sceneSend('scene-error', { message: String(e) }); }
+        return;
+      }
       if (msg.type === 'seek') {
         try {
           if (window.scene && typeof window.scene.seek === 'function') {

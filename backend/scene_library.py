@@ -619,7 +619,50 @@ MOON = {
 """,
 }
 
-OBJECTS = [CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
+CHARACTER = {
+    "slug": "character",
+    "title": "Персонаж",
+    "category": "character",
+    "description": "Риг-заготовка: голова, лицо, рот, руки, ноги. Позже — visemes и липсинк.",
+    "tags": ["character", "rig", "person"],
+    "mechanics": ["idle", "walk", "talk", "blink"],
+    "rig": {
+        "type": "svg",
+        "parts": ["root", "head", "face", "mouth", "arm-left", "arm-right", "leg-left", "leg-right"],
+        "clips": ["idle", "walk", "talk", "blink"],
+        "visemes": 10,
+    },
+    "html": """
+<div class="obj-character" style="left:50%; bottom:14%; width:14vmin; height:34vmin">
+  <svg viewBox="0 0 120 300" class="character-svg">
+    <g class="rig-root" data-rig="root">
+      <g class="rig-head" data-rig="head">
+        <circle cx="60" cy="44" r="26" fill="#1B2430"/>
+        <g class="rig-face" data-rig="face">
+          <circle class="rig-eye left" cx="50" cy="40" r="3.4" fill="#E2E8F0"/>
+          <circle class="rig-eye right" cx="70" cy="40" r="3.4" fill="#E2E8F0"/>
+          <ellipse class="rig-mouth" data-rig="mouth" cx="60" cy="54" rx="7" ry="3" fill="#0B1118"/>
+        </g>
+      </g>
+      <path class="rig-torso" data-rig="torso" d="M38 76 Q60 68 82 76 L88 152 Q60 162 32 152 Z" fill="#1B2430"/>
+      <path class="rig-arm left" data-rig="arm-left" d="M38 82 L24 148 L34 150 L46 88 Z" fill="#151D28"/>
+      <path class="rig-arm right" data-rig="arm-right" d="M82 82 L96 148 L86 150 L74 88 Z" fill="#151D28"/>
+      <path class="rig-leg left" data-rig="leg-left" d="M46 152 L40 262 L54 262 L58 156 Z" fill="#151D28"/>
+      <path class="rig-leg right" data-rig="leg-right" d="M74 152 L80 262 L66 262 L62 156 Z" fill="#151D28"/>
+    </g>
+  </svg>
+</div>""",
+    "css": """
+.obj-character { position:absolute; transform-origin:50% 100%; }
+.obj-character .character-svg { width:100%; height:100%; overflow:visible; }
+.obj-character .rig-head { transform-box:fill-box; transform-origin:50% 80%; }
+.obj-character .rig-arm, .obj-character .rig-leg { transform-box:fill-box; transform-origin:50% 8%; }
+.obj-character .rig-mouth { transform-box:fill-box; transform-origin:50% 50%; }
+.obj-character.view-side { transform:scaleX(.72); }
+""",
+}
+
+OBJECTS = [CHARACTER, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLASSIFICATION / COMPATIBILITY / VIEWS
@@ -652,6 +695,7 @@ OBJ_META = {
     "coffee":        {"domain": ["indoor"], "environments": ["office"], "surface": "desk", "views": ["side"], "default_view": "side"},
     "plant":         {"domain": ["indoor", "stage"], "environments": ["office", "studio"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "person":        {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "side"], "default_view": "front"},
+    "character":     {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "three-quarter", "side"], "default_view": "front"},
     "traffic-light": {"domain": ["outdoor"], "environments": ["city"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "sun":           {"domain": ["outdoor"], "environments": ["forest", "mountains", "city"], "surface": "sky", "views": ["front"], "default_view": "front"},
     "moon":          {"domain": ["outdoor"], "environments": ["city", "forest"], "surface": "sky", "views": ["front"], "default_view": "front"},
@@ -760,7 +804,7 @@ def _obj(slug):
     return next(o for o in OBJECTS if o["slug"] == slug)
 
 
-def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None):
+def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, props_schema=None, default_props=None, cues=None):
     env = _env(env_slug)
     objs = [_obj(s) for s in obj_slugs]
     html = (
@@ -779,6 +823,7 @@ def _compose(env_slug, obj_slugs, js, *, title, description, tags, duration, pro
         "duration": duration,
         "environment": env_slug,
         "view": env.get("default_view", ""),
+        "cues": cues or [],
         "objects": obj_slugs,
         "props_schema": props_schema or {},
         "default_props": default_props or {},
@@ -797,11 +842,13 @@ const clouds = root.querySelectorAll('.obj-cloud');
 if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
 SceneKit.views(root, p.views || { car: 'side' });
 const base = Number(p.cruise_speed) || 1.4;
-const cues = SceneKit.cues([
+const defaultCues = [
   { at: 0,    set: { speed: base, brake: false } },
   { at: 2200, set: { speed: base * 2.1 } },
   { at: 4600, set: { speed: base * 0.25, brake: true } },
-]);
+];
+const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
+const cues = SceneKit.cues(cueList);
 function seek(t) {
   const st = cues.stateAt(t);
   const dist = cues.integrate('speed', t) * 90;
@@ -830,11 +877,13 @@ const layers = root.querySelectorAll('[data-depth]');
 if (car && p.car_color) car.style.setProperty('--car-color', p.car_color);
 SceneKit.views(root, p.views || { car: 'side' });
 const base = Number(p.cruise_speed) || 1.2;
-const cues = SceneKit.cues([
+const defaultCues = [
   { at: 0,    set: { speed: base } },
   { at: 1800, set: { speed: base * 1.8 } },
   { at: 4200, set: { speed: base * 0.35 } },
-]);
+];
+const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
+const cues = SceneKit.cues(cueList);
 function seek(t) {
   const dist = cues.integrate('speed', t) * 80;
   if (car) car.style.transform = `translate3d(${dist}px,0,0)`;
@@ -927,6 +976,7 @@ TEMPLATES = [
             "cruise_speed": {"type": "number", "label": "Скорость"},
         },
         default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "views": {"car": "side"}},
+        cues=[{"at": 0, "set": {"speed": 1.4, "brake": False}}, {"at": 2200, "set": {"speed": 2.9}}, {"at": 4600, "set": {"speed": 0.35, "brake": True}}],
     ),
     _compose(
         "city", ["road", "car", "street-lamp", "building"],
@@ -940,6 +990,7 @@ TEMPLATES = [
             "cruise_speed": {"type": "number", "label": "Скорость"},
         },
         default_props={"car_color": "#38BDF8", "cruise_speed": 1.2, "views": {"car": "side"}},
+        cues=[{"at": 0, "set": {"speed": 1.2}}, {"at": 1800, "set": {"speed": 2.16}}, {"at": 4200, "set": {"speed": 0.42}}],
     ),
     _compose(
         "mountains", ["bird", "cloud", "sun"],

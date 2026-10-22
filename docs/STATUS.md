@@ -64,6 +64,24 @@
 - Вкладка `Layers`: парсит `.obj-*` из HTML, даёт left/bottom/width/height/
   z-index/transform/view, duplicate/delete.
 
+## Управление и ключи (добавлено 2026-10-22)
+
+- Layers: слайдеры X/Y, ширина/высота, масштаб, поворот, opacity, z-index.
+- Живой patch стилей в preview через `postMessage` (`patch-style`), без полного
+  пересоздания iframe.
+- Cues: таймлайн-маркеры, время, `key=value`, add/delete, live preview.
+- `window.__sceneCues` в iframe; `SceneKit.cues` читает их.
+- Персонаж: объект `character` (SVG-риг-заготовка) + `docs/CHARACTERS.md`.
+
+## Learning registry / DAM / characters (2026-10-22)
+
+- Добавлена таблица `scene_learnings`, API `/scene-library/learnings`,
+  сид `scripts/seed_learnings.py`, документ `docs/LEARNINGS.md`.
+- Добавлен объект `character` (SVG-риг-заготовка), `docs/CHARACTERS.md`
+  с сравнением Rive/Spine/DragonBones/Live2D/OpenToonz/Synfig/Blender.
+- Добавлены `docs/ENGINE.md`, `docs/API.md`, `docs/EDITOR.md`, `docs/ASSETS.md`,
+  `docs/HUMAN_AI_STUDIO.md`.
+
 ## Что ещё не сделано
 
 1. **Рендер не проверен end-to-end** после перехода на сцены. Realtime-захват

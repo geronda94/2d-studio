@@ -174,3 +174,59 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 - `POST /scene-library/validate-composition` — корректно отдаёт ошибки
   для `car`/`street-lamp` в `office`.
 - Демо `/p/1` — `forest-drive`, `view: day`, wrapper на месте.
+
+
+---
+
+## 2026-10-22 — sliders, cues, human+AI research
+
+### Сделано
+- Layers: слайдеры вместо текстовых полей.
+- Live-patch стилей в iframe через `patch-style` (без пересборки).
+- Cues-редактор: маркеры, время, `key=value`, add/delete.
+- `window.__sceneCues` + `SceneKit.cues` интеграция.
+- Добавлен объект `character` (SVG-риг-заготовка).
+- `docs/HUMAN_AI_STUDIO.md` — исследование best practices 2026.
+- `docs/CHARACTERS.md` — варианты движка персонажей и липсинка.
+
+### Источники исследования
+- HyperFrames vs Remotion (Voyager, HyperFrames docs)
+- Human-in-the-loop (Velt, Manava)
+- Motion graphics AI pipeline (TapVid)
+- Theatre.js sequences
+- Rive lip sync (10 visemes)
+
+### Вывод
+- Строим **human-in-the-loop** конвейер: AI предлагает, человек утверждает.
+- Ворота: brief → storyboard → scene → animation → QA → render → publish.
+- Не делать полностью автономный ИИ и нодовый редактор раньше слоёв/таймлайна.
+- Персонажи: начать с SVG-рига, Rive/Spine — после проб.
+
+---
+
+## 2026-10-22 — human+AI решения, learnings, DAM, персонажи
+
+### Решения пользователя
+- Утверждать раскадровку и каждую сцену.
+- Ошибки документировать, чтобы ИИ не повторял.
+- ИИ: и прямое редактирование, и diff-предложения.
+- Сначала opencode + качественная документация; позже агенты по API.
+- Персонажи: Rive/Spine/бесплатные аналоги; только видео.
+- Ассеты: полный DAM.
+- UI: итеративно.
+
+### Сделано
+- Таблица `scene_learnings` + API `GET/POST /scene-library/learnings`.
+- Сид `scripts/seed_learnings.py` (10 записей).
+- `docs/LEARNINGS.md`, `docs/ENGINE.md`, `docs/API.md`, `docs/EDITOR.md`,
+  `docs/ASSETS.md`, `docs/HUMAN_AI_STUDIO.md`.
+- Объект `character` (SVG-риг-заготовка) и `docs/CHARACTERS.md` с таблицей
+  Rive/Spine/DragonBones/Live2D/OpenToonz/Synfig/Blender.
+- Cues в шаблонах читают `window.__sceneCues`.
+- Персонаж/ключи/слайдеры собраны; `npm run build` проходит.
+
+### Проверки
+- `GET /scene-library/learnings` → 10 записей.
+- `POST /scene-library/learnings` → создаёт запись (тестовая удалена).
+- `POST /scene-library/validate-composition` → корректные ошибки.
+- `npm run build` — OK.

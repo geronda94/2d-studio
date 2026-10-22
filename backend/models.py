@@ -400,6 +400,23 @@ class Slide(Base):
     data = relationship("SlideData", back_populates="slide", uselist=False, cascade="all, delete-orphan")
     events = relationship("DirectorEvent", back_populates="slide", cascade="all, delete-orphan")
 
+class SceneLearning(Base):
+    """Накопленные ошибки/решения по сценам. ИИ читает перед генерацией,
+    а после QA/ревью добавляет новые записи, чтобы не повторять ошибки."""
+    __tablename__ = "scene_learnings"
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String, index=True)          # determinism | layout | compatibility | visuals | audio | process
+    symptom = Column(String)                       # что видно
+    cause = Column(String, nullable=True)          # почему
+    fix = Column(String, nullable=True)            # как исправили
+    rule = Column(String, nullable=True)           # правило, чтобы не повторить
+    scene_ref = Column(String, nullable=True)      # slide_id / scene slug
+    tags = Column(JSON, nullable=True)
+    status = Column(String, default="active")      # active | archived
+    source = Column(String, default="human")       # human | ai | qa
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 class SlideData(Base):
     __tablename__ = "slide_data"
     id = Column(Integer, primary_key=True, index=True)

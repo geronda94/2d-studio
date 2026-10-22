@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
+from sqlalchemy.orm import Session
+
+from ..database import get_db
+from .. import models, schemas
 
 from ..scene_library import (
     compatibility_matrix,
@@ -80,3 +84,34 @@ def read_compatibility():
 @router.post("/validate-composition")
 def validate(body: CompositionRequest):
     return validate_composition(body.environment, body.objects)
+
+
+@router.get("/learnings", response_model=List[schemas.SceneLearning])
+def read_learnings(
+    category: Optional[str] = None,
+    status: Optional[str] = "active",
+    q: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(models.SceneLearning)
+    if category:
+        query = query.filter(models.SceneLearning.category == category)
+    if status:
+        query = query.filter(models.SceneLearning.status == status)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            models.SceneLearning.symptom.ilike(like)
+            | models.SceneLearning.rule.ilike(like)
+            | models.SceneLearning.fix.ilike(like)
+        )
+    return query.order_by(models.SceneLearning.created_at.desc()).limit(200).all()
+
+
+@router.post("/learnings", response_model=schemas.SceneLearning)
+def create_learning(payload: schemas.SceneLearningCreate, db: Session = Depends(get_db)):
+    row = models.SceneLearning(**payload.dict())
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row

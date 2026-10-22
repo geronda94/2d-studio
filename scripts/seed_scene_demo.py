@@ -22,6 +22,7 @@ DEMO_CODE = TPL["code"]
 DEMO_PROPS = TPL["default_props"]
 DEMO_DURATION = TPL["duration"]
 DEMO_VIEW = TPL.get("view") or "day"
+DEMO_CUES = TPL.get("cues") or []
 DEMO_TITLE = "Forest drive"
 
 
@@ -88,6 +89,7 @@ def run():
                 "props_schema": TPL.get("props_schema") or {},
                 "duration": DEMO_DURATION,
                 "view": DEMO_VIEW,
+                "cues": DEMO_CUES,
             }
         else:
             db.add(models.SlideData(slide_id=scene.id, payload={
@@ -97,6 +99,7 @@ def run():
                 "props_schema": TPL.get("props_schema") or {},
                 "duration": DEMO_DURATION,
                 "view": DEMO_VIEW,
+                "cues": DEMO_CUES,
             }))
 
         end = db.query(models.Slide).filter(

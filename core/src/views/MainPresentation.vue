@@ -52,6 +52,7 @@
             v-if="isSceneSlide(slide)"
             :code="scenePayload(slide).code"
             :scene-props="scenePayload(slide).props"
+            :cues="scenePayload(slide).cues"
             :start-time="slide.start_time || slide.startTime || 0"
             :duration="scenePayload(slide).duration"
             :view="scenePayload(slide).view"
@@ -345,6 +346,7 @@ const scenePayload = (slide) => {
     props_schema: slide?.props_schema || p.props_schema || {},
     duration: slide?.duration ?? p.duration,
     view: slide?.view || p.view || '',
+    cues: Array.isArray(p.cues) ? p.cues : [],
   });
 };
 
@@ -1235,6 +1237,8 @@ const handleAddSlide = async () => {
     props: sceneProps,
     props_schema: sceneSchema,
     duration: sceneDuration,
+    view: tpl?.view || "",
+    cues: tpl?.cues || [],
   };
 
   const newSlidePayload = {

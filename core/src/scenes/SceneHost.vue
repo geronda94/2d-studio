@@ -26,6 +26,7 @@ import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource } from '
 const props = defineProps({
   code: { type: Object, default: () => ({}) },
   sceneProps: { type: Object, default: () => ({}) },
+  cues: { type: Array, default: () => [] },
   startTime: { type: Number, default: 0 },
   duration: { type: Number, default: 0 },
   // Manual time for the editor preview. When set, the global director is ignored.
@@ -69,6 +70,7 @@ const docKey = computed(() =>
   JSON.stringify({
     code: props.code || {},
     sceneProps: props.sceneProps || {},
+    cues: props.cues || [],
     format: format.value,
   }),
 )
@@ -92,6 +94,7 @@ async function rebuild() {
   doc.value = buildSceneDoc({
     code: props.code || {},
     sceneProps: props.sceneProps || {},
+    cues: props.cues || [],
     themeCss: collectThemeVars(hostEl.value),
     format: format.value,
     view: props.view,
@@ -121,6 +124,12 @@ function scheduleSeek(t) {
 }
 
 // Public: awaitable seek for the future frame-by-frame renderer.
+function patchObject(id, styles) {
+  const win = frameEl.value?.contentWindow
+  if (!win || !id) return
+  win.postMessage({ type: 'patch-style', id, styles: styles || {} }, '*')
+}
+
 function seek(t) {
   const id = ++pendingSeekId
   const win = frameEl.value?.contentWindow
@@ -189,7 +198,7 @@ onUnmounted(() => {
   waiters.clear()
 })
 
-defineExpose({ seek, rebuild })
+defineExpose({ seek, rebuild, patchObject })
 </script>
 
 <style scoped>
