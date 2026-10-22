@@ -814,6 +814,18 @@ function setMonitor(media, video) {
   }
 }
 setMonitor(p.monitor_media, p.monitor_video);
+const studioCues = SceneKit.cues(window.__sceneCues || []);
+let lastMedia = p.monitor_media || '';
+let lastVideo = p.monitor_video || '';
+function applyCueMedia(t) {
+  const st = studioCues.stateAt(t);
+  const media = st.monitor_media !== undefined ? st.monitor_media : lastMedia;
+  const video = st.monitor_video !== undefined ? st.monitor_video : lastVideo;
+  if (media !== lastMedia || video !== lastVideo) {
+    lastMedia = media; lastVideo = video;
+    setMonitor(media, video);
+  }
+}
 
 const chars = Array.from(root.querySelectorAll('.char'));
 function animateChars(t) {
@@ -832,6 +844,7 @@ function animateChars(t) {
 function seek(t) {
   animateChars(t);
   drawDust(t);
+  applyCueMedia(t);
   if (monitorVid && monitorVid.src && monitorVid.duration) {
     try { monitorVid.currentTime = Math.min(monitorVid.duration, t / 1000); } catch (e) {}
   }

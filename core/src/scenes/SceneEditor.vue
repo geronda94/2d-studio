@@ -65,7 +65,7 @@
       </section>
 
       <aside class="w-full lg:w-[46%] xl:w-[42%] shrink-0 border-t lg:border-t-0 lg:border-l border-text-muted/30 bg-bg-surface/40 flex flex-col min-h-0">
-        <div class="shrink-0 flex items-center gap-1 px-3 pt-3">
+        <div class="shrink-0 flex items-center gap-1 px-3 pt-3 overflow-x-auto hide-scrollbar">
           <button v-for="tab in tabs" :key="tab.id"
             class="rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors"
             :class="activeTab === tab.id ? 'bg-brand-blue text-white' : 'text-text-secondary hover:bg-bg-surface'"
@@ -276,6 +276,39 @@
             </div>
           </div>
 
+          <div v-else-if="activeTab === 'media'" class="h-full overflow-y-auto space-y-3 pr-1">
+            <div class="rounded-lg border border-text-muted/30 bg-bg-base p-3 space-y-2">
+              <div class="text-sm font-bold text-text-primary">Монитор · картинка</div>
+              <div v-if="parsedProps.monitor_media" class="text-[10px] font-mono text-brand-light-blue break-all">{{ parsedProps.monitor_media }}</div>
+              <input type="file" accept="image/*" class="block w-full text-[11px] text-text-secondary" @change="onMediaFile($event, 'monitor_media')" />
+              <div class="flex gap-2">
+                <input :value="parsedProps.monitor_media || ''" @input="setProp('monitor_media', $event.target.value)"
+                  placeholder="/media/... или https://..."
+                  class="flex-1 rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-[11px] text-text-primary" />
+                <button class="rounded border border-text-muted/40 px-2 py-1 text-[10px] text-text-secondary" @click="setProp('monitor_media', '')">Очистить</button>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-text-muted/30 bg-bg-base p-3 space-y-2">
+              <div class="text-sm font-bold text-text-primary">Монитор · видео</div>
+              <div v-if="parsedProps.monitor_video" class="text-[10px] font-mono text-brand-light-blue break-all">{{ parsedProps.monitor_video }}</div>
+              <input type="file" accept="video/*" class="block w-full text-[11px] text-text-secondary" @change="onMediaFile($event, 'monitor_video')" />
+              <div class="flex gap-2">
+                <input :value="parsedProps.monitor_video || ''" @input="setProp('monitor_video', $event.target.value)"
+                  placeholder="/media/... или https://..."
+                  class="flex-1 rounded border border-text-muted/30 bg-bg-surface px-2 py-1 text-[11px] text-text-primary" />
+                <button class="rounded border border-text-muted/40 px-2 py-1 text-[10px] text-text-secondary" @click="setProp('monitor_video', '')">Очистить</button>
+              </div>
+            </div>
+
+            <p v-if="mediaBusy" class="text-[11px] text-brand-light-blue">Загрузка…</p>
+            <p v-if="mediaError" class="text-[11px] text-red-300">{{ mediaError }}</p>
+            <p class="text-[10px] text-text-muted">
+              Ключи (Cues) могут менять медиа по ходу сцены:
+              <code class="text-brand-light-blue">monitor_media=/media/...</code>.
+            </p>
+          </div>
+
           <CodeEditor v-else-if="activeTab === 'html'" v-model="form.code.html" language="html" />
 
           <CodeEditor v-else-if="activeTab === 'css'" v-model="form.code.css" language="css" />
@@ -325,11 +358,12 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } fr
 import SceneHost from './SceneHost.vue'
 const CodeEditor = defineAsyncComponent(() => import('./CodeEditor.vue'))
 import { DEMO_SCENE, normalizeScenePayload } from './demoScene'
-import { fetchSceneEnvironments, fetchSceneObjects, fetchSceneTemplates, fetchSceneTemplate } from '../services/api'
+import { fetchSceneEnvironments, fetchSceneObjects, fetchSceneTemplates, fetchSceneTemplate, uploadMedia } from '../services/api'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
   scene: { type: Object, default: null },
+  presentationId: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['close', 'save', 'delete'])
@@ -366,6 +400,7 @@ const tabs = [
   { id: 'objects', label: 'Objects' },
   { id: 'layers', label: 'Layers' },
   { id: 'cues', label: 'Cues' },
+  { id: 'media', label: 'Media' },
   { id: 'html', label: 'HTML' },
   { id: 'css', label: 'CSS' },
   { id: 'js', label: 'JS' },
@@ -386,6 +421,8 @@ const libraryError = ref('')
 const activeEnvironment = ref('')
 const showAllObjects = ref(false)
 const compatWarning = ref('')
+const mediaBusy = ref(false)
+const mediaError = ref('')
 const selectedLayer = ref(0)
 const selectedCue = ref(0)
 const sceneHostRef = ref(null)
@@ -653,6 +690,30 @@ function seekFromCueBar(event) {
   const rect = event.currentTarget.getBoundingClientRect()
   const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)))
   previewTime.value = Math.round(ratio * form.value.duration)
+}
+
+function setProp(key, value) {
+  let obj = {}
+  try { obj = JSON.parse(propsText.value || '{}') } catch (e) { obj = {} }
+  if (!value) delete obj[key]
+  else obj[key] = value
+  propsText.value = JSON.stringify(obj, null, 2)
+}
+
+async function onMediaFile(event, key) {
+  const file = event.target.files && event.target.files[0]
+  if (!file) return
+  mediaBusy.value = true
+  mediaError.value = ''
+  try {
+    const res = await uploadMedia(props.presentationId, file, key === 'monitor_video' ? 'video' : 'image')
+    setProp(key, res.file_path || res.url || '')
+  } catch (err) {
+    mediaError.value = err?.message || 'Не удалось загрузить медиа'
+  } finally {
+    mediaBusy.value = false
+    event.target.value = ''
+  }
 }
 
 const parsedProps = computed(() => {

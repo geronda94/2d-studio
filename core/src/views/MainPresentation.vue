@@ -89,6 +89,7 @@
     <SceneEditor
       :isOpen="showEditorModal"
       :scene="editingSlide"
+      :presentationId="activeFolderData?.id || 0"
       @close="handleCloseEditor"
       @save="handleSaveSlide"
       @delete="handleDeleteSlide"
