@@ -925,6 +925,23 @@ TIMELINE_CSS = CAPTION_CSS + """
 .prav-timeline .label { margin-top:.6vh; font-family:var(--font-heading); font-size:clamp(10px,1.1vw,16px); color:var(--text-primary); }
 """
 
+PORTRAIT_CSS = """
+@media (orientation: portrait) {
+  .layer-actors .obj-host { left:50% !important; bottom:14% !important; width:74vmin !important; height:94vmin !important; transform:translateX(-50%) !important; }
+  .layer-actors .obj-cohost { left:50% !important; bottom:14% !important; width:68vmin !important; height:86vmin !important; transform:translateX(-50%) !important; }
+  .layer-actors .obj-priest, .layer-actors .obj-historian, .layer-actors .obj-sociologist { left:50% !important; bottom:14% !important; width:68vmin !important; height:86vmin !important; transform:translateX(-50%) !important; }
+  .layer-actors .obj-priest ~ .obj-priest, .layer-actors .obj-historian ~ .obj-historian { display:none !important; }
+  .layer-objects .obj-studio-monitor { left:50% !important; bottom:56% !important; width:80vmin !important; height:52vmin !important; }
+  .studio-front { height:28% !important; }
+  .studio-lower-third { left:6% !important; right:6% !important; bottom:5% !important; }
+  .period-figure { bottom:14% !important; }
+  .prav-caption { left:6% !important; right:6% !important; bottom:6% !important; }
+  .prav-timeline { left:6% !important; right:6% !important; bottom:18% !important; }
+  .prav-timeline .ev { min-width:18vw; }
+  .prav-quote { left:6% !important; width:88% !important; top:12% !important; }
+}
+"""
+
 TIMELINE_JS = """
 const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
@@ -996,7 +1013,7 @@ def install(environments, objects, templates, compose):
                 "monitor_video": {"type": "video", "label": "Видео на мониторе"},
             },
             default_props={"host_name": "Ведущий", "host_role": "МЕХАНИЗМ · авторский разбор", "monitor_media": "", "monitor_video": ""},
-            extra_css=studio_css + STUDIO_FRONT_CSS,
+            extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS,
             extra_html=STUDIO_FRONT_HTML,
             object_styles=studio_styles,
         ),
@@ -1011,7 +1028,7 @@ def install(environments, objects, templates, compose):
                 "monitor_video": {"type": "video", "label": "Видео на мониторе"},
             },
             default_props={"monitor_media": "", "monitor_video": ""},
-            extra_css=studio_css + STUDIO_FRONT_CSS,
+            extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS,
             extra_html=STUDIO_FRONT_HTML,
             object_styles=studio_styles,
         ),
@@ -1023,7 +1040,7 @@ def install(environments, objects, templates, compose):
             duration=6000,
             props_schema={"monitor_media": {"type": "image", "label": "Медиа"}},
             default_props={"monitor_media": ""},
-            extra_css=studio_css + STUDIO_FRONT_CSS,
+            extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS,
             extra_html=STUDIO_FRONT_HTML,
             object_styles=studio_styles,
         ),
@@ -1035,7 +1052,7 @@ def install(environments, objects, templates, compose):
             duration=7000,
             props_schema={"caption": {"type": "text", "label": "Подпись"}},
             default_props={"caption": "Империя накануне"},
-            extra_css=history_css + CAPTION_CSS,
+            extra_css=history_css + CAPTION_CSS + PORTRAIT_CSS,
             extra_html='<div class="prav-caption"><span data-caption></span></div>',
             object_styles=history_styles,
         ),
@@ -1047,7 +1064,7 @@ def install(environments, objects, templates, compose):
             duration=7000,
             props_schema={"caption": {"type": "text", "label": "Подпись"}},
             default_props={"caption": "Древняя Русь · до империи"},
-            extra_css=history_css + CAPTION_CSS,
+            extra_css=history_css + CAPTION_CSS + PORTRAIT_CSS,
             extra_html='<div class="prav-caption"><span data-caption></span></div>',
             object_styles=history_styles,
         ),
@@ -1059,7 +1076,7 @@ def install(environments, objects, templates, compose):
             duration=7000,
             props_schema={"caption": {"type": "text", "label": "Подпись"}},
             default_props={"caption": "Советский город · 1930-е"},
-            extra_css=history_css + CAPTION_CSS,
+            extra_css=history_css + CAPTION_CSS + PORTRAIT_CSS,
             extra_html='<div class="prav-caption"><span data-caption></span></div>',
             object_styles=history_styles,
         ),
@@ -1071,7 +1088,7 @@ def install(environments, objects, templates, compose):
             duration=7000,
             props_schema={"caption": {"type": "text", "label": "Заголовок"}, "timeline_duration": {"type": "integer", "label": "Длительность, мс"}},
             default_props={"caption": "Сто лет упадка", "timeline_duration": 7000},
-            extra_css=studio_css + STUDIO_FRONT_CSS + TIMELINE_CSS,
+            extra_css=studio_css + STUDIO_FRONT_CSS + TIMELINE_CSS + PORTRAIT_CSS,
             object_styles=timeline_styles,
             extra_html=STUDIO_FRONT_HTML + '''<div class="prav-timeline">
   <div class="prav-caption" style="left:0;bottom:calc(100% + 2.6vh);background:transparent;backdrop-filter:none;border-left:0;padding:0;">
@@ -1093,7 +1110,7 @@ def install(environments, objects, templates, compose):
             duration=6000,
             props_schema={"quote": {"type": "long_text", "label": "Цитата"}, "author": {"type": "text", "label": "Автор"}},
             default_props={"quote": "Вера на языке, а сердце в стороне.", "author": "По мотивам Писания"},
-            extra_css=church_css,
+            extra_css=church_css + PORTRAIT_CSS,
             extra_html='<div class="prav-quote"><div class="mark">“</div><blockquote data-quote></blockquote><div class="author" data-author></div></div>',
             object_styles=church_styles,
         ),
@@ -1106,7 +1123,7 @@ def install(environments, objects, templates, compose):
             props_schema={"headline": {"type": "text", "label": "Заголовок"}, "handle": {"type": "text", "label": "Контакт"}},
             default_props={"headline": "Дальше — самое горькое", "handle": "@mechanism"},
             object_styles=studio_styles,
-            extra_css=studio_css + STUDIO_FRONT_CSS + """
+            extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS + """
 .prav-outro { position:absolute; left:8%; bottom:10%; z-index:50; }
 .prav-outro h2 { margin:0; font-family:var(--font-heading); font-size:clamp(28px,3.6vw,54px); color:var(--text-primary); }
 .prav-outro .handle { margin-top:1.6vh; font-family:var(--font-mono); color:var(--brand-amber); letter-spacing:.12em; }

@@ -300,3 +300,11 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 - Вкладка Media в редакторе: загрузка картинки/видео, URL, очистка.
 - `STUDIO_JS` читает `monitor_media`/`monitor_video` из cues и переключает монитор.
 - Табы редактора сделаны горизонтально скроллируемыми.
+
+
+### 2026-10-23 — portrait/Shorts + агенты
+- Портретные оверрайды для PRAV-шаблонов (`@media (orientation: portrait)`):
+  персонаж по центру, монитор сверху, lower third снизу.
+- Добавлены opencode-агенты `.opencode/agent/`:
+  `pravoslavie-producer`, `script-analyst`, `storyboard-director`,
+  `scene-builder`, `scene-qa`, `visual-researcher`.
