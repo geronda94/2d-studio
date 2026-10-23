@@ -168,16 +168,44 @@ def _peep(slug, title, file_name, *, skin, cloth, hair, description="", tags=Non
     }
 
 
-HOST = _peep("host", "Ведущий", "host.svg", skin="#C98E6B", cloth="#4F7CAC", hair="#2A1B12",
-             description="Мужчина ~30, борода, рубашка/пиджак. Основной ведущий.")
-COHOST = _peep("cohost", "Соведущая", "cohost.svg", skin="#D8A17E", cloth="#2F4A6A", hair="#2A1B12",
-               description="Женщина 30–35, платок, длинная юбка.")
-PRIEST = _peep("priest", "Священник", "priest.svg", skin="#C98E6B", cloth="#15171C", hair="#1A1A1A",
-               description="Священник: борода, чёрное облачение, крест.")
-HISTORIAN = _peep("historian", "Историк", "historian.svg", skin="#C98E6B", cloth="#3B3B4A", hair="#4A4038",
-                  description="Историк: очки, борода, пиджак.")
-SOCIOLOGIST = _peep("sociologist", "Социолог", "sociologist.svg", skin="#C98E6B", cloth="#4A5568", hair="#2A1B12",
-                    description="Социолог: очки, рубашка.")
+def _portrait(slug, title, file_name, *, description="", cast_order=0):
+    html = f'''<div class="obj-{slug} char portrait" data-rig="root">
+  <img class="portrait-img" src="/portraits/{file_name}" alt="" />
+</div>'''.strip()
+    css = f'''
+.obj-{slug} {{ position:absolute; left:50%; bottom:10%; width:30vmin; height:38vmin; transform-origin:50% 100%; }}
+.obj-{slug} .portrait-img {{ width:100%; height:100%; object-fit:cover; object-position:50% 0%;
+  filter:drop-shadow(0 1.2vmin 1.6vmin rgba(0,0,0,.45)); transform-origin:50% 100%; will-change:transform; }}
+'''.strip()
+    return {
+        "slug": slug,
+        "title": title,
+        "category": "character",
+        "description": description,
+        "tags": ["character", "pravoslavie", "portrait"],
+        "mechanics": ["idle", "talk"],
+        "rig": {"type": "portrait", "source": "Gemini image, chroma-keyed", "clips": ["idle"], "visemes": 0},
+        "domain": ["outdoor", "indoor", "stage"],
+        "environments": [],
+        "surface": "ground",
+        "views": ["front"],
+        "default_view": "front",
+        "cast_order": cast_order,
+        "html": html,
+        "css": css,
+    }
+
+
+HOST = _portrait("host", "Ведущий", "host.png", cast_order=0,
+                 description="Мужчина ~30, борода, очки, рубашка. Основной ведущий.")
+COHOST = _portrait("cohost", "Соведущая", "cohost.png", cast_order=1,
+                   description="Женщина 30–35, платок, скромная одежда.")
+PRIEST = _portrait("priest", "Священник", "priest.png", cast_order=2,
+                   description="Священник: борода, чёрное облачение, крест.")
+HISTORIAN = _portrait("historian", "Историк", "historian.png", cast_order=3,
+                      description="Историк: очки, седая борода, пиджак.")
+SOCIOLOGIST = _portrait("sociologist", "Социолог", "sociologist.png", cast_order=4,
+                        description="Социолог: очки, рубашка, жилет.")
 PEASANT = _peep("peasant", "Прихожанка", "parishioner.svg", skin="#C08A63", cloth="#6B5A45", hair="#3A2A1A",
                 description="Прихожанка/массовка: платок, скромная одежда.")
 WARRIOR = _peep("warrior", "Гость", "guest.svg", skin="#C98E6B", cloth="#4A4F57", hair="#2A1B12",
@@ -692,6 +720,7 @@ STUDIO_MONITOR = {
       <img data-monitor-image alt="" />
       <video data-monitor-video muted playsinline></video>
       <div class="monitor-placeholder">MECHANISM</div>
+      <div class="monitor-scan" data-monitor-scan></div>
     </div>
     <div class="monitor-brand">MECHANISM · STUDIO</div>
   </div>
@@ -746,6 +775,11 @@ STUDIO_FRONT_CSS = """
 .studio-lower-third .role { font-family:var(--font-mono); font-size:clamp(9px,.95vw,13px); letter-spacing:.14em;
   text-transform:uppercase; color:var(--brand-amber); }
 .studio-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; mix-blend-mode:screen; opacity:.55; z-index:30; }
+.studio-sweep { position:absolute; top:-20%; bottom:-20%; left:0; width:32%; pointer-events:none; z-index:25;
+  background:linear-gradient(90deg,transparent,rgba(255,225,170,.10),transparent); mix-blend-mode:screen; }
+.obj-studio-monitor .monitor-scan { position:absolute; left:0; right:0; top:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(180,220,255,.25),transparent); box-shadow:0 0 1.2vmin rgba(120,180,255,.25); }
+
 """
 
 STUDIO_FRONT_HTML = """
@@ -755,6 +789,7 @@ STUDIO_FRONT_HTML = """
   <div class="coffee"></div>
   <div class="mic"></div>
 </div>
+<div class="studio-sweep"></div>
 <div class="studio-lower-third">
   <div class="name" data-lt-name></div>
   <div class="role" data-lt-role></div>
@@ -830,6 +865,14 @@ function applyCueMedia(t) {
 const chars = Array.from(root.querySelectorAll('.char'));
 function animateChars(t) {
   chars.forEach((el, i) => {
+    const portrait = el.querySelector('.portrait-img');
+    if (portrait) {
+      const breathe = Math.sin(t / 1500 + i * 1.3) * 1.4;
+      const sway = Math.sin(t / 2600 + i) * 0.55;
+      const scale = 1 + Math.sin(t / 2800 + i) * 0.0035;
+      portrait.style.transform = `translateY(${breathe}px) rotate(${sway}deg) scale(${scale})`;
+      return;
+    }
     const head = el.querySelector('[data-rig="head"]');
     const mouth = el.querySelector('[data-rig="mouth"]');
     const armL = el.querySelector('[data-rig="arm-left"]');
@@ -841,10 +884,41 @@ function animateChars(t) {
   });
 }
 
+const studioCamLayers = [
+  { el: root.querySelector('.env-studio-prav .wall'), depth: 0.12 },
+  { el: root.querySelector('.env-studio-prav .shelf'), depth: 0.24 },
+  { el: root.querySelector('.env-studio-prav .poster'), depth: 0.3 },
+  { el: root.querySelector('.env-studio-prav .plant'), depth: 0.38 },
+  { el: root.querySelector('.env-studio-prav .lamp'), depth: 0.34 },
+  { el: root.querySelector('.env-studio-prav .desk'), depth: 0.46 },
+].filter((x) => x.el);
+const studioCam = studioCamLayers.length
+  ? SceneKit.camera(studioCamLayers, { path(t) {
+      return { x: Math.sin(t / 5200) * 14, y: Math.cos(t / 6400) * 6, zoom: Math.sin(t / 7000) * 0.012, rot: Math.sin(t / 9000) * 0.12 };
+    } })
+  : null;
+const lightSweep = root.querySelector('.studio-sweep');
+const monitorScan = root.querySelector('[data-monitor-scan]');
+const lowerThird = root.querySelector('.studio-lower-third');
+
 function seek(t) {
   animateChars(t);
   drawDust(t);
   applyCueMedia(t);
+  if (studioCam) studioCam.seek(t);
+  if (lightSweep) {
+    const x = ((t / 7000) % 1) * 190 - 45;
+    lightSweep.style.transform = `translateX(${x}vw) skewX(-14deg)`;
+  }
+  if (monitorScan) {
+    const y = ((t / 2600) % 1) * 100;
+    monitorScan.style.transform = `translateY(${y}%)`;
+  }
+  if (lowerThird) {
+    const p = Math.min(1, t / 700);
+    lowerThird.style.opacity = String(p);
+    lowerThird.style.transform = `translateX(${(1 - p) * -42}px)`;
+  }
   if (monitorVid && monitorVid.src && monitorVid.duration) {
     try { monitorVid.currentTime = Math.min(monitorVid.duration, t / 1000); } catch (e) {}
   }
@@ -893,10 +967,20 @@ const root = document.querySelector('.scene');
 const figures = Array.from(root.querySelectorAll('.period-figure'));
 const cap = root.querySelector('[data-caption]');
 if (cap) cap.textContent = p.caption || '';
+const sceneSvg = root.querySelector('.env .scene-svg');
+const historyCam = sceneSvg ? SceneKit.camera([{ el: sceneSvg, depth: 1 }], { path(t) {
+  return { x: Math.sin(t / 6200) * 10, y: Math.cos(t / 7600) * 5, zoom: 0.03 + Math.sin(t / 8200) * 0.012, rot: 0 };
+} }) : null;
 function seek(t) {
   figures.forEach((el, i) => {
     el.style.transform = `translateY(${Math.sin(t / 1400 + i) * 2.2}px) rotate(${Math.sin(t / 2200 + i) * 0.6}deg)`;
   });
+  if (historyCam) historyCam.seek(t);
+  if (cap) {
+    const k = Math.min(1, t / 650);
+    cap.style.opacity = String(k);
+    cap.style.transform = `translateY(${(1 - k) * 18}px)`;
+  }
 }
 window.scene = { seek };
 """
@@ -984,12 +1068,23 @@ def install(environments, objects, templates, compose):
   letter-spacing:.14em; text-transform:uppercase; color:var(--brand-amber); }
 """
     studio_styles = {
-        "host": "left:24%;bottom:10%;width:42vmin;height:54vmin",
-        "cohost": "left:68%;bottom:10%;width:38vmin;height:50vmin",
-        "priest": "left:43%;bottom:8%;width:33vmin;height:45vmin",
-        "historian": "left:16%;bottom:8%;width:32vmin;height:44vmin",
-        "sociologist": "left:64%;bottom:8%;width:32vmin;height:44vmin",
-        "studio-monitor": "left:58%;bottom:40%;width:36vmin;height:23vmin",
+        "host": "left:24%;bottom:8%;width:62vmin;height:74vmin",
+        "cohost": "left:68%;bottom:8%;width:56vmin;height:68vmin",
+        "priest": "left:43%;bottom:8%;width:54vmin;height:66vmin",
+        "historian": "left:16%;bottom:8%;width:52vmin;height:64vmin",
+        "sociologist": "left:64%;bottom:8%;width:52vmin;height:64vmin",
+        "studio-monitor": "left:58%;bottom:40%;width:34vmin;height:22vmin",
+    }
+    panel_styles = {
+        "host": "left:16%;bottom:8%;width:46vmin;height:58vmin",
+        "priest": "left:42%;bottom:8%;width:48vmin;height:60vmin",
+        "historian": "left:68%;bottom:8%;width:46vmin;height:58vmin",
+        "studio-monitor": "left:50%;bottom:42%;width:32vmin;height:21vmin",
+    }
+    sociologist_styles = {
+        "host": "left:22%;bottom:8%;width:58vmin;height:70vmin",
+        "sociologist": "left:64%;bottom:8%;width:52vmin;height:64vmin",
+        "studio-monitor": "left:58%;bottom:40%;width:34vmin;height:22vmin",
     }
     history_styles = {
         "figure-peasant": "left:16%;bottom:8%;width:12vmin;height:36vmin",
@@ -1030,7 +1125,7 @@ def install(environments, objects, templates, compose):
             default_props={"monitor_media": "", "monitor_video": ""},
             extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS,
             extra_html=STUDIO_FRONT_HTML,
-            object_styles=studio_styles,
+            object_styles=panel_styles,
         ),
         compose(
             "studio-prav", ["host", "sociologist", "studio-monitor"], STUDIO_JS,
@@ -1042,7 +1137,7 @@ def install(environments, objects, templates, compose):
             default_props={"monitor_media": ""},
             extra_css=studio_css + STUDIO_FRONT_CSS + PORTRAIT_CSS,
             extra_html=STUDIO_FRONT_HTML,
-            object_styles=studio_styles,
+            object_styles=sociologist_styles,
         ),
         compose(
             "empire", ["figure-peasant", "figure-warrior", "figure-monk"], HISTORY_JS,

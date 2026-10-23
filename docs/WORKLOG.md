@@ -319,3 +319,13 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 ### 2026-10-23 — статусы сцен
 - В редакторе появился статус сцены: draft/review/approved (payload `status`).
   Это первый шаг к воротам качества human+AI.
+
+
+### 2026-10-23 — детализированные портреты
+- Сгенерированы 5 портретов (host/cohost/priest/historian/sociologist) через
+  Gemini Image; chroma-key + crop (`scripts/generate_prav_portraits.py`).
+- Заменены Open Peeps у основного каста на портреты (`/portraits/*.png`).
+- Добавлено процедурное движение: дыхание/качание портрета, камера студии,
+  световой свип, сканлайн монитора, анимация lower third и caption.
+- Портреты приведены к квадрату и `object-fit: cover`, чтобы лица были
+  одного масштаба в панели.

@@ -30,9 +30,10 @@
 | Монах | `monk` | чёрное облачение, борода | духовная линия |
 | Горожанин | `worker` | рубашка, очки | массовка, XX век |
 
-Персонажи сейчас — **Open Peeps (CC0)** в стиле hand-drawn. Это качественный
-плейсхолдер. Для полноценных ригов/липсинка — Rive или DragonBones
-(`docs/CHARACTERS.md`).
+Основной каст — **детализированные портреты**, сгенерированные Gemini Image
+и вырезанные chroma-key (`core/public/portraits/`). Это уже не «палки»:
+лица, бороды, одежда, очки, платок, облачение. Для движения/липсинка —
+Rive или DragonBones (`docs/CHARACTERS.md`).
 
 ## 3. Миры
 
@@ -109,7 +110,9 @@
 
 - **Персонажи:** Open Peeps by Pablo Stanley — **CC0** (public domain).
   Файлы: `backend/pravoslavie_assets/*.svg`. Можно менять и использовать
-  коммерчески без указания авторства.
+  коммерчески без указания авторства. Основной каст — Gemini-портреты
+  (`core/public/portraits/`), chroma-key, генерируются
+  `scripts/generate_prav_portraits.py`.
 - **Историческая массовка:** собственные SVG-силуэты
   (`figure-peasant`, `figure-warrior`, `figure-monk`, `figure-worker`).
 - **Миры:** собственные HTML/SVG-иллюстрации.
