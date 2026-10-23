@@ -8,6 +8,7 @@
 Анимация: **`docs/ANIMATION.md`**. Ошибки/решения: **`docs/WORKLOG.md`**.
 Решения: **`docs/DECISIONS.md`**.
 Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
+Липсинк: **`docs/LIPSYNC.md`**.
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
 Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
 Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.

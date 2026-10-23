@@ -37,6 +37,7 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 - `docs/CHANNEL_PRAVOSLAVIE.md` — контент канала
 - `docs/AGENT_ROLES.md` — роли ИИ
 - `docs/CHARACTERS.md` — персонажи и липсинк
+- `docs/LIPSYNC.md` — пайплайн липсинка
 - `docs/WORKLOG.md` — история и ошибки
 - `docs/DECISIONS.md` — архитектурные решения
 - `docs/DEV.md` — порты

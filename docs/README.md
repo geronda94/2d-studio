@@ -20,6 +20,7 @@
 | `CHANNEL_PRAVOSLAVIE.md` | Канал «Механизм»: каст, миры, формулы сцен |
 | `AGENT_ROLES.md` | Роли ИИ: Script Analyst, Storyboard, Scene Builder, QA |
 | `CHARACTERS.md` | Персонажи: SVG-риг, Rive/Spine, visemes, липсинк |
+| `LIPSYNC.md` | Липсинк: виземы, тайминги, Rive/DragonBones, костыли |
 | `WORKLOG.md` | Что делалось, какие были ошибки и как исправляли |
 | `DECISIONS.md` | ADR: почему архитектура такая |
 | `DEV.md` | Порты, запуск, сиды |

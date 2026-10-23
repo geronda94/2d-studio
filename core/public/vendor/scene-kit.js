@@ -127,6 +127,29 @@
     return out
   }
 
+  // Lip-sync: viseme timeline is data, the renderer only asks "which viseme at t".
+  // visemes: [{ t: 0, viseme: 0 }, { t: 120, viseme: 1 }, ...] or [{ timeMs, viseme }]
+  function visemeAt(visemes, t) {
+    let v = 0
+    const list = visemes || []
+    for (const item of list) {
+      const at = item.t !== undefined ? item.t : item.timeMs
+      if (at <= t) v = item.v !== undefined ? item.v : item.viseme
+      else break
+    }
+    return v
+  }
+
+  function lipsync(opts) {
+    const list = (opts && opts.visemes) || []
+    return {
+      seek(t) {
+        const v = visemeAt(list, t)
+        if (opts && typeof opts.onViseme === 'function') opts.onViseme(v, t)
+      },
+    }
+  }
+
   // Per-object view switching: { car: 'front', building: 'corner' }.
   // Objects opt in with CSS classes like .obj-car.view-front.
   function applyViews(root, map) {
@@ -153,5 +176,5 @@
     }
   }
 
-  window.SceneKit = { cues, mechanism, parallax, camera, compose, views: applyViews, scatter, mulberry32 }
+  window.SceneKit = { cues, mechanism, parallax, camera, compose, views: applyViews, scatter, mulberry32, visemeAt, lipsync }
 })()
