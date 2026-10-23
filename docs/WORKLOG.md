@@ -308,3 +308,9 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 - Добавлены opencode-агенты `.opencode/agent/`:
   `pravoslavie-producer`, `script-analyst`, `storyboard-director`,
   `scene-builder`, `scene-qa`, `visual-researcher`.
+
+
+### 2026-10-23 — рендер проверен
+- `POST /renders/realtime` для презентации 2 → `completed`, 36.9 с, 30 fps, 5 МБ.
+- Кадры 2 с (студия) и 20 с (империя) корректны.
+- Вывод: сцены рендерятся тем же пайплайном, что и слайды; handshake работает.
