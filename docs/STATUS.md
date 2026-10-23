@@ -118,6 +118,7 @@
 - Портретные оверрайды для Shorts (персонаж по центру, монитор сверху).
 - OpenCode-агенты: `.opencode/agent/` (producer, analyst, storyboard,
   scene-builder, QA, researcher).
+- Статус сцены: `draft` / `review` / `approved` в шапке редактора и payload.
 - **Рендер проверен end-to-end:** `Prav_Studio_demo` 36.9 с, 30 fps, 5 МБ;
   кадры 2 с и 20 с содержат студийную и историческую сцены.
 

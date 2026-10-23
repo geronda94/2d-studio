@@ -19,6 +19,14 @@
           class="w-24 rounded-md border border-text-muted/40 bg-bg-base px-2 py-1.5 text-xs text-text-primary outline-none focus:border-brand-blue" />
       </label>
       <label class="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-wide text-text-muted">
+        Статус
+        <select v-model="form.status" class="rounded-md border border-text-muted/40 bg-bg-base px-2 py-1.5 text-xs text-text-primary outline-none focus:border-brand-blue">
+          <option value="draft">draft</option>
+          <option value="review">review</option>
+          <option value="approved">approved</option>
+        </select>
+      </label>
+      <label class="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-wide text-text-muted">
         Длительность, мс
         <input v-model.number="form.duration" type="number" step="100"
           class="w-24 rounded-md border border-text-muted/40 bg-bg-base px-2 py-1.5 text-xs text-text-primary outline-none focus:border-brand-blue" />
@@ -435,6 +443,7 @@ const form = ref({
   props_schema: {},
   view: '',
   cues: [],
+  status: 'draft',
 })
 
 let previewTimer = null
@@ -455,6 +464,7 @@ function resetFromScene(scene) {
     props_schema: scene?.props_schema || p.props_schema || {},
     view: scene?.view || p.view || '',
     cues: Array.isArray(p.cues) ? p.cues.map((c) => ({ at: Number(c.at) || 0, set: { ...(c.set || {}) } })) : [],
+    status: p.status || 'draft',
   }
   form.value.code.html = ensureLayerIds(form.value.code.html)
   propsText.value = JSON.stringify(p.props || {}, null, 2)
@@ -764,6 +774,7 @@ function applyTemplate(t) {
   activeEnvironment.value = t.environment || ''
   form.value.view = t.view || activeEnvData.value?.default_view || ''
   form.value.cues = Array.isArray(t.cues) ? t.cues.map((c) => ({ at: Number(c.at) || 0, set: { ...(c.set || {}) } })) : []
+  form.value.status = 'draft' 
   propsText.value = JSON.stringify(t.default_props || {}, null, 2)
   previewTime.value = Math.min(1200, form.value.duration)
   previewError.value = ''
@@ -851,6 +862,7 @@ function save() {
     props_schema: form.value.props_schema || {},
     view: form.value.view || '',
     cues: form.value.cues,
+    status: form.value.status || 'draft',
     track: props.scene.track || 'main',
     z_index: props.scene.z_index ?? 0,
     data: {
@@ -861,6 +873,7 @@ function save() {
         props_schema: form.value.props_schema || {},
         view: form.value.view || '',
         cues: form.value.cues,
+        status: form.value.status || 'draft',
         duration: Number(form.value.duration) || 5000,
       },
     },

@@ -314,3 +314,8 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
 - `POST /renders/realtime` для презентации 2 → `completed`, 36.9 с, 30 fps, 5 МБ.
 - Кадры 2 с (студия) и 20 с (империя) корректны.
 - Вывод: сцены рендерятся тем же пайплайном, что и слайды; handshake работает.
+
+
+### 2026-10-23 — статусы сцен
+- В редакторе появился статус сцены: draft/review/approved (payload `status`).
+  Это первый шаг к воротам качества human+AI.
