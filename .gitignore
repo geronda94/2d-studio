@@ -41,3 +41,8 @@ media-library-fixed.png
 
 # Папки QA-скриншотов агентов
 qa-*/
+
+
+# Mixamo clips: free to use, redistribution restricted (Adobe terms).
+# Fetch with scripts/fetch_avatar_anims.py; copy to servers manually.
+core/public/models/anim/

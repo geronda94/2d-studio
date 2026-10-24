@@ -1,6 +1,34 @@
 # STATUS — текущее состояние SceneEngine
 
-Обновлено: 2026-10-23.
+Обновлено: 2026-10-24.
+
+
+## 3D-аватар (2026-10-24)
+
+- Шаблон `character-3d`, демо **`/p/10`**: Ready Player Me GLB (67 костей,
+  72 ARKit/Oculus-морфа), Babylon.js, детерминированный `seek(t)`.
+- Драйвер `core/public/vendor/babylon-character.js` /
+  `SceneKit.babylonCharacter`:
+  - мокап-клипы Mixamo (`Neutral_Idle`, `Talking`, `Standing_Greeting`,
+    `Pointing`, `Shrugging`, `Hard_Head_Nod`, `Thinking`, ...), ретаргет
+    T-pose → A-pose по абсолютным world-ориентациям;
+  - липсинк: 10 визёмов движка → 15 Oculus (`viseme_aa`, `viseme_O`, ...);
+  - моргание, взгляд, настроение, жесты, контактная тень, ground clamp;
+  - позы-оверрайды и ключи позы (`pose`, `pose_keys`);
+  - frustum culling для skinned-мешей отключён — иначе голова/рука
+    «пропадают» на кадр;
+  - eye-кости не ретаргетятся из клипов (иначе глаза уезжают), gaze — от rest.
+- Редактор: вкладка **3D** — кадр, базовый/речевой клип, вес речи,
+  настроение, взгляд, реплика → виземы, жесты, слайдеры позы и ключи позы.
+  Live-сообщения `avatar-*` обновляют превью без пересборки iframe.
+- Камера: presets `face/bust/full/wide` с coverage, чтобы голова и руки
+  не обрезались; портрет учитывает aspect.
+- Ассеты: `core/public/models/brunette.glb` (+ `.js`-обёртка),
+  `core/public/models/anim/*.glb` (Mixamo) и `avatar-anims.js`.
+  **Mixamo-клипы не коммитить в публичный репозиторий** (лицензия Adobe);
+  скачивать `scripts/fetch_avatar_anims.py` + `scripts/extract_avatar_anims.py`.
+- Проверено: `/p/10`, harness `babylon-avatar.html`, липсинк, жесты,
+  pose-оверрайды, live-сообщения редактора.
 
 ## Готовые Rive-персонажи (2026-10-23, вечер)
 

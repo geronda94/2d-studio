@@ -131,6 +131,16 @@ GET http://localhost:8002/scene-library/characters/{slug}
 - текст/оверлеи → `layer-overlay`.
 - каждый объект: `class="obj-<slug>"`, `data-layer-id`.
 
+## 3.6. 3D-аватар
+
+- Шаблон `character-3d`, драйвер `SceneKit.babylonCharacter`
+  (`core/public/vendor/babylon-character.js`).
+- GLB + мокап-клипы: `core/public/models/`, harness `babylon-avatar.html`.
+- Mixamo-клипы не коммитить в публичный репозиторий; скачивать
+  `scripts/fetch_avatar_anims.py` + `scripts/extract_avatar_anims.py`.
+- Управление: `setPose`, `setVisemes`, `setClips`, `setGestures`, `setMood`,
+  `setGaze`; из редактора — сообщения `avatar-*`.
+
 ## 4. Модель 2D-сцены
 
 ```

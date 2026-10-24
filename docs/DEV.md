@@ -56,3 +56,18 @@ docker compose down
 
 - Не занимать порты исходного проекта: `5174 / 8001 / 5435`.
 - Не менять `name: scene-saas` и имя тома без необходимости — иначе compose создаст второй набор контейнеров/БД.
+
+
+## 3D-ассеты (2026-10-24)
+
+3D-аватар использует Ready Player Me GLB и мокап-клипы Mixamo. GLB лежит в
+репозитории; клипы — нет (лицензия Adobe ограничивает перераспространение).
+
+```bash
+python scripts/fetch_avatar_anims.py      # скачать 16 Mixamo GLB
+python scripts/extract_avatar_anims.py    # собрать avatar-anims.js
+python scripts/build_avatar_asset.py      # обернуть GLB в .js для iframe
+```
+
+На сервер `core/public/models/anim/` и `.env` переносятся вручную (scp),
+не через GitHub.

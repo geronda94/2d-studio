@@ -368,3 +368,75 @@ python3 scripts/build_rive_character.py --rml    # только RML
   работают после остановки state machine (`/p/9`).
 - Для массовки и других возрастов нужны новые готовые `.riv` или
   доработка собственного рига.
+
+## 10. 3D-аватар (GLB + Babylon, 2026-10-24)
+
+Полноценный 3D-персонаж для студийных сцен: Ready Player Me GLB, Babylon.js,
+мокап-клипы Mixamo. Работает в sandbox-iframe и остаётся детерминированным:
+один кадр на `seek(t)`, без render loop и внутренних часов.
+
+### Файлы
+
+- `core/public/models/brunette.glb` — аватар (67 костей, 72 морфа).
+- `core/public/models/brunette.glb.js` — тот же GLB в base64 для iframe
+  (`scripts/build_avatar_asset.py`).
+- `core/public/models/anim/*.glb` — клипы Mixamo (не в git, см. лицензию).
+- `core/public/models/anim/avatar-anims.js` — сжатые треки для рантайма
+  (`scripts/extract_avatar_anims.py`).
+- `core/public/vendor/babylon-character.js` — драйвер.
+- `core/public/vendor/babylon.js`, `babylonjs.loaders.min.js` — движок.
+- `core/public/babylon-avatar.html` — harness: `?preset=&t=&idle=&clip=&gx=`.
+
+### Как устроен драйвер
+
+```
+SceneKit.babylonCharacter(canvas, {
+  buffer, preset, visemes, mood, gaze, gestures,
+  idleClip, talkClip, talkWeight, pose, poseKeys,
+  seed, intensity,
+}) -> { ready, seek(t), setPose, setVisemes, ... }
+```
+
+- **Ретаргет**: Mixamo-клипы сняты с T-pose, RPM-аватар — в A-pose.
+  Переносится абсолютная world-ориентация:
+  `W_tgt(t) = (W_tgt_rest * inv(W_src_rest)) * W_src(t)`, затем локальная
+  кватернионная цепочка. Локальные/мировые дельты ломают локти.
+- **Eye-кости не ретаргетятся** — иначе глаза уезжают; gaze добавляется
+  к rest-кватерниону.
+- **Липсинк**: 10 визёмов движка → Oculus-морфы (`viseme_aa`, `viseme_O`,
+  `viseme_PP`, ...), кроссфейд 80 мс; виземы приходят из
+  `POST /scene-library/text-to-visemes`.
+- **Моргание** — детерминированный импульс раз в ~3.6 с.
+- **Ground clamp** — самый низкий стоп возвращается на rest-высоту.
+- **Culling** — `alwaysSelectAsActiveMesh = true` для skinned-мешей, иначе
+  голова/рука исчезают на кадр.
+- **Камера** — presets `face/bust/full/wide` с `covW/covH`, радиус считается
+  из покрытия и aspect; портрет отдельно.
+- **Позы**: `pose = {bone: [x,y,z]}` — статическое смещение в локальной
+  системе кости (градусы); `pose_keys = [{at,bone,x,y,z}]` — ключи,
+  держатся до следующего ключа этой кости.
+
+### Редактор
+
+Вкладка **3D** в `SceneEditor.vue`: кадр, базовый/речевой клип, вес речи,
+настроение, взгляд, реплика → виземы, жесты, слайдеры позы, ключи позы.
+Правки уходят в сцену сообщениями `avatar-*` через `SceneHost.post()`
+(без пересборки iframe); в props пишутся кнопкой «Записать в props» или Save.
+
+### Ассеты и лицензия
+
+- Аватар: Ready Player Me (free avatar), можно использовать в проекте.
+- Клипы: Mixamo / deevid-mixamo-assets. Бесплатны для коммерческого
+  использования по условиям Adobe, но **перераспространение сырых ассетов
+  ограничено** — не держите их в публичном репозитории. Скачивание:
+  `python scripts/fetch_avatar_anims.py`, затем
+  `python scripts/extract_avatar_anims.py`.
+- На сервер клипы переносятся вручную (scp), как и `.env`.
+
+### Добавить клип
+
+1. Скачать `.glb` (Mixamo, без скина) в `core/public/models/anim/`.
+2. Добавить имя в `CLIPS` в `scripts/extract_avatar_anims.py`.
+3. `python scripts/extract_avatar_anims.py`.
+4. В редакторе выбрать клип в «Базовый клип»/«Клип речи» или добавить
+   в `gestureOptions`.
