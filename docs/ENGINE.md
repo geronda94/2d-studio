@@ -51,15 +51,22 @@ core/src/
   scenes/
     SceneHost.vue                iframe + seek + handshake + theme
     SceneEditor.vue              редактор сцены
-    runtime.js                   srcdoc, GSAP, SceneKit, cues, patch-style
+    runtime.js                   srcdoc, GSAP, SceneKit, Rive rig, cues, patch-style
     demoScene.js                 fallback
+
+core/rive/character/           исходник Rive-рига (RML, rive.yaml)
+core/public/rive/              character.riv + эксперименты
+core/public/vendor/
+  rive-character.js            RiveCharacter: VM-числа из seek(t)
   composables/useDirector.js     глобальные часы
   composables/useAudioEngine.js  аудио-клипы
   services/api.js                API-клиент
 
 core/public/vendor/
   gsap.min.js             локальный GSAP
-  scene-kit.js            cues/integrate/mechanism/parallax/views
+  rive.js                 Rive runtime (vendored)
+  rive-character.js       детерминированный драйвер Rive-рига
+  scene-kit.js            cues/integrate/mechanism/parallax/views/riveCharacter
 
 docs/                     документация
 scripts/                  сиды и утилиты
@@ -141,7 +148,8 @@ SceneKit.compose(...)      // объединить механизмы
 - `OBJECTS`: character, car, road, tree, pine, cloud, bird, street-lamp,
   building, desk, monitor, coffee, plant, person, traffic-light, sun, moon.
 - `TEMPLATES`: forest-drive, city-night-drive, mountain-flight, office-day,
-  studio-intro.
+  studio-intro, cinematic-forest, portrait-talk, character-talk, **character-rive**,
+  prav-* (канал).
 
 Метаданные:
 - мир: `domain` (outdoor/indoor/stage), `views`, `default_view`, `perspective`;

@@ -1,0 +1,4 @@
+name: character
+main: Character
+output:
+  dir: build

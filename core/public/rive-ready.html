@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Ready Rive characters</title>
+<style>
+body{margin:0;background:#0b1018;color:#e8eef7;font:12px/1.45 system-ui;padding:12px}
+#bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+select,button{background:#16203a;color:#e8eef7;border:1px solid #2a3b5c;border-radius:6px;padding:5px 8px}
+button{background:#1d4ed8;border:0;cursor:pointer}
+#wrap{display:flex;gap:14px;align-items:flex-start}
+#stage{width:min(70vw,760px);aspect-ratio:3/4;background:radial-gradient(circle at 50% 35%,#1b2435,#0b1018 70%);border-radius:8px;overflow:hidden}
+canvas{width:100%;height:100%;display:block}
+pre{flex:1;max-width:520px;max-height:80vh;overflow:auto;background:#0e1523;border:1px solid #1e2a40;border-radius:8px;padding:10px;white-space:pre-wrap}
+</style></head><body>
+<div id="bar">
+  <select id="who">
+    <option value="/rive/ready/bob.riv">Bob (CC BY 4.0)</option>
+    <option value="/rive/ready/haido.riv">HaiDo bone lipsync</option>
+    <option value="/rive/ready/rig.riv">Interactive rig</option>
+    <option value="/rive/ready/face.riv">Character face animation</option>
+  </select>
+  <button id="load">load</button>
+  <button id="play">play</button>
+  <input id="t" type="range" min="0" max="5000" value="0" step="10" style="flex:1;min-width:180px">
+  <span id="tv">t=0</span>
+</div>
+<div id="wrap"><div id="stage"><canvas id="c" width="720" height="960"></canvas></div><pre id="log">loading…</pre></div>
+<script src="/vendor/rive.js"></script>
+<script>
+const logEl=document.getElementById('log'), who=document.getElementById('who'), tv=document.getElementById('tv');
+let r=null, raf=null;
+function dump(){
+  const out={};
+  try{ out.artboard=r.artboard; }catch(e){}
+  try{ out.animations=r.animationNames||[]; }catch(e){}
+  try{ out.stateMachines=r.stateMachineNames||[]; }catch(e){}
+  try{
+    const vm=r.viewModelInstance;
+    out.vm=vm?vm.viewModelName:null;
+    out.props=vm&&vm.properties?vm.properties.map(p=>({name:p.name,type:p.type})):[];
+  }catch(e){ out.vmErr=String(e); }
+  try{
+    const sm=(r.stateMachineNames||[])[0];
+    if(sm){ const ins=r.stateMachineInputs(sm); out.inputs=(ins||[]).map(i=>({name:i.name,type:i.type,value:i.value})); }
+  }catch(e){ out.inputErr=String(e); }
+  logEl.textContent=JSON.stringify(out,null,2);
+  window.__info=out;
+}
+function load(){
+  if(raf){cancelAnimationFrame(raf);raf=null}
+  logEl.textContent='loading '+who.value;
+  const src=who.value;
+  r=new rive.Rive({src,canvas:document.getElementById('c'),autoplay:false,autoBind:true,
+    onLoad(){ try{r.play((r.stateMachineNames||[])[0]);}catch(e){} dump(); r.drawFrame(); window.__ready=true; },
+    onLoadError(e){ logEl.textContent='ERROR '+e; }
+  });
+  window.__r=r;
+}
+function seek(t){ tv.textContent='t='+Math.round(t); if(r){ try{ r.scrub(null, t/1000); }catch(e){} try{ r.drawFrame(); }catch(e){} } }
+document.getElementById('load').onclick=load;
+document.getElementById('play').onclick=()=>{
+  if(raf){cancelAnimationFrame(raf);raf=null;return}
+  let t=0,last=performance.now();
+  const loop=(now)=>{ t=(t+(now-last))%5000; last=now; document.getElementById('t').value=t; seek(t); raf=requestAnimationFrame(loop) };
+  raf=requestAnimationFrame(loop);
+};
+document.getElementById('t').oninput=(e)=>seek(Number(e.target.value));
+load();
+</script></body></html>

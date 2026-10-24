@@ -29,7 +29,18 @@ docker compose exec -T backend python scripts/seed_presets.py
 docker compose exec -T backend python scripts/seed_scene_demo.py
 ```
 
-Демо: http://localhost:5175/p/1
+Демо: http://localhost:5175/p/1 (машина), `/p/5` (Rive-персонаж).
+
+## Rive-риг персонажа
+
+```bash
+~/.rive/bin/rive --version          # нужен Rive CLI 1.7
+python3 scripts/build_rive_character.py
+```
+
+Скрипт генерирует `core/rive/character/scene.rml`, собирает `.riv` и копирует
+его в `core/public/rive/character.riv`. Демо: `/p/5` (один ведущий),
+`/p/6` (host + cohost).
 
 ## Полезное
 

@@ -22,7 +22,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDirector } from '../composables/useDirector'
-import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource } from './runtime'
+import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer } from './runtime'
 
 const props = defineProps({
   code: { type: Object, default: () => ({}) },
@@ -53,6 +53,13 @@ const format = ref(props.format || 'landscape')
 
 let gsapSource = ''
 let kitSource = ''
+let charSource = ''
+let riveSource = ''
+let riveCharSource = ''
+let riveBuffer = ''
+let riveActorSource = ''
+let riveActorBuffer = ''
+let riveOldManBuffer = ''
 let pendingSeekId = 0
 let lastTime = 0
 let rafId = null
@@ -93,6 +100,17 @@ async function rebuild() {
   if (typeof window !== 'undefined' && !props.preview) window.__sceneReady = false
   if (!gsapSource) gsapSource = await loadGsapSource()
   if (!kitSource) kitSource = await loadKitSource()
+  if (!charSource) charSource = await loadCharSource()
+  const sceneJs = String((props.code && props.code.js) || '')
+  const wantsRive = /rive/i.test(sceneJs)
+  const wantsRiveChar = /RiveCharacter|riveCharacter|rive-character/i.test(sceneJs)
+  const wantsRiveActor = /RiveActor|riveActor|rive-actor/i.test(sceneJs)
+  if (wantsRive && !riveSource) riveSource = await loadRiveSource()
+  if (wantsRiveChar && !riveCharSource) riveCharSource = await loadRiveCharSource()
+  if (wantsRiveChar && !riveBuffer) riveBuffer = await loadRiveCharacterBuffer()
+  if (wantsRiveActor && !riveActorSource) riveActorSource = await loadRiveActorSource()
+  if (wantsRiveActor && !riveActorBuffer) riveActorBuffer = await loadRiveActorBuffer()
+  if (wantsRiveActor && /oldman|character-oldman/i.test(sceneJs) && !riveOldManBuffer) riveOldManBuffer = await loadRiveOldManBuffer()
   doc.value = buildSceneDoc({
     code: props.code || {},
     sceneProps: props.sceneProps || {},
@@ -102,6 +120,13 @@ async function rebuild() {
     view: props.view,
     gsapSource,
     kitSource,
+    charSource,
+    riveSource: wantsRive ? riveSource : '',
+    riveCharSource: wantsRiveChar ? riveCharSource : '',
+    riveBuffer: wantsRiveChar ? riveBuffer : '',
+    riveActorSource: wantsRiveActor ? riveActorSource : '',
+    riveActorBuffer: wantsRiveActor ? riveActorBuffer : '',
+    riveOldManBuffer: wantsRiveActor && /oldman|character-oldman/i.test(sceneJs) ? riveOldManBuffer : '',
   })
   frameKey.value += 1
 }
@@ -127,6 +152,12 @@ function scheduleSeek(t) {
 }
 
 // Public: awaitable seek for the future frame-by-frame renderer.
+function post(type, data) {
+  const win = frameEl.value?.contentWindow
+  if (!win) return
+  win.postMessage(Object.assign({ type }, data || {}), '*')
+}
+
 function patchObject(id, styles) {
   const win = frameEl.value?.contentWindow
   if (!win || !id) return
@@ -201,7 +232,7 @@ onUnmounted(() => {
   waiters.clear()
 })
 
-defineExpose({ seek, rebuild, patchObject })
+defineExpose({ seek, rebuild, patchObject, post })
 </script>
 
 <style scoped>

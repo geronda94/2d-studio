@@ -81,6 +81,9 @@
 | GET | `/scene-library/objects` | все объекты |
 | GET | `/scene-library/objects?environment=forest` | фильтр |
 | GET | `/scene-library/objects/{slug}` | объект |
+| GET | `/scene-library/characters` | готовые актёры (Rive) |
+| GET | `/scene-library/characters/{slug}` | карточка актёра |
+| POST | `/scene-library/text-to-visemes` | `{text,start,end}` → `[{t,viseme}]` |
 | GET | `/scene-library/compatibility` | матрица совместимости |
 | POST | `/scene-library/validate-composition` | проверить состав |
 

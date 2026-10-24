@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Rive test</title>
+<style>body{margin:0;background:#0B1322;color:#E8EEF7;font:13px system-ui;padding:12px}
+#c{width:320px;height:320px;background:#16203a;border-radius:8px}</style></head><body>
+<div id="log">загрузка…</div><canvas id="c" width="320" height="320"></canvas>
+<script src="/vendor/rive.js"></script><script src="/vendor/scene-kit.js"></script>
+<script>
+const log=document.getElementById('log');
+const r=SceneKit.rive(document.getElementById('c'),{
+  src:'/rive/test.riv',
+  stateMachine:'State Machine 1',
+  visemes:[{t:0,viseme:1}],
+  onReady(inst,inputs){ log.textContent='RIVE LOADED. inputs='+(inputs?inputs.length:0)+' names='+(inputs||[]).map(i=>i.name).join(',');
+    window.__ok=true;
+    for(let i=0;i<3;i++){ inst.scrub(undefined, i*0.2); inst.drawFrame(); }
+  },
+  onError(e){ log.textContent='RIVE ERROR: '+(e&&e.message||e); window.__err=true; },
+});
+r.seek(1000);
+window.__rive=r;
+</script></body></html>

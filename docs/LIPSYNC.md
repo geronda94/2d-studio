@@ -40,19 +40,48 @@ TTS / запись
 
 ### SceneKit
 ```js
+// грубый переключатель (совместимость со старым кодом)
 const lip = SceneKit.lipsync({
   visemes: window.__sceneProps.visemes || [],
-  onViseme(v) { riveInput.value = v; },
+  onViseme(v) { /* v = 0..9 */ },
 });
-window.scene = { seek(t) { lip.seek(t); } };
+
+// плавный кроссфейд двух форм рта
+const lip = SceneKit.lipsync({
+  visemes: window.__sceneProps.visemes || [],
+  blend: 70,                       // мс перехода между формами
+  onVisemePair(cur, next, k) {     // k: 0..1 — доля следующей формы
+    // cur-форма: opacity = 1 - k, next-форма: opacity = k
+  },
+});
 ```
-Для статичного портрета `onViseme` может переключать кадр рта.
+
+Для рига `character` всё уже сделано за кулисами:
+```js
+const rig = SceneKit.characterRig(root.querySelector('.obj-character'), {
+  visemes: p.visemes || [],   // [{t, viseme}]
+});
+window.scene = { seek(t) { rig.seek(t); } };
+```
+Драйвер сам ставит `opacity` нужному пути рта, двигает челюсть и язык.
+
+**Визим-формы рта в SVG-риге** — 10 путей `[data-viseme="0..9"]` внутри
+`[data-rig="mouth"]`, плюс язык `[data-viseme="t"]`. Форма 0 (neutral) —
+видима по умолчанию, остальные скрыты (`opacity: 0`).
+
+**Полезно:** `SceneKit.visemeAt(visemes, t)` — просто «какой визем в t»;
+`SceneKit.visemeBlend(visemes, t, blend)` — `{cur, next, k}`.
 
 ---
 
 ## 3. Варианты реализации
 
-### A. Rive (рекомендуется)
+> Статус: **вариант A (Rive) реализован** — собственный `.riv` с 10 формами
+> рта, костями и view-model числами. Детерминизм достигается тем, что контроллер
+> пишет значения и вызывает `drawFrame()`, а не полагается на внутренние часы.
+> Демо: `/p/5`, шаблон `character-rive`.
+
+### A. Rive (рабочий путь)
 - В Rive: 10 состояний рта + state machine с числовым входом `phoneme`.
 - В сцене: `new rive.Rive({ src, stateMachines, autoplay:false })`,
   `stateMachineInputs('...')`, на `seek(t)` выставлять `phoneme`.
@@ -75,28 +104,33 @@ window.scene = { seek(t) { lip.seek(t); } };
 - Плюсы: реалистично для фото.
 - Минусы: тяжело, артефакты на стилизации, лицензии, не детерминировано покадрово.
 
-**Вывод:** для канала — **Rive** (ведущий/соведущая) или **DragonBones**
-(бесплатный путь). Костыль C — только для теста.
+**Вывод:** рабочий путь — **Rive-риг с 10 формами рта** (реализовано,
+`core/public/rive/character.riv`, драйвер `SceneKit.riveCharacter`).
+SVG-риг и портреты остаются как legacy/простые случаи.
+Костыль C — только для теста.
 
 ---
 
 ## 4. Текущий статус в проекте
 
-- `SceneKit.visemeAt` и `SceneKit.lipsync` — готовы.
+- **Rive-риг ведущего работает**: скелет, 10 визёмов, моргание, взгляд, брови,
+  жесты, ходьба. Контроллер `RiveCharacter` / `SceneKit.riveCharacter`.
+- `SceneKit.visemeAt` / `visemeBlend` — готовы; контроллер использует ту же
+  логику кроссфейда.
 - `scripts/text_to_visemes.py` — приближённый русский текст → виземы.
-- Портреты ведущего/каста — детализированные, но **статичные** (дыхание/качание).
-- Rive/DragonBones ещё не подключены; `.riv`/skeleton-ассетов нет.
-- В сцене можно хранить `visemes` в payload и передавать в Rive-адаптер.
+- Портреты каста — legacy; Rive-риг — основной путь.
+- В сцене виземы хранятся в `props.visemes` (или cues) и передаются в адаптер.
+- Демо: `/p/5` (шаблон `character-rive`), исходник `core/rive/character/`.
 
 ## 5. Что сделать, чтобы получить липсинк ведущего
 
-1. Выбрать Rive (рекомендуется).
-2. Сделать/заказать риг ведущего: голова, челюсть, 10 форм рта.
-3. Экспортировать `.riv` в `core/public/characters/`.
-4. Добавить Rive-адаптер в сцену (`SceneKit.character`/`rive`).
-5. TTS → тайминги → `text_to_visemes.py` → `visemes` в payload.
+1. ~~Выбрать Rive~~ — выбрано, риг собран.
+2. ~~Сделать риг: голова, челюсть, 10 форм рта~~ — сделано (cutout-риг).
+3. ~~Экспортировать `.riv`~~ — `core/public/rive/character.riv`.
+4. ~~Добавить Rive-адаптер~~ — `SceneKit.riveCharacter`.
+5. TTS → тайминги → `text_to_visemes.py` → `visemes` в `props`.
 6. Проверить `seek(t)` на 3–4 репликах, 16:9 и 9:16.
-7. Для массовки/экспертов — тот же пайплайн или статичные портреты.
+7. Для массовки/экспертов — те же пресеты; сложные риги — следующий этап.
 
 ## 6. Критерии приёмки
 
@@ -105,3 +139,16 @@ window.scene = { seek(t) { lip.seek(t); } };
 - Работает при seek назад/вперёд (детерминизм).
 - 16:9 и 9:16.
 - Нет артефактов на стыках виземов.
+
+
+## 9. Готовый ассет Old Man (2026-10-23)
+
+- Рот: view model enum `mouth` со значениями `Default`, `OO`, `AAA`.
+- Маппинг 10 визёмов: `0→Default`, `1→AAA`, `2→Default`, `3→Default`,
+  `4→AAA`, `5→OO`, `6→OO`, `7→Default`, `8→OO`, `9→OO`.
+- `face`: `Normal` / `wow` (настроение `neutral`/`surprise`).
+- Жест: trigger `leftHand`.
+- Драйвер: `SceneKit.riveActor` (state machine, `seek(t)`).
+- Демо: `/p/7` (один) и `/p/8` (два, разные тайминги визёмов).
+- Тайминги визёмов генерируются из текста:
+  `scripts/text_to_visemes.py` → `props.visemes`.

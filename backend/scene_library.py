@@ -1,4 +1,6 @@
 import re
+
+from . import character_rig
 """Built-in 2D world library: environments, physical objects, scene templates.
 
 Not UI cards. This is a content factory primitive:
@@ -628,48 +630,262 @@ MOON = {
 
 CHARACTER = {
     "slug": "character",
-    "title": "Персонаж",
+    "title": "Персонаж (риг)",
     "category": "character",
-    "description": "Риг-заготовка: голова, лицо, рот, руки, ноги. Позже — visemes и липсинк.",
-    "tags": ["character", "rig", "person"],
-    "mechanics": ["idle", "walk", "talk", "blink"],
+    "description": "Управляемый SVG-риг: голова, объём, взгляд, моргание, брови-настроение, одежда с деталями, обувь, 10 визёмов рта. Драйвер — SceneKit.characterRig.",
+    "tags": ["character", "rig", "person", "lipsync", "visemes"],
+    "mechanics": ["lipsync", "blink", "breathe", "sway", "gaze", "gesture", "walk", "mood", "hair-lag"],
     "rig": {
         "type": "svg",
-        "parts": ["root", "head", "face", "mouth", "arm-left", "arm-right", "leg-left", "leg-right"],
+        "parts": ["root", "head", "hair", "gaze", "lid-left", "lid-right", "brow-left", "brow-right", "mouth", "torso", "arm-left", "arm-right", "leg-left", "leg-right"],
         "clips": ["idle", "walk", "talk", "blink"],
         "visemes": 10,
+        "driver": "SceneKit.characterRig",
+        "palette": ["skin", "hair", "shirt", "pants", "shoe", "iris", "line"],
+    },
+    "html": character_rig.CHARACTER_HTML,
+    "css": character_rig.CHARACTER_CSS,
+}
+
+PORTRAIT = {
+    "slug": "portrait",
+    "title": "Персонаж (нарисованный портрет)",
+    "category": "character",
+    "description": "Нарисованный портрет + оверлей рта с 10 виземами: драйвер SceneKit.portraitRig. Геометрия рта и глаза — в пропсах.",
+    "tags": ["character", "portrait", "lipsync", "visemes"],
+    "mechanics": ["lipsync", "blink", "breathe", "sway"],
+    "rig": {
+        "type": "portrait",
+        "parts": ["portrait-img", "mouth-layer", "mouth", "lid-left", "lid-right"],
+        "clips": ["idle", "talk", "blink"],
+        "visemes": 10,
+        "driver": "SceneKit.portraitRig",
     },
     "html": """
-<div class="obj-character" style="left:50%; bottom:14%; width:14vmin; height:34vmin">
-  <svg viewBox="0 0 120 300" class="character-svg">
-    <g class="rig-root" data-rig="root">
-      <g class="rig-head" data-rig="head">
-        <circle cx="60" cy="44" r="26" fill="#1B2430"/>
-        <g class="rig-face" data-rig="face">
-          <circle class="rig-eye left" cx="50" cy="40" r="3.4" fill="#E2E8F0"/>
-          <circle class="rig-eye right" cx="70" cy="40" r="3.4" fill="#E2E8F0"/>
-          <ellipse class="rig-mouth" data-rig="mouth" cx="60" cy="54" rx="7" ry="3" fill="#0B1118"/>
-        </g>
-      </g>
-      <path class="rig-torso" data-rig="torso" d="M38 76 Q60 68 82 76 L88 152 Q60 162 32 152 Z" fill="#1B2430"/>
-      <path class="rig-arm left" data-rig="arm-left" d="M38 82 L24 148 L34 150 L46 88 Z" fill="#151D28"/>
-      <path class="rig-arm right" data-rig="arm-right" d="M82 82 L96 148 L86 150 L74 88 Z" fill="#151D28"/>
-      <path class="rig-leg left" data-rig="leg-left" d="M46 152 L40 262 L54 262 L58 156 Z" fill="#151D28"/>
-      <path class="rig-leg right" data-rig="leg-right" d="M74 152 L80 262 L66 262 L62 156 Z" fill="#151D28"/>
-    </g>
-  </svg>
+<div class="obj-portrait char portrait" data-rig="root">
+  <img class="portrait-img" src="/portraits/host.png" alt="" />
 </div>""",
     "css": """
-.obj-character { position:absolute; transform-origin:50% 100%; }
-.obj-character .character-svg { width:100%; height:100%; overflow:visible; }
-.obj-character .rig-head { transform-box:fill-box; transform-origin:50% 80%; }
-.obj-character .rig-arm, .obj-character .rig-leg { transform-box:fill-box; transform-origin:50% 8%; }
-.obj-character .rig-mouth { transform-box:fill-box; transform-origin:50% 50%; }
-.obj-character.view-side { transform:scaleX(.72); }
+.obj-portrait { position:absolute; left:50%; bottom:10%; width:34vmin; height:34vmin;
+  margin-left:-17vmin; transform-origin:50% 100%; }
+.obj-portrait .portrait-img { position:absolute; inset:0; width:100%; height:100%;
+  object-fit:contain; object-position:50% 50%; transform-origin:50% 100%; will-change:transform;
+  filter:drop-shadow(0 1.2vmin 1.8vmin rgba(0,0,0,.45)); }
+.obj-portrait .mouth-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+.obj-portrait .mouth-layer .vis { fill:#3B1A1C; stroke:#16090A; stroke-width:.55; stroke-linejoin:round; opacity:0; }
+.obj-portrait .mouth-layer .vis-base { fill:#8E4A44; }
+.obj-portrait .mouth-layer .tongue { fill:#C7606A; stroke:none; }
+.obj-portrait .mouth-layer .lid { fill:#E9B892; stroke:#16090A; stroke-width:.4; transform-box:fill-box; transform-origin:50% 0%; }
 """,
 }
 
-OBJECTS = [CHARACTER, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
+PRESENTER = {
+    "slug": "presenter",
+    "title": "Ведущий (canvas-риг)",
+    "category": "character",
+    "description": "Риг персонажа на canvas: скелет (плечо/локоть/запястье, бедро/колено), 10 визёмов рта, моргание, взгляд, дыхание, жест, ходьба.",
+    "tags": ["character", "canvas", "rig", "lipsync", "presenter"],
+    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture", "walk", "mood"],
+    "rig": {
+        "type": "canvas",
+        "driver": "CharacterRig.create",
+        "bones": ["hips", "neck", "head", "shoulder", "elbow", "wrist", "hip", "knee", "ankle"],
+        "clips": ["idle", "talk", "walk"],
+        "visemes": 10,
+    },
+    "html": """
+<div class="obj-presenter" style="left:50%; bottom:6%; width:26vmin; height:42vmin; margin-left:-13vmin">
+  <canvas class="char-canvas" width="720" height="1150"></canvas>
+</div>""",
+    "css": """
+.obj-presenter { position:absolute; transform-origin:50% 100%; }
+.obj-presenter .char-canvas { width:100%; height:100%; display:block; }
+""",
+}
+
+RIVE_CHARACTER = {
+    "slug": "character-rive",
+    "title": "Ведущий (Rive-риг)",
+    "category": "character",
+    "description": "Полноценный Rive-риг: скелет (плечи/локти/кисти, бёдра/колени/стопы), 10 визёмов рта, моргание, взгляд, брови, жесты и ходьба. Драйвер — SceneKit.riveCharacter.",
+    "tags": ["character", "rive", "rig", "skeleton", "lipsync", "visemes", "presenter"],
+    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture", "walk", "mood"],
+    "rig": {
+        "type": "rive",
+        "driver": "SceneKit.riveCharacter",
+        "bones": ["root", "spine", "chest", "neck", "head", "shoulder", "upperArm", "foreArm", "hand", "hip", "thigh", "shin", "foot"],
+        "clips": ["idle", "talk", "walk", "wave", "point", "open", "shrug"],
+        "visemes": 10,
+        "asset": "/rive/character.riv",
+        "presets": ["host", "cohost", "priest", "historian", "sociologist"],
+    },
+    "html": """
+<div class="obj-character-rive">
+  <canvas class="rive-canvas" width="600" height="1000"></canvas>
+</div>""",
+    "css": """
+.obj-character-rive { position:absolute; left:50%; bottom:3%; width:42vmin; height:70vmin;
+  margin-left:-21vmin; transform-origin:50% 100%; }
+.obj-character-rive .rive-canvas { width:100%; height:100%; display:block; }
+.obj-character-rive::after { content:''; position:absolute; left:18%; right:18%; bottom:-1.2vmin;
+  height:2.2vmin; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);
+  filter:blur(.4vmin); z-index:-1; }
+@media (orientation: portrait) {
+  .obj-character-rive { left:50%; bottom:15%; width:84vmin; height:140vmin; margin-left:-42vmin; }
+}
+""",
+}
+
+RIVE_BOB = {
+    "slug": "character-bob",
+    "title": "Bob (ready-made Rive, CC BY 4.0)",
+    "category": "character",
+    "description": "Готовый Rive-персонаж Bob: полный бюст/тело, 10 визёмов, выражения, взгляд, дыхание, жесты. Лицензия CC BY 4.0 — требуется атрибуция emanuelcabezas.",
+    "tags": ["character", "rive", "ready", "lipsync", "visemes", "bob"],
+    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture", "mood"],
+    "rig": {
+        "type": "rive",
+        "driver": "SceneKit.riveActor",
+        "clips": ["idle", "talk", "wave", "point", "lean"],
+        "visemes": 10,
+        "asset": "/rive/ready/bob.riv",
+        "license": "CC BY 4.0",
+        "author": "emanuelcabezas",
+        "source": "https://rive.app/marketplace/28111-53105-bob-lip-sync-character-system-in-rive/",
+    },
+    "html": """
+<div class="obj-character-bob">
+  <canvas class="rive-canvas" width="1080" height="1920"></canvas>
+</div>""",
+    "css": """
+.obj-character-bob { position:absolute; left:62%; bottom:0; width:46vmin; height:81.8vmin;
+  margin-left:-23vmin; transform-origin:50% 100%; }
+.obj-character-bob .rive-canvas { width:100%; height:100%; display:block; }
+.obj-character-bob::after { content:''; position:absolute; left:24%; right:24%; bottom:-.6vmin;
+  height:2vmin; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);
+  filter:blur(.4vmin); z-index:-1; }
+@media (orientation: portrait) {
+  .obj-character-bob { left:50%; bottom:2%; width:70vmin; height:124.4vmin; margin-left:-35vmin; }
+}
+""",
+}
+
+RIVE_OLDMAN = {
+    "slug": "character-oldman",
+    "title": "Старец (ready-made Rive, CC BY 4.0)",
+    "category": "character",
+    "description": "Готовый Rive-персонаж: старец в рясе с посохом. Полное тело, ткань, верёвка, ноги, глаза, моргание, говорящий рот. CC BY 4.0 — атрибуция ar.akash.",
+    "tags": ["character", "rive", "ready", "lipsync", "oldman", "historical"],
+    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture"],
+    "rig": {
+        "type": "rive",
+        "driver": "SceneKit.riveActor",
+        "clips": ["talking", "idle", "cloth", "foot-tap", "eyes"],
+        "visemes": 3,
+        "asset": "/rive/ready/oldman.riv",
+        "license": "CC BY 4.0",
+        "author": "ar.akash",
+        "source": "https://rive.app/marketplace/28375-53657-old-man-character-animation-or-rive-interactive-v02/",
+    },
+    "html": """
+<div class="obj-character-oldman">
+  <canvas class="rive-canvas" width="1080" height="1920"></canvas>
+</div>""",
+    "css": """
+.obj-character-oldman { position:absolute; left:62%; bottom:0; width:42vmin; height:74.7vmin;
+  margin-left:-21vmin; transform-origin:50% 100%; }
+.obj-character-oldman .rive-canvas { width:100%; height:100%; display:block; }
+.obj-character-oldman::after { content:''; position:absolute; left:20%; right:20%; bottom:-.4vmin;
+  height:2vmin; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);
+  filter:blur(.4vmin); z-index:-1; }
+@media (orientation: portrait) {
+  .obj-character-oldman { left:50%; bottom:4%; width:64vmin; height:113.8vmin; margin-left:-32vmin; }
+}
+""",
+}
+
+OBJECTS = [CHARACTER, PORTRAIT, PRESENTER, RIVE_CHARACTER, RIVE_BOB, RIVE_OLDMAN, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
+
+# Ready actors: a compact catalogue for the editor and AI agents. The full
+# object entry (HTML/CSS) is in OBJECTS; this is the capability card.
+CHARACTERS = [
+    {
+        "slug": "character-oldman",
+        "title": "Старец (Old Man)",
+        "template": "character-oldman",
+        "kind": "ready-rive",
+        "driver": "SceneKit.riveActor",
+        "mode": "stateMachine",
+        "state_machine": "State Machine 1",
+        "view_model": ["mouth", "face", "leftHand"],
+        "visemes": 3,
+        "viseme_labels": ["Default", "OO", "AAA"],
+        "body": ["idle", "cloth", "rope", "foot-tap", "blink", "hand-gesture"],
+        "lip_sync": True,
+        "full_body": True,
+        "license": "CC BY 4.0",
+        "author": "ar.akash",
+        "source": "https://rive.app/marketplace/28375-53657-old-man-character-animation-or-rive-interactive-v02/",
+        "asset": "/rive/ready/oldman.riv",
+    },
+    {
+        "slug": "character-bob",
+        "title": "Bob",
+        "template": "character-bob",
+        "kind": "ready-rive",
+        "driver": "SceneKit.riveActor",
+        "mode": "linear",
+        "state_machine": "State Machine 1",
+        "view_model": ["visemes", "poses", "expressions", "mood", "pupils", "headAuto"],
+        "visemes": 10,
+        "body": ["idle", "breath", "head-idle", "pupils", "hand-poses"],
+        "lip_sync": True,
+        "full_body": False,
+        "license": "CC BY 4.0",
+        "author": "emanuelcabezas",
+        "source": "https://rive.app/marketplace/28111-53105-bob-lip-sync-character-system-in-rive/",
+        "asset": "/rive/ready/bob.riv",
+    },
+    {
+        "slug": "character-3d",
+        "title": "3D-аватар (Ready Player Me)",
+        "template": "character-3d",
+        "kind": "glb-3d",
+        "driver": "SceneKit.babylonCharacter",
+        "mode": "morph-targets",
+        "visemes": 10,
+        "viseme_set": "oculus-15",
+        "body": ["idle", "breath", "blink", "gaze", "head", "wave", "point", "nod"],
+        "lip_sync": True,
+        "full_body": True,
+        "license": "Ready Player Me (free avatar)",
+        "author": "Ready Player Me",
+        "asset": "/models/brunette.glb",
+    },
+    {
+        "slug": "character-rive",
+        "title": "Собственный Rive-риг",
+        "template": "character-rive",
+        "kind": "own-rive",
+        "driver": "SceneKit.riveCharacter",
+        "mode": "viewModel-numbers",
+        "visemes": 10,
+        "body": ["idle", "talk", "walk", "wave", "point", "open", "shrug"],
+        "lip_sync": True,
+        "full_body": True,
+        "license": "internal",
+        "author": "SceneEngine",
+        "asset": "/rive/character.riv",
+    },
+]
+
+
+def list_characters():
+    return CHARACTERS
+
+
+def get_character(slug: str):
+    return next((c for c in CHARACTERS if c["slug"] == slug), None)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLASSIFICATION / COMPATIBILITY / VIEWS
@@ -703,6 +919,10 @@ OBJ_META = {
     "plant":         {"domain": ["indoor", "stage"], "environments": ["office", "studio"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "person":        {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "side"], "default_view": "front"},
     "character":     {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "three-quarter", "side"], "default_view": "front"},
+    "character-rive": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "character-3d": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "character-bob": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "character-oldman": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "traffic-light": {"domain": ["outdoor"], "environments": ["city"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "sun":           {"domain": ["outdoor"], "environments": ["forest", "mountains", "city"], "surface": "sky", "views": ["front"], "default_view": "front"},
     "moon":          {"domain": ["outdoor"], "environments": ["city", "forest"], "surface": "sky", "views": ["front"], "default_view": "front"},
@@ -879,7 +1099,7 @@ const defaultCues = [
   { at: 4600, set: { speed: base * 0.25, brake: true } },
 ];
 const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
-const cues = SceneKit.cues(cueList);
+const cues = SceneKit.cues(cueList, { smooth: true });
 function seek(t) {
   const st = cues.stateAt(t);
   const dist = cues.integrate('speed', t) * 90;
@@ -918,7 +1138,7 @@ const defaultCues = [
   { at: 4200, set: { speed: base * 0.35 } },
 ];
 const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
-const cues = SceneKit.cues(cueList);
+const cues = SceneKit.cues(cueList, { smooth: true });
 function seek(t) {
   const dist = cues.integrate('speed', t) * 80;
   if (car) car.style.transform = `translate3d(${dist}px,0,0)`;
@@ -1053,7 +1273,7 @@ const defaultCues = [
   { at: 4600, set: { speed: base * 0.25, brake: true } },
 ];
 const cueList = (window.__sceneCues && window.__sceneCues.length) ? window.__sceneCues : defaultCues;
-const cues = SceneKit.cues(cueList);
+const cues = SceneKit.cues(cueList, { smooth: true });
 
 function seek(t) {
   const st = cues.stateAt(t);
@@ -1067,7 +1287,583 @@ function seek(t) {
 window.scene = { seek };
 """
 
+# Демо-тайминги липсинка: «Мир вам — это сцена с живым липсинком» (text_to_visemes).
+VIS_PAIRS = [(700, 2), (800, 1), (900, 4), (1050, 3), (1150, 1), (1250, 2), (1450, 1), (1550, 4), (1650, 8),
+             (1850, 4), (1940, 4), (2030, 1), (2120, 4), (2210, 1), (2400, 4), (2560, 6), (2658, 1), (2756, 3),
+             (2854, 1), (2952, 2), (3150, 7), (3233, 1), (3316, 2), (3400, 4), (3483, 1), (3566, 4),
+             (3650, 4), (3733, 8), (3816, 2)]
+VIS_DEMO = [{"t": t, "viseme": v} for t, v in VIS_PAIRS]
+VIS_DEMO_B = [{"t": t + 3000, "viseme": v} for t, v in VIS_PAIRS]
+
+PRESENTER_TALK_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const canvas = root.querySelector('.obj-presenter canvas');
+const rig = window.CharacterRig ? CharacterRig.create(canvas, {
+  visemes: p.visemes || [],
+  mood: p.mood || 'neutral',
+  gestureAt: p.gesture_at !== undefined && p.gesture_at !== null ? Number(p.gesture_at) : 4200,
+  gestureDur: Number(p.gesture_dur) || 1500,
+  walk: !!p.walk,
+  seed: Number(p.seed) || 0,
+}) : { seek() {} };
+const cap = root.querySelector('.talk-caption');
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+
+const halo = root.querySelector('.talk-halo');
+const actors = root.querySelector('.layer-actors');
+const actorBox = root.querySelector('.obj-presenter');
+if (halo && actors && actorBox) actors.insertBefore(halo, actorBox);
+
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 46, seed: 17, color: '255,225,175',
+  speedY: 9, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.82, duration: 1.1, ease: 'power3.out' }, 0)
+  .from('.obj-presenter', { y: 30, opacity: 0, duration: 0.85, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = { seek(t) { tl.seek(t / 1000); rig.seek(t); dust.seek(t); } };
+"""
+
+CHARACTER_TALK_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const actor = root.querySelector('.obj-portrait');
+const eyeY = Number(p.eye_y) || 30;
+const rig = SceneKit.portraitRig(actor, {
+  image: p.image || '/portraits/host.png',
+  mouth: { x: Number(p.mouth_x) || 49, y: Number(p.mouth_y) || 45.5, w: Number(p.mouth_w) || 7 },
+  eyes: p.blink ? [[Number(p.eye_lx) || 41, eyeY, 3.6, 2.6], [Number(p.eye_rx) || 57, eyeY, 3.6, 2.6]] : null,
+  visemes: p.visemes || [],
+  mood: p.mood || 'neutral',
+  seed: Number(p.seed) || 0,
+});
+const cap = root.querySelector('.talk-caption');
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+
+// ореол светится ЗА героем
+const halo = root.querySelector('.talk-halo');
+const actors = root.querySelector('.layer-actors');
+if (halo && actors) actors.insertBefore(halo, actor);
+
+// атмосфера: пыль в луче + пост-обработка кадра (зерно/виньетка/грейд)
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 46, seed: 17, color: '255,225,175',
+  speedY: 9, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
+
+// кинетическая типографика + появление героя
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.82, duration: 1.1, ease: 'power3.out' }, 0)
+  .from('.obj-portrait', { y: 34, opacity: 0, duration: 0.85, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = { seek(t) { tl.seek(t / 1000); rig.seek(t); dust.seek(t); } };
+"""
+
+RIVE_CHARACTER_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const canvas = root.querySelector('.obj-character-rive canvas');
+const raw = window.__riveCharacterBuffer || '';
+let buffer = null;
+try {
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) { window.__sceneSend && window.__sceneSend('scene-error', { message: 'rive buffer: ' + e }); }
+
+const rig = SceneKit.riveCharacter(canvas, {
+  buffer,
+  character: p.character || 'host',
+  visemes: p.visemes || [],
+  gestures: p.gestures || [{ at: 4200, type: 'wave', hand: 'R', dur: 1600 }],
+  walk: !!p.walk,
+  mood: p.mood || 'neutral',
+  seed: Number(p.seed) || 0,
+  props: p,
+});
+
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+
+const halo = root.querySelector('.talk-halo');
+const actors = root.querySelector('.layer-actors');
+const actorBox = root.querySelector('.obj-character-rive');
+if (halo && actors && actorBox) actors.insertBefore(halo, actorBox);
+
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 46, seed: 17, color: '255,225,175',
+  speedY: 9, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.82, duration: 1.1, ease: 'power3.out' }, 0)
+  .from('.obj-character-rive', { y: 24, duration: 0.85, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = {
+  ready: rig.ready,
+  seek(t) {
+    if (rig) rig.seek(t);
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+RIVE_PANEL_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const raw = window.__riveCharacterBuffer || '';
+let buffer = null;
+try {
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) {}
+
+const canvases = Array.from(root.querySelectorAll('.obj-character-rive canvas'));
+const cast = Array.isArray(p.cast) && p.cast.length ? p.cast : [
+  { character: 'host', mood: 'joy' },
+  { character: 'cohost', mood: 'joy' },
+];
+const rigs = canvases.map((canvas, i) => SceneKit.riveCharacter(canvas, {
+  buffer,
+  character: (cast[i] && cast[i].character) || 'host',
+  visemes: (cast[i] && cast[i].visemes) || p.visemes || [],
+  gestures: (cast[i] && cast[i].gestures) || [],
+  mood: (cast[i] && cast[i].mood) || p.mood || 'neutral',
+  walk: !!(cast[i] && cast[i].walk),
+  seed: Number((cast[i] && cast[i].seed) || i * 17),
+  props: cast[i] || {},
+}));
+
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 52, seed: 19, color: '255,225,175',
+  speedY: 8, driftX: 20, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.05, alphaMax: 0.22,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.86, duration: 1, ease: 'power3.out' }, 0)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = {
+  ready: Promise.all(rigs.map((r) => r.ready)),
+  seek(t) {
+    rigs.forEach((r) => r.seek(t));
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+RIVE_BOB_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const canvas = root.querySelector('.obj-character-bob canvas');
+const raw = window.__riveActorBuffer || '';
+let buffer = null;
+try {
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) {}
+
+const rig = SceneKit.riveActor(canvas, {
+  buffer,
+  visemes: p.visemes || [],
+  gestures: p.gestures || [{ at: 4200, type: 'wave', dur: 1800 }],
+  mood: p.mood || 'neutral',
+  props: p,
+});
+
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 46, seed: 17, color: '255,225,175',
+  speedY: 9, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.86, duration: 1, ease: 'power3.out' }, 0)
+  .from('.obj-character-bob', { y: 26, duration: 0.9, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.obj-character-bob', { y: -6, rotation: 0.35, duration: 3.1, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0.95)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = {
+  ready: rig.ready,
+  seek(t) {
+    if (rig) rig.seek(t);
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+RIVE_OLDMAN_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const canvas = root.querySelector('.obj-character-oldman canvas');
+const raw = window.__riveOldManBuffer || '';
+let buffer = null;
+try {
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) {}
+
+const rig = SceneKit.riveActor(canvas, {
+  buffer,
+  character: 'oldman',
+  visemes: p.visemes || [],
+  gestures: p.gestures || [{ at: 4200, type: 'point', dur: 1500 }],
+  mood: p.mood || 'neutral',
+  props: p,
+});
+
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 54, seed: 23, color: '255,225,175',
+  speedY: 8, driftX: 20, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
+});
+SceneKit.grain(root, { grainOpacity: 0.12, vignetteStrength: 0.5 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.86, duration: 1, ease: 'power3.out' }, 0)
+  .from('.obj-character-oldman', { y: 26, duration: 0.9, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = {
+  ready: rig.ready,
+  seek(t) {
+    if (rig) rig.seek(t);
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+RIVE_OLDMAN_PANEL_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const raw = window.__riveOldManBuffer || '';
+let buffer = null;
+try {
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) {}
+
+const canvases = Array.from(root.querySelectorAll('.obj-character-oldman canvas'));
+const cast = Array.isArray(p.cast) && p.cast.length ? p.cast : [
+  { name: 'Летописец', mood: 'neutral', visemes: p.visemes || [], gestures: [{ at: 4200, type: 'point', dur: 1500 }] },
+  { name: 'Старец', mood: 'surprise', visemes: p.visemes_b || [], gestures: [{ at: 6200, type: 'point', dur: 1400 }] },
+];
+const rigs = canvases.map((canvas, i) => SceneKit.riveActor(canvas, {
+  buffer,
+  character: 'oldman',
+  visemes: (cast[i] && cast[i].visemes) || [],
+  gestures: (cast[i] && cast[i].gestures) || [],
+  mood: (cast[i] && cast[i].mood) || 'neutral',
+  props: cast[i] || {},
+}));
+
+const line = root.querySelector('.talk-line');
+if (line && p.headline) line.textContent = p.headline;
+SceneKit.views(root, p.views || {});
+const dustCanvas = root.querySelector('.talk-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 58, seed: 29, color: '255,225,175',
+  speedY: 8, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.05, alphaMax: 0.24,
+});
+SceneKit.grain(root, { grainOpacity: 0.12, vignetteStrength: 0.52 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-halo', { opacity: 0, scale: 0.86, duration: 1.1, ease: 'power3.out' }, 0)
+  .from('.layer-actors > .obj-character-oldman', { y: 28, duration: 0.95, stagger: 0.12, ease: 'power4.out' }, 0.05)
+  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out' }, 0.4)
+  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.55)
+  .to('.talk-sweep', { xPercent: 130, duration: 2.6, ease: 'power2.inOut' }, 0.6)
+  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
+
+window.scene = {
+  ready: Promise.all(rigs.map((r) => r.ready)),
+  seek(t) {
+    rigs.forEach((r) => r.seek(t));
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3D AVATAR (Ready Player Me GLB + Babylon.js)
+# ─────────────────────────────────────────────────────────────────────────────
+# The model ships 67 bones and 72 ARKit/Oculus morph targets (15 visemes).
+# Babylon is loaded via <script src> because the sandbox has an opaque origin;
+# the GLB is wrapped into /models/brunette.glb.js for the same reason (fetch is
+# blocked there). BabylonCharacter draws exactly one frame per seek(t).
+
+CHARACTER_3D_HTML = """
+<div class="scene">
+  <div class="layer layer-world" data-layer="world">
+    <div class="av-bg"></div>
+    <div class="av-glow"></div>
+  </div>
+  <div class="layer layer-actors" data-layer="actors">
+    <div class="obj-character-3d" data-layer-id="hero">
+      <canvas class="av-canvas" width="1600" height="900"></canvas>
+    </div>
+  </div>
+  <div class="layer layer-overlay" data-layer="overlay">
+    <div class="av-sweep"></div>
+    <canvas class="av-dust" width="1920" height="1080"></canvas>
+    <div class="av-caption">
+      <div class="av-kicker">3D STUDIO</div>
+      <div class="av-mask"><span class="av-line">Живой 3D-аватар</span></div>
+    </div>
+  </div>
+</div>
+<script src="/vendor/babylon.js"></script>
+<script src="/vendor/babylonjs.loaders.min.js"></script>
+<script src="/vendor/babylon-character.js"></script>
+<script src="/models/brunette.glb.js"></script>
+"""
+
+CHARACTER_3D_CSS = """
+.av-bg { position:absolute; inset:0;
+  background:radial-gradient(120% 90% at 50% 12%, #2b3a52 0%, #161d29 46%, #090c12 100%); }
+.av-glow { position:absolute; left:50%; top:4%; width:78vmin; height:78vmin; margin-left:-39vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(130,175,255,.20) 0%, rgba(130,175,255,.05) 46%, transparent 70%);
+  filter:blur(8px); }
+.obj-character-3d { position:absolute; inset:0; }
+.obj-character-3d .av-canvas { width:100%; height:100%; display:block; }
+.av-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.av-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.55; }
+.av-caption { position:absolute; left:7%; bottom:9%; max-width:46%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.av-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue);
+  margin-bottom:1.2vmin; }
+.av-mask { overflow:hidden; padding:.12em 0 .18em; }
+.av-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06;
+  transform-origin:left bottom; }
+.av-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px;
+  background:var(--brand-light-blue); }
+@media (orientation: portrait) {
+  .av-caption { left:8%; right:8%; bottom:7%; max-width:none; text-align:center; }
+  .av-caption::before { display:none; }
+  .av-line { font-size:clamp(18px, 6vmin, 40px); }
+}
+"""
+
+CHARACTER_3D_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const canvas = root.querySelector('.av-canvas');
+
+let buffer = null;
+try {
+  const raw = window.__avatarGlb || '';
+  if (raw) {
+    const bin = atob(raw);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    buffer = u.buffer;
+  }
+} catch (e) {
+  window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar buffer: ' + e });
+}
+
+const rig = SceneKit.babylonCharacter(canvas, {
+  buffer,
+  preset: p.preset || 'bust',
+  visemes: p.visemes || [],
+  mood: p.mood || 'neutral',
+  gestures: p.gestures || [{ at: 4200, type: 'wave', duration: 1800 }],
+  gaze: p.gaze || { x: 0, y: 0 },
+  idleClip: p.idleClip || 'Neutral_Idle',
+  talkClip: p.talkClip || 'Talking',
+  talkWeight: p.talk_weight !== undefined ? Number(p.talk_weight) : 0.4,
+  pose: p.pose || {},
+  poseKeys: p.pose_keys || [],
+  seed: Number(p.seed) || 0,
+  intensity: p.intensity !== undefined ? Number(p.intensity) : 1,
+  onError(e) {
+    window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar: ' + (e && e.message ? e.message : e) });
+  },
+});
+
+const line = root.querySelector('.av-line');
+if (line && p.headline) line.textContent = p.headline;
+const kicker = root.querySelector('.av-kicker');
+if (kicker && p.kicker) kicker.textContent = p.kicker;
+
+const dustCanvas = root.querySelector('.av-dust');
+const dust = SceneKit.particles(dustCanvas, {
+  count: Number(p.dust_count) || 44, seed: 23, color: '210,225,255',
+  speedY: 8, driftX: 18, sizeMin: 0.8, sizeMax: 2.2, alphaMin: 0.05, alphaMax: 0.22,
+});
+SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.46 });
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.av-glow', { opacity: 0, scale: 0.86, duration: 1.1, ease: 'power3.out' }, 0)
+  .from('.obj-character-3d', { opacity: 0, y: 22, duration: 0.9, ease: 'power4.out' }, 0.05)
+  .from('.av-line', { yPercent: 118, rotate: 2, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
+  .fromTo('.av-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
+  .to('.av-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
+  .to('.av-caption', { opacity: 0, y: -16, duration: 0.6, ease: 'power2.in' }, 6.2);
+
+// live controls from the editor (no iframe rebuild)
+window.addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (!m || !m.type || m.type.indexOf('avatar-') !== 0) return;
+  try {
+    if (m.type === 'avatar-pose') rig.setPose(m.pose || {});
+    else if (m.type === 'avatar-pose-keys') rig.setPoseKeys(m.keys || []);
+    else if (m.type === 'avatar-visemes') rig.setVisemes(m.visemes || []);
+    else if (m.type === 'avatar-mood') rig.setMood(m.mood || 'neutral');
+    else if (m.type === 'avatar-gaze') rig.setGaze(m.gaze || { x: 0, y: 0 });
+    else if (m.type === 'avatar-gestures') rig.setGestures(m.gestures || []);
+    else if (m.type === 'avatar-clips') rig.setClips(m.clips || {});
+    else if (m.type === 'avatar-preset') rig.applyPreset(m.preset || 'bust');
+    else if (m.type === 'avatar-text') {
+      const line = root.querySelector('.av-line');
+      if (line && m.headline) line.textContent = m.headline;
+      const kicker = root.querySelector('.av-kicker');
+      if (kicker && m.kicker) kicker.textContent = m.kicker;
+    }
+  } catch (err) {
+    window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar control: ' + err });
+  }
+});
+
+window.scene = {
+  ready: rig.ready,
+  seek(t) {
+    rig.seek(t);
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+  destroy() { try { rig.destroy(); } catch (e) {} },
+};
+"""
+
+CHARACTER_3D_TEMPLATE = {
+    "slug": "character-3d",
+    "title": "3D avatar",
+    "description": "Ready Player Me: скелет 67 костей и 72 ARKit-морфа. Липсинк по 15 Oculus-виземам, моргание, дыхание, взгляд, жесты, кинетическая типографика.",
+    "tags": ["scene", "character", "lipsync", "3d", "avatar", "babylon", "studio"],
+    "duration": 7000,
+    "environment": "studio",
+    "view": "",
+    "cues": [],
+    "objects": [],
+    "props_schema": {
+        "headline": {"type": "text", "label": "Подпись"},
+        "kicker": {"type": "text", "label": "Надпись сверху"},
+        "preset": {"type": "select", "label": "Кадр", "options": ["face", "bust", "full", "wide"]},
+        "idleClip": {"type": "select", "label": "Базовый клип", "options": ["Neutral_Idle", "Idle", "Talking", "Thinking", "Look_Around"]},
+        "talkClip": {"type": "select", "label": "Клип речи", "options": ["Talking", "Neutral_Idle", "Thinking"]},
+        "talk_weight": {"type": "number", "label": "Вес речи 0..1"},
+        "pose": {"type": "json", "label": "Поза {кость: [x,y,z]}°"},
+        "pose_keys": {"type": "json", "label": "Ключи позы [{at,bone,x,y,z}]"},
+        "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "sad", "surprise", "anger"]},
+        "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+        "gestures": {"type": "json", "label": "Жесты [{at,type,duration}]"},
+        "gaze": {"type": "json", "label": "Взгляд {x,y}"},
+        "seed": {"type": "integer", "label": "Seed"},
+    },
+    "default_props": {
+        "headline": "Живой 3D-аватар",
+        "kicker": "3D STUDIO",
+        "preset": "bust",
+        "idleClip": "Neutral_Idle",
+        "talkClip": "Talking",
+        "talk_weight": 0.4,
+        "pose": {},
+        "pose_keys": [],
+        "mood": "neutral",
+        "visemes": [],
+        "gestures": [{"at": 4200, "type": "wave", "duration": 1800}],
+        "gaze": {"x": 0, "y": 0},
+        "seed": 3,
+    },
+    "code": {
+        "html": CHARACTER_3D_HTML.strip(),
+        "css": (BASE_CSS + "\n" + CHARACTER_3D_CSS).strip(),
+        "js": CHARACTER_3D_JS.strip(),
+    },
+}
+
+
 TEMPLATES = [
+    CHARACTER_3D_TEMPLATE,
     _compose(
         "forest", ["road", "car", "tree", "pine", "cloud"],
         FOREST_DRIVE_JS,
@@ -1147,6 +1943,458 @@ TEMPLATES = [
         default_props={"car_color": "#E4572E", "cruise_speed": 1.4, "tree_count": 5, "pine_count": 6, "camera_amount": 1, "views": {"car": "side"}},
         cues=[{"at": 0, "set": {"speed": 1.4, "brake": False}}, {"at": 2200, "set": {"speed": 2.9}}, {"at": 4600, "set": {"speed": 0.35, "brake": True}}],
         extra_css=CINEMATIC_FOREST_CSS,
+    ),
+    _compose(
+        "studio", ["portrait"],
+        CHARACTER_TALK_JS,
+        title="Portrait talk",
+        description="Нарисованный портрет + оверлей рта: липсинк по виземам, дыхание, кинетическая типографика, пыль.",
+        tags=["scene", "character", "lipsync", "studio", "portrait"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "image": {"type": "text", "label": "Портрет (путь)"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
+            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+            "mouth_x": {"type": "number", "label": "Рот X, %"},
+            "mouth_y": {"type": "number", "label": "Рот Y, %"},
+            "mouth_w": {"type": "number", "label": "Ширина рта, %"},
+            "blink": {"type": "boolean", "label": "Моргание"},
+        },
+        default_props={
+            "headline": "Живой персонаж",
+            "image": "/portraits/host.png",
+            "mood": "joy",
+            "visemes": VIS_DEMO,
+            "mouth_x": 49, "mouth_y": 45.5, "mouth_w": 7,
+            "blink": False,
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">ЖИВОЙ ПЕРСОНАЖ</div>'
+            '<div class="talk-mask"><span class="talk-line">Живой персонаж</span></div>'
+            '</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 58% 40%, rgba(120,165,255,.12), transparent 60%); }
+.obj-portrait { left:58% !important; bottom:2% !important; width:60vmin !important; height:60vmin !important;
+  margin-left:-30vmin !important; }
+.talk-halo { position:absolute; left:58%; top:4%; width:56vmin; height:56vmin; margin-left:-28vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(150,190,255,.24) 0%, rgba(150,190,255,.05) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.6; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:10%;
+  text-align:left; max-width:44%; z-index:35;
+  font-family:var(--font-heading); font-weight:700;
+  color:var(--text-primary); text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue);
+  margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06;
+  transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px;
+  background:var(--brand-light-blue); }
+@media (orientation: portrait) {
+  .obj-portrait { left:50% !important; bottom:10% !important; width:86vmin !important; height:86vmin !important;
+    margin-left:-43vmin !important; }
+  .talk-halo { left:50%; top:8%; width:84vmin; height:84vmin; margin-left:-42vmin; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+  .talk-line { font-size:clamp(18px, 6vmin, 40px); }
+}
+""",
+    ),
+    _compose(
+        "studio", ["presenter"],
+        PRESENTER_TALK_JS,
+        title="Character talk",
+        description="Ригированный ведущий на canvas: скелет, липсинк по виземам, моргание, взгляд, жест.",
+        tags=["scene", "character", "lipsync", "studio", "canvas", "rig"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
+            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+            "gesture_at": {"type": "number", "label": "Жест, мс"},
+            "gesture_dur": {"type": "number", "label": "Длительность жеста, мс"},
+            "walk": {"type": "boolean", "label": "Ходьба"},
+        },
+        default_props={
+            "headline": "Живой персонаж",
+            "mood": "joy",
+            "visemes": VIS_DEMO,
+            "gesture_at": 4200,
+            "gesture_dur": 1500,
+            "walk": False,
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">ЖИВОЙ ПЕРСОНАЖ</div>'
+            '<div class="talk-mask"><span class="talk-line">Живой персонаж</span></div>'
+            '</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 58% 40%, rgba(120,165,255,.12), transparent 60%); }
+.obj-presenter { left:60% !important; bottom:4% !important; width:34vmin !important; height:54vmin !important;
+  margin-left:-17vmin !important; }
+.talk-halo { position:absolute; left:60%; top:6%; width:50vmin; height:50vmin; margin-left:-25vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(150,190,255,.24) 0%, rgba(150,190,255,.05) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.6; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:10%;
+  text-align:left; max-width:44%; z-index:35;
+  font-family:var(--font-heading); font-weight:700;
+  color:var(--text-primary); text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue);
+  margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06;
+  transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px;
+  background:var(--brand-light-blue); }
+@media (orientation: portrait) {
+  .obj-presenter { left:50% !important; bottom:8% !important; width:66vmin !important; height:104vmin !important;
+    margin-left:-33vmin !important; }
+  .talk-halo { left:50%; top:12%; width:64vmin; height:64vmin; margin-left:-32vmin; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+  .talk-line { font-size:clamp(18px, 6vmin, 40px); }
+}
+""",
+    ),
+    _compose(
+        "studio", ["character-rive"],
+        RIVE_CHARACTER_JS,
+        title="Rive character",
+        slug="character-rive",
+        description="Rive-риг ведущего: скелет, липсинк по виземам, моргание, взгляд, жесты, ходьба, пресеты персонажей.",
+        tags=["scene", "character", "lipsync", "rive", "skeleton", "studio"],
+        duration=7000,
+        props_schema={
+            "character": {"type": "select", "label": "Персонаж", "options": ["host", "cohost", "priest", "historian", "sociologist"]},
+            "headline": {"type": "text", "label": "Подпись"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
+            "walk": {"type": "boolean", "label": "Ходьба"},
+            "gestures": {"type": "json", "label": "Жесты [{at,type,hand,dur}]"},
+            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+            "seed": {"type": "number", "label": "Seed"},
+        },
+        default_props={
+            "character": "host",
+            "headline": "Живой персонаж",
+            "mood": "joy",
+            "walk": False,
+            "gestures": [{"at": 4200, "type": "wave", "hand": "R", "dur": 1600}],
+            "visemes": VIS_DEMO,
+            "seed": 7,
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">RIVE / SKELETON</div>'
+            '<div class="talk-mask"><span class="talk-line">Живой персонаж</span></div>'
+            '</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 58% 40%, rgba(120,165,255,.12), transparent 60%); }
+.talk-halo { position:absolute; left:50%; top:2%; width:62vmin; height:62vmin; margin-left:-31vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(150,190,255,.22) 0%, rgba(150,190,255,.05) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.6; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:10%; text-align:left; max-width:44%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-light-blue); }
+@media (orientation: portrait) {
+  .talk-halo { left:50%; top:4%; width:86vmin; height:86vmin; margin-left:-43vmin; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+  .talk-line { font-size:clamp(18px, 6vmin, 40px); }
+}
+""",
+    ),
+    _compose(
+        "studio", ["character-rive", "character-rive"],
+        RIVE_PANEL_JS,
+        title="Rive panel",
+        slug="character-rive-panel",
+        description="Двое ведущих на Rive-риге: разные пресеты, синхронный seek, общий липсинк.",
+        tags=["scene", "character", "lipsync", "rive", "panel", "studio"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "cast": {"type": "json", "label": "Каст [{character,mood,visemes,gestures}]"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
+            "visemes": {"type": "json", "label": "Виземы по умолчанию"},
+        },
+        default_props={
+            "headline": "Двое в студии",
+            "mood": "joy",
+            "visemes": VIS_DEMO,
+            "cast": [
+                {"character": "host", "mood": "joy"},
+                {"character": "cohost", "mood": "joy"},
+            ],
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">RIVE / CAST</div>'
+            '<div class="talk-mask"><span class="talk-line">Двое в студии</span></div>'
+            '</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 50% 40%, rgba(120,165,255,.12), transparent 60%); }
+.layer-actors > .obj-character-rive:nth-of-type(1) { left:33% !important; bottom:2% !important; width:36vmin !important; height:60vmin !important; margin-left:-18vmin !important; }
+.layer-actors > .obj-character-rive:nth-of-type(2) { left:67% !important; bottom:2% !important; width:36vmin !important; height:60vmin !important; margin-left:-18vmin !important; }
+.talk-halo { position:absolute; left:50%; top:2%; width:70vmin; height:70vmin; margin-left:-35vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(150,190,255,.20) 0%, rgba(150,190,255,.04) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.6; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:8%; text-align:left; max-width:50%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-light-blue); }
+@media (orientation: portrait) {
+  .layer-actors > .obj-character-rive:nth-of-type(1) { left:50% !important; bottom:36% !important; width:62vmin !important; height:103vmin !important; margin-left:-31vmin !important; }
+  .layer-actors > .obj-character-rive:nth-of-type(2) { left:50% !important; bottom:4% !important; width:62vmin !important; height:103vmin !important; margin-left:-31vmin !important; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+}
+""",
+    ),
+    _compose(
+        "studio", ["character-bob"],
+        RIVE_BOB_JS,
+        title="Bob / ready Rive",
+        slug="character-bob",
+        description="Готовый Rive-персонаж Bob: 10 визёмов, выражения, взгляд, дыхание, жесты. CC BY 4.0 — emanuelcabezas.",
+        tags=["scene", "character", "lipsync", "rive", "ready", "studio"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "smile", "sad", "surprise", "thinking", "warm", "proud", "focus"]},
+            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+            "gestures": {"type": "json", "label": "Жесты [{at,type,dur}]"},
+        },
+        default_props={
+            "headline": "Мир вам — это живая сцена",
+            "mood": "joy",
+            "visemes": VIS_DEMO,
+            "gestures": [{"at": 4200, "type": "wave", "dur": 1800}],
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">READY RIVE / BOB</div>'
+            '<div class="talk-mask"><span class="talk-line">Живой персонаж</span></div>'
+            '</div>'
+            '<div class="bob-credit">Bob — emanuelcabezas · CC BY 4.0</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 58% 40%, rgba(120,165,255,.12), transparent 60%); }
+.talk-halo { position:absolute; left:62%; top:2%; width:62vmin; height:62vmin; margin-left:-31vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(150,190,255,.20) 0%, rgba(150,190,255,.04) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.6; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:12%; text-align:left; max-width:44%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-light-blue); }
+.bob-credit { position:absolute; right:2.5%; bottom:2.5%; z-index:40; font:400 clamp(8px,1vmin,11px)/1.3 var(--font-sans);
+  color:rgba(232,238,247,.5); letter-spacing:.04em; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+@media (orientation: portrait) {
+  .obj-character-bob { left:50% !important; bottom:8% !important; width:82vmin !important; height:145.8vmin !important; margin-left:-41vmin !important; }
+  .talk-halo { left:50%; top:4%; width:84vmin; height:84vmin; margin-left:-42vmin; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+}
+""",
+    ),
+    _compose(
+        "studio", ["character-oldman"],
+        RIVE_OLDMAN_JS,
+        title="Old Man / ready Rive",
+        slug="character-oldman",
+        description="Готовый Rive-старец в рясе с посохом: полное тело, ткань, глаза, моргание, говорящий рот. CC BY 4.0 — ar.akash.",
+        tags=["scene", "character", "lipsync", "rive", "ready", "oldman", "historical"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "surprise"]},
+            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
+            "gestures": {"type": "json", "label": "Жесты [{at,type,dur}]"},
+        },
+        default_props={
+            "headline": "Слово о главном",
+            "mood": "neutral",
+            "visemes": VIS_DEMO,
+            "gestures": [{"at": 4200, "type": "point", "dur": 1500}],
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">READY RIVE / OLD MAN</div>'
+            '<div class="talk-mask"><span class="talk-line">Слово о главном</span></div>'
+            '</div>'
+            '<div class="bob-credit">Old Man — ar.akash · CC BY 4.0</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 58% 38%, rgba(255,190,110,.10), transparent 62%); }
+.talk-halo { position:absolute; left:62%; top:2%; width:60vmin; height:60vmin; margin-left:-30vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,196,120,.20) 0%, rgba(255,196,120,.04) 45%, transparent 70%);
+  filter:blur(6px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(255,225,175,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.65; z-index:30; }
+.talk-caption { position:absolute; left:7%; bottom:12%; text-align:left; max-width:44%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-amber); margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
+.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-amber); }
+.bob-credit { position:absolute; right:2.5%; bottom:2.5%; z-index:40; font:400 clamp(8px,1vmin,11px)/1.3 var(--font-sans);
+  color:rgba(232,238,247,.5); letter-spacing:.04em; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+@media (orientation: portrait) {
+  .obj-character-oldman { left:50% !important; bottom:8% !important; width:76vmin !important; height:135.1vmin !important; margin-left:-38vmin !important; }
+  .talk-halo { left:50%; top:4%; width:82vmin; height:82vmin; margin-left:-41vmin; }
+  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
+  .talk-caption::before { display:none; }
+}
+""",
+    ),
+    _compose(
+        "studio", ["character-oldman", "character-oldman"],
+        RIVE_OLDMAN_PANEL_JS,
+        title="Old Man panel",
+        slug="character-oldman-panel",
+        description="Два готовых Rive-старца в одной сцене: у каждого свой липсинк, настроение и жест; общий seek и независимые state machine.",
+        tags=["scene", "character", "lipsync", "rive", "ready", "oldman", "panel", "historical"],
+        duration=7000,
+        props_schema={
+            "headline": {"type": "text", "label": "Подпись"},
+            "cast": {"type": "json", "label": "Каст [{name,mood,visemes,gestures}]"},
+            "visemes": {"type": "json", "label": "Виземы первого"},
+            "visemes_b": {"type": "json", "label": "Виземы второго"},
+        },
+        default_props={
+            "headline": "Два свидетеля",
+            "visemes": VIS_DEMO,
+            "visemes_b": VIS_DEMO_B,
+            "cast": [
+                {"name": "Летописец", "mood": "neutral", "visemes": VIS_DEMO,
+                 "gestures": [{"at": 4200, "type": "point", "dur": 1500}]},
+                {"name": "Старец", "mood": "surprise", "visemes": VIS_DEMO_B,
+                 "gestures": [{"at": 6200, "type": "point", "dur": 1400}]},
+            ],
+        },
+        extra_html=(
+            '<div class="talk-halo"></div>'
+            '<div class="talk-sweep"></div>'
+            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
+            '<div class="actor-tag tag-a">Летописец</div>'
+            '<div class="actor-tag tag-b">Старец</div>'
+            '<div class="talk-caption">'
+            '<div class="talk-kicker">READY RIVE / TWO ELDERS</div>'
+            '<div class="talk-mask"><span class="talk-line">Два свидетеля</span></div>'
+            '</div>'
+            '<div class="bob-credit">Old Man — ar.akash · CC BY 4.0</div>'
+        ),
+        extra_css="""
+.layer-actors { background:radial-gradient(ellipse at 50% 40%, rgba(255,190,110,.10), transparent 64%); }
+.layer-actors > .obj-character-oldman:nth-of-type(1) { left:33% !important; bottom:0 !important; width:38vmin !important; height:67.6vmin !important; margin-left:-19vmin !important; }
+..layer-actors > .obj-character-oldman:nth-of-type(2) { left:67% !important; bottom:0 !important; width:38vmin !important; height:67.6vmin !important; margin-left:-19vmin !important; transform:scaleX(-1); filter:hue-rotate(-16deg) saturate(.9) brightness(1.03); }
+.actor-tag { position:absolute; z-index:36; bottom:42%; font-family:var(--font-sans); font-size:clamp(9px,1.35vmin,14px);
+  letter-spacing:.16em; text-transform:uppercase; color:var(--brand-amber); opacity:.9;
+  text-shadow:0 2px 12px rgba(0,0,0,.7); }
+.actor-tag.tag-a { left:24%; }
+.actor-tag.tag-b { left:76%; }
+.talk-halo { position:absolute; left:50%; top:2%; width:76vmin; height:76vmin; margin-left:-38vmin;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,196,120,.18) 0%, rgba(255,196,120,.04) 45%, transparent 70%);
+  filter:blur(7px); }
+.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 42%, rgba(255,225,175,.10) 50%, transparent 58%);
+  transform:translateX(-30%); }
+.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.62; z-index:30; }
+.talk-caption { position:absolute; left:50%; bottom:7%; transform:translateX(-50%); text-align:center; max-width:72%; z-index:35;
+  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
+  text-shadow:0 2px 18px rgba(0,0,0,.6); }
+.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-amber); margin-bottom:1.2vmin; }
+.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
+.talk-line { display:inline-block; font-size:clamp(20px, 4vmin, 52px); line-height:1.06; }
+.bob-credit { position:absolute; right:2.5%; bottom:2.5%; z-index:40; font:400 clamp(8px,1vmin,11px)/1.3 var(--font-sans);
+  color:rgba(232,238,247,.5); letter-spacing:.04em; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+@media (orientation: portrait) {
+  .layer-actors > .obj-character-oldman:nth-of-type(1) { left:26% !important; bottom:14% !important; width:48vmin !important; height:92vmin !important; margin-left:-24vmin !important; }
+  .layer-actors > .obj-character-oldman:nth-of-type(2) { left:74% !important; bottom:14% !important; width:48vmin !important; height:92vmin !important; margin-left:-24vmin !important; }
+  .talk-halo { left:50%; top:8%; width:90vmin; height:90vmin; margin-left:-45vmin; }
+  .talk-caption { left:8%; right:8%; bottom:3%; max-width:none; transform:none; }
+  .actor-tag { bottom:auto; top:30%; font-size:8px; letter-spacing:.1em; }
+  .actor-tag.tag-a { left:26%; transform:translateX(-50%); }
+  .actor-tag.tag-b { left:74%; transform:translateX(-50%); }
+}
+""",
     ),
 ]
 

@@ -137,36 +137,69 @@ function visemeAt(t) {
 
 ---
 
-## 3.5. Решение по подходу
+## 3.5. Решение по подходу (принято 2026-10-23)
 
 Пользователь уже пробовал SVG+JS через Gemini Pro — результат слабый.
 Это ожидаемо: LLM хорошо генерирует **код**, но плохо строит **риг** без
 визуального редактора (кости, веса, IK, деформации).
 
-Поэтому:
-- SVG-риг — **timeboxed эксперимент** (1 персонаж, 2–3 клипа, 6–10 визомов).
-- Если результат не предсказуем — переходим на **Rive** (лучший workflow)
-  или **DragonBones** (бесплатный).
-- Абстракция `CharacterRuntime` в сцене: `seek(t)`, `setClip`, `setViseme`.
-  Тогда SVG/Rive/DragonBones можно менять, не переписывая сцены.
+**Решение: SVG/DOM-риг — рабочий путь, Rive — отложен.**
+- Риг написан руками (координаты SVG), LLM его не «фантазирует», а меняет.
+- Полный контроль: любую часть можно двигать из `seek(t)`, из пропсов и из cues.
+- Детерминизм: никаких внутренних часов движка, только `t`.
+- AI-генерируемость: правки персонажа = правка чисел и путей, а не ассетов.
 
-## 4. Что делать сейчас
+Rive остаётся как путь для «геройских» персонажей (сложный скелет, IK,
+веса, нестандартная мимика), но конвейер не должен зависеть от него:
+абстракция `SceneKit.characterRig(el, opts)` даёт `seek(t)` и может быть
+заменена на Rive-драйвер без переписывания сцен.
 
-1. Оставить `character` как SVG-заготовку с частями рига.
-2. Добавить 2–3 клипа: idle, walk, talk (пока без visemes).
-3. Сделать `SceneKit.character` helper:
-   - `setClip(name)`, `seek(t)`, `setViseme(v)`.
-4. Подготовить `visemes` в payload сцены (позже — из TTS).
-5. Выбрать Rive vs SVG по результатам проб:
-   - нужен ли сложный скелет/IK;
-   - важна ли интерактивность;
-   - готов ли ты работать с `.riv`/Spine-ассетами.
+## 4. Что сделано (2026-10-23)
+
+1. **Объект `character` переписан** (`backend/scene_library.py`): полноценный
+   SVG-риг вместо силуэта.
+   Части: `root`, `head`, `gaze`, `lid-left/right`, `brow-left/right`,
+   `mouth`, `torso`, `arm-left/right`, `leg-left/right`.
+   Рот — 10 форм-визёмов (`data-viseme="0..9"`) + язык (`data-viseme="t"`).
+   Цвета — CSS-переменные `--char-skin/hair/shirt/pants/mouth/eye/pupil/shoe`,
+   переопределяются пропсами `colors`.
+2. **`SceneKit.characterRig(el, opts)`** (`core/public/vendor/scene-kit.js`):
+   один драйвер управляет всем ригом от `t`.
+   - виземы с кроссфейдом (`visemeBlend`), челюсть и язык по «открытости»;
+   - моргание (период 3400 мс, окно 170 мс, seed-сдвиг);
+   - дыхание, покачивание, наклон головы;
+   - саккадический взгляд (зрачки);
+   - настроение `neutral|joy|anger|sad|surprise` (брови);
+   - жест рукой (`gestureAt`/`gestureDur`), ходьба (`walk`).
+3. **Шаблон `character-talk`** — студийный talking-head: GSAP-таймлайн,
+   кинетическая типографика, пыль, зерно/виньетка/грейд, контактная тень.
+4. **`SceneKit.visemeBlend` / `lipsync({blend, onVisemePair})`** — плавный
+   переход между формами рта вместо ступеньки.
+5. **Демо**: `scripts/seed_character_talk.py` → `/p/4`.
+
+### Как сделать своего персонажа
+
+```js
+const rig = SceneKit.characterRig(root.querySelector('.obj-character'), {
+  visemes: p.visemes || [],   // [{t, viseme}]
+  mood: 'joy',                // neutral|joy|anger|sad|surprise
+  gestureAt: 4300,            // мс — подъём правой руки
+  gestureDur: 1600,
+  walk: false,
+  seed: 0,                    // сдвиг фазы моргания
+});
+window.scene = { seek(t) { rig.seek(t); } };
+```
+
+Свой SVG-риг подключается тем же драйвером, если в нём есть
+`[data-rig="mouth"]` с 10 путями `[data-viseme="0..9"]` и части головы/тела.
 
 ## 5. Что не делать сейчас
 
 - Не строить полноценный 3D-риг.
 - Не обещать консистентность персонажа без rig/asset pipeline.
-- Не тащить Rive, пока не ясны требования к персонажам.
+- Rive — не тянуть, пока не ясны требования к «геройским» персонажам.
+- Не анимировать рот через `Math.sin` — только виземы.
 
 ## 6. Ссылки
 
@@ -216,15 +249,122 @@ function visemeAt(t) {
 
 ---
 
-## 8. Текущий статус (2026-10-23)
+## 8. Текущий рабочий риг: Rive (2026-10-23)
 
-- Основной каст (`host`, `cohost`, `priest`, `historian`, `sociologist`) —
-  **детализированные портреты**, сгенерированные Gemini Image и вырезанные
-  chroma-key. Файлы: `core/public/portraits/`.
-- Портреты анимируются детерминированно: дыхание, лёгкое качание, масштаб;
-  камера/свет/пыль двигаются отдельно.
-- Историческая массовка — SVG-силуэты.
-- Липсинк и полноценные риги (Rive/DragonBones) ещё не подключены; текущий
-  портрет — статичный bust с процедурным «дыханием».
-- Генератор: `scripts/generate_prav_portraits.py` (Gemini 3 Pro Image +
-  chroma-key + crop).
+Главный путь для персонажей — **собственный Rive-риг**, а не натягивание рта
+на фото и не готовые чужие `.riv` (у них нет контракта виземов/скелета).
+
+### Что собрано
+
+- `core/rive/character/` — исходник проекта Rive CLI:
+  `rive.yaml`, `scene.rml` (генерируется).
+- `scripts/build_rive_character.py` — генератор RML и сборка `.riv`.
+- `core/public/rive/character.riv` — рантайм-ассет.
+- `core/public/vendor/rive-character.js` — детерминированный контроллер:
+  `RiveCharacter.create(canvas, opts)` / `SceneKit.riveCharacter`.
+- Шаблоны `character-rive` (`/p/5`) и `character-rive-panel` (`/p/6`).
+
+### Скелет
+
+Кости (21): `root, spine, chest, neck, head`, `shoulder/upperArm/foreArm/hand`
+(L/R), `hip/thigh/shin/foot` (L/R). Каждая кость — view-model число; контроллер
+пишет углы из `seek(t)` и вызывает `drawFrame()`. Внутренние часы Rive не
+используются: state machine запускает пустую анимацию только чтобы работали
+data binds.
+
+### Лицо и липсинк
+
+- 10 форм рта (`m0..m9`) — отдельные Shape, opacity которых пишется
+  контроллером; кроссфейд 70 мс, зубы/язык привязаны к тем же виземам.
+- Глаза: белки + радужка/зрачок/блик (общий gaze-узел), веки на `blink`,
+  брови на `browY/browTilt`.
+- Голова: `head` (наклон), `neck`, `chest`, `spine`.
+
+### Пресеты
+
+`host`, `cohost`, `priest`, `historian`, `sociologist` — цвета (skin, hair,
+shirt, pants, shoe, lip, iris, scarf, skirt, cassock) и флаги
+(`beard`, `glasses`, `scarfOn`, `skirtOn`, `cassockOn`, `blazerOn`, `longHair`).
+Один `.riv` обслуживает весь каст; переключение — `rig.setPreset(name)`.
+
+### Клипы/движения
+
+`idle` (дыхание, вес, голова, взгляд, моргание), `talk` (кивки), `wave`,
+`point`, `open`, `shrug`, `walk` (in-place, с опциональным переносом root).
+Жесты задаются списком `[{at, type, hand, dur}]`.
+
+### Сборка
+
+```bash
+# Rive CLI 1.7: ~/.rive/bin/rive (или rive в PATH)
+python3 scripts/build_rive_character.py          # RML + .riv + копия в public
+python3 scripts/build_rive_character.py --rml    # только RML
+```
+
+### Грабли (важно)
+
+1. **Порядок отрисовки Rive:** первый child рисуется сверху. Торс, объявленный
+   раньше головы, закрывает подбородок/рот. Сначала рисуем лицо/детали, потом
+   базу; для одежды — сначала детали, потом рубашку.
+2. **У `RootBone` x/y — ключи 90/91**, а не 13/14 (это Node). Ошибка
+   `bind-target-missing-property` тихая: ассет собирается, но не двигается.
+3. **Data binds работают только при запущенной state machine.** Держим
+   пустую animation, `play()` и `drawFrame()`.
+4. **`.riv` в sandboxed iframe:** `fetch` из opaque origin блокируется CORS.
+   `SceneHost` читает файл в родителе и инжектит base64; контроллер принимает
+   `buffer`.
+5. **Шея как Shape в neck-кости закрывает рот** (она рисуется раньше головы).
+   Шею не рисуем отдельно; её закрывает голова/торс.
+6. **Портреты** (`core/public/portraits`) остаются для старого `character-talk`;
+   Rive-риг — основной путь.
+
+### Ограничения текущего арта
+
+- Это **cutout-риг** (жёсткие части на костях), без mesh-скиннинга; швы
+  скрываются накладками/суставами.
+- Арт — стилизованный вектор-база; детализацию (лица, одежда, волосы, обувь)
+  можно наращивать в `scripts/build_rive_character.py`, не меняя скелет.
+- Нет head yaw/3D-поворота, нет IK, нет физики волос; ходьба in-place.
+
+### Legacy SVG/портреты
+
+- Риг `character` (SVG) — рабочий, драйвер `SceneKit.characterRig`, демо `/p/4`.
+- Портреты каста — Gemini Image + chroma-key, анимация дыхания/качания,
+  `SceneKit.idle`; рот процедурный.
+- `scripts/generate_prav_portraits.py` — генератор портретов.
+
+
+## 9. Готовые Rive-актёры (2026-10-23, вечер)
+
+Каталог: `GET /scene-library/characters` (и `/{slug}`). Карточка содержит
+лицензию, автора, режим драйвера, число визёмов и список возможностей.
+
+| slug | актив | режим | тело | липсинк | лицензия |
+|---|---|---|---|---|---|
+| `character-oldman` | Old Man | state machine + view model | полное (ткань, верёвка, стопа) | 3 формы (`Default/OO/AAA`) | CC BY 4.0, ar.akash |
+| `character-bob` | Bob | linear (SM остановлен) | бюст, дыхание, взгляд | 10 визёмов | CC BY 4.0, emanuelcabezas |
+| `character-rive` | собственный риг | view-model numbers | полное, 21 кость | 10 визёмов | internal |
+
+### Как устроен Old Man
+
+- `SceneKit.riveActor(canvas, { character:'oldman', visemes, gestures, mood })`.
+- Драйвер: `core/public/vendor/rive-actor.js`, режим `stateMachine`.
+- После загрузки: `play('State Machine 1')` → `stopRendering()`.
+- `seek(t)`:
+  - двигает state machine `advanceAndApply(dt)` шагами 1/60;
+  - выставляет `mouth` (`Default/OO/AAA`), `face` (`Normal/wow`);
+  - по жестам дергает `leftHand` trigger;
+  - добавляет вторичное движение (наклон/дыхание/смещение).
+- Виземы приходят из `props.visemes` (`[{t, viseme}]`). В редакторе открой
+  вкладку **Characters**, введи реплику и выбери актёра: текст уйдёт в
+  `POST /scene-library/text-to-visemes`, а сцена откроется с готовым липсинком.
+  Офлайн — `scripts/text_to_visemes.py`.
+
+### Ограничения
+
+- У Old Man нет ходьбы и IK; это сценический статичный персонаж с жестами.
+- Bob: numeric view model (`visemes/poses/expressions/mood`) ещё не
+  разобран — позы не переключаются, но линейные виземы/дыхание/взгляд
+  работают после остановки state machine (`/p/9`).
+- Для массовки и других возрастов нужны новые готовые `.riv` или
+  доработка собственного рига.

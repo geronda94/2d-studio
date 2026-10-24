@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Rive персонажи — оригиналы в движении и с речью</title>
+<style>
+  body{margin:0;background:#080C14;color:#E6EDF7;font:13px/1.45 system-ui,-apple-system,sans-serif;padding:16px}
+  h1{font-size:17px;margin:0 0 4px}
+  .sub{color:#8FA3BF;margin-bottom:16px}
+  .row{display:flex;gap:18px;flex-wrap:wrap}
+  .card{background:#101828;border:1px solid #1E2A40;border-radius:10px;padding:12px;width:420px}
+  .card h2{font-size:14px;margin:0 0 8px}
+  .cv{width:396px;height:396px;background:radial-gradient(circle at 50% 40%,#1A2438,#0D1420);border-radius:8px}
+  .bar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  input[type=range]{flex:1}
+  .tag{font-size:11px;background:#1B2740;border-radius:4px;padding:2px 6px;color:#9FC0F0}
+  .log{font-size:11px;color:#7E93B0;margin-top:6px;max-height:74px;overflow:auto;white-space:pre-wrap}
+  button{background:#1D4ED8;color:#fff;border:0;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px}
+  button.ghost{background:#1B2740}
+</style>
+</head>
+<body>
+<h1>Rive-персонажи: оригиналы в движении и с речью</h1>
+<div class="sub">Кадр = чистая функция от t: <code>scrub(t)</code> + входы стейт-машины (без rAF и wall-clock). Свайп по t справа.</div>
+<div class="row" id="row"></div>
+
+<script src="/vendor/rive.js"></script>
+<script src="/vendor/scene-kit.js"></script>
+<script>
+// наши 10 визёмов → их 15 кодов (контракт OpenHuman)
+const VISEME_MAP = { 0:'sil', 1:'aa', 2:'PP', 3:'FF', 4:'DD', 5:'ou', 6:'CH', 7:'nn', 8:'oh', 9:'ih' };
+// таймлайн речи (из scripts/text_to_visemes.py для фразы «Мир вам — это сцена»)
+const SPEECH = [{t:700,viseme:2},{t:800,viseme:1},{t:900,viseme:4},{t:1050,viseme:3},{t:1150,viseme:1},
+ {t:1250,viseme:2},{t:1450,viseme:1},{t:1550,viseme:4},{t:1650,viseme:8},{t:1850,viseme:4},
+ {t:2030,viseme:1},{t:2120,viseme:4},{t:2210,viseme:1},{t:2400,viseme:4},{t:2560,viseme:6},{t:2658,viseme:1},
+ {t:2854,viseme:1},{t:2952,viseme:2},{t:3150,viseme:7},{t:3316,viseme:2},{t:3483,viseme:1},
+ {t:3650,viseme:4},{t:3733,viseme:8},{t:3816,viseme:2}];
+
+const ASSETS = [
+  { slug:'tiny',  title:'Tiny Mascot (185 KB, status ready)', src:'/rive/tiny.riv', sm:'State Machine 1' },
+  { slug:'toshi', title:'Toshi (2.2 MB, status ready)',        src:'/rive/toshi.riv', sm:'' },
+];
+
+const row = document.getElementById('row');
+const cards = [];
+
+for (const a of ASSETS) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `<h2>${a.title}</h2><canvas class="cv" width="792" height="792"></canvas>
+    <div class="bar"><button data-m="idle">▶ idle</button><button data-m="talk" class="ghost">🗣 речь</button>
+    <input type="range" min="0" max="6000" value="0" step="10"><span class="tag" data-t>t=0</span></div>
+    <div class="log"></div>`;
+  row.appendChild(el);
+  const cv = el.querySelector('canvas');
+  const log = el.querySelector('.log');
+  const tag = el.querySelector('[data-t]');
+  const slider = el.querySelector('input');
+  const state = { mode:'idle', inputs:[], inst:null, rive:null, sm:a.sm, vm:null, names:{anim:[], sm:[], boards:[]} };
+
+  const holder = { inst: null };
+  const c = new rive.Rive({
+    src: a.src, canvas: cv, autoplay: false, autoBind: true,
+    layout: new rive.Layout({ fit: rive.Fit.Contain, alignment: rive.Alignment.Center }),
+    onLoad() {
+      const inst = holder.inst;
+      state.inst = inst;
+      try { inst.resizeDrawingSurfaceToCanvas() } catch(e){}
+      state.names.anim = (inst.animationNames || []).slice();
+      state.names.sm = (inst.stateMachineNames || []).slice();
+      state.names.boards = (inst.contents || []).map(x => x.name + ' [' + x.animations.map(a=>a.name).join(',') + ']');
+      const sm = a.sm || state.names.sm[0];
+      state.sm = sm;
+      try { if (sm) { inst.play(sm); state.inputs = inst.stateMachineInputs(sm) || [] } } catch(e){}
+      log.textContent = 'артборды: ' + (state.names.boards.join(' | ') || '—') +
+        '\nанимации: ' + (state.names.anim.join(', ') || '—') +
+        '\nстейт-машины: ' + (state.names.sm.join(', ') || '—') +
+        '\nвходы: ' + (state.inputs.map(i => i.name + ':' + (i.type !== undefined ? i.type : '?')).join(', ') || '—');
+      draw(0);
+    },
+    onLoadError(e) { log.textContent = 'ОШИБКА ЗАГРУЗКИ: ' + (e && e.message || e) },
+  });
+  try { holder.inst = c; state.inst = c } catch(e) {}
+
+  function draw(t) {
+    if (!state.inst) return
+    const inst = state.inst
+    // правильный путь: view model (enum) + играющая стейт-машина
+    try {
+      if (!state.vm && inst.viewModelInstance) {
+        state.vm = inst.viewModelInstance
+        state.visemeProp = state.vm.enum('mouthVisemeCode')
+        state.poseProp = state.vm.enum('pose')
+        if (state.sm) { try { inst.play(state.sm) } catch(e) {} }
+      }
+    } catch (e) {}
+    if (state.visemeProp) {
+      const code = state.mode === 'talk'
+        ? (VISEME_MAP[SceneKit.visemeAt(SPEECH, t)] || 'sil')
+        : 'sil'
+      try { state.visemeProp.value = code } catch(e) {}
+      try { if (state.poseProp) state.poseProp.value = state.mode === 'talk' ? 'thinking' : 'idle' } catch(e) {}
+    }
+    tag.textContent = 't=' + Math.round(t) + ' v=' + SceneKit.visemeAt(SPEECH, t) + (state.visemeProp ? ' → ' + state.visemeProp.value : '')
+  }
+
+  el.querySelectorAll('button').forEach(b => b.onclick = () => {
+    state.mode = b.dataset.m
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('ghost', x !== b))
+    draw(Number(slider.value))
+  })
+  slider.oninput = () => draw(Number(slider.value))
+  cards.push({ a, draw, slider })
+}
+
+// прогоняем оба персонажа по таймлайну речи
+function playAll() {
+  let t0 = performance.now()
+  const step = () => {
+    const t = (performance.now() - t0)
+    if (t > 6000) { setTimeout(() => { t0 = performance.now(); cards.forEach(c => { c.slider.value = 0 }); step() }, 900); return }
+    for (const c of cards) { c.slider.value = Math.min(6000, t); c.draw(t) }
+    requestAnimationFrame(step)
+  }
+  step()
+}
+playAll()
+</script>
+</body>
+</html>

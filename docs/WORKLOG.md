@@ -329,3 +329,112 @@ DB → API → `scenePayload` → `SceneHost` → `runtime` → CSS.
   световой свип, сканлайн монитора, анимация lower third и caption.
 - Портреты приведены к квадрату и `object-fit: cover`, чтобы лица были
   одного масштаба в панели.
+
+
+### 2026-10-23 — Аудит качества и конвейер DeepSeek (от Claude)
+- Проведен комплексный аудит кодовой базы, всех 15 шаблонов и SceneKit.
+- Оформлен документ `docs/CLAUDE_ANALYSIS.md`:
+  - Выделены сильные стороны (детерминизм `seek(t)`, sandboxing, `scene_learnings`).
+  - Учтены осознанные проектные решения автора (realtime-рендер, отсутствие Alembic).
+  - Сформулированы 7 обязательных компонентов premium-качества (GSAP timelines вместо vanilla math, canvas particles, film grain/vignette/grading, контактные тени, кинетическая типографика, вторичное движение, 2.5D параллакс).
+  - Определена архитектура конвейера с DeepSeek: JSON Schema контракт, 5 gold-standard шаблонов (few-shot), автоматический инжект learnings, валидация forbidden APIs.
+  - Спланированы расширения SceneKit (`particles`, `idle`, `postFx`, `ease`).
+- Документ подписан: Claude (Anthropic).
+
+### 2026-10-23 — Управляемый персонаж + липсинк + инструменты кинематографичности
+- Rive CLI 1.7.0 установлен (загрузка 24 МБ с CloudFront шла ~2 МБ/мин, докачано
+  вручную с проверкой SHA-256). Решение по движку: Rive отложен — нет
+  произвольного `seek(t)` и внутренних часов runtime; рабочий путь — SVG-риг.
+- Объект `character` переписан из силуэта в полноценный риг: голова, веки,
+  зрачки (взгляд), брови (настроение), рот с 10 формами-виземами + язык,
+  торс (дыхание), руки (жест), ноги (ходьба). Цвета — CSS-переменные
+  `--char-*`, переопределяются пропсами.
+- `SceneKit.characterRig(el, opts)` — драйвер персонажа: виземы с кроссфейдом,
+  челюсть/язык по открытости, моргание (3400/170 мс + seed), дыхание,
+  качание, саккадический взгляд, настроение neutral/joy/anger/sad/surprise,
+  жест рукой, ходьба.
+- `SceneKit.visemeBlend(visemes, t, blend)` и `lipsync({blend, onVisemePair})` —
+  плавный переход форм рта вместо ступеньки.
+- Расширен SceneKit: `particles(canvas, opts)`, `idle(root, opts)`,
+  `grain(root, opts)` (зерно+виньетка+грейд), `shadow(el, opts)` (контактная
+  тень), `cues(list, {smooth:true})` — плавная интерполяция ключей, устранена
+  ступенчатая скорость в drive-шаблонах.
+- Новый шаблон `character-talk` — первый gold-standard: GSAP-таймлайн,
+  кинетическая типографика (маска + yPercent + letterSpacing + stagger),
+  пыль, зерно/виньетка/грейд, контактная тень, ореол, световой свип, липсинк.
+  Проверен в 16:9 и 9:16.
+- Демо: `scripts/seed_character_talk.py` → `/p/4`.
+- Тест-харнес `core/public/rig-test.html`: `?tpl=`, `?pres=&slide=`, `?ar=9:16`,
+  `?t=мс` — быстрая покадровая проверка сцен без плеера.
+- Доки: `docs/CHARACTERS.md` (риг и драйвер), `docs/LIPSYNC.md` (виземы вместо
+  Rive), `docs/ANIMATION.md` §1.5 (стандарт кинематографичности), `docs/SCENES.md`
+  (справочник SceneKit), `docs/STATUS.md`, `AGENTS.md` §5.5.
+
+
+### 2026-10-23 — Rive-риг персонажа (скелет + липсинк)
+
+- Собран собственный `.riv` из RML через Rive CLI 1.7:
+  `core/rive/character/` + `scripts/build_rive_character.py` →
+  `core/public/rive/character.riv`.
+- 21 кость, 10 форм рта, глаза/веки/брови, 5 пресетов (host/cohost/priest/
+  historian/sociologist), клипы idle/talk/wave/point/open/shrug/walk.
+- `RiveCharacter` (`core/public/vendor/rive-character.js`) пишет VM-числа из
+  `seek(t)` и вызывает `drawFrame()`; `SceneKit.riveCharacter` — обёртка.
+- Шаблон `character-rive`, демо `/p/5`; `SceneHost` инжектит `.riv` base64,
+  чтобы обойти CORS песочницы.
+- Проверено: плеер 16:9/9:16, seek(0)/seek(5200), жест, ходьба, липсинк,
+  редактор, консоль без ошибок.
+
+Ошибки/решения:
+1. `bind-target-missing-property` на RootBone x/y — у RootBone ключи 90/91,
+   не 13/14. Симптом: файл собирается, но не двигается.
+2. Пустой кадр/невидимый персонаж при `--screenshot` — ошибки биндов; смотреть
+   `rive inspect --summary` (`problems`), а не только код возврата.
+3. Рот/подбородок закрыт — порядок отрисовки Rive: первый child сверху.
+   Торс/шея, объявленные раньше головы, перекрывают лицо. Рисуем лицо и
+   детали раньше базы.
+4. В iframe `fetch('/rive/character.riv')` даёт CORS (opaque origin) —
+   читаем файл в родителе и передаём base64/buffer.
+5. Готовые чужие `.riv` (tiny/toshi и др.) не подходят: у большинства нет
+   контракта виземов; у tiny он есть, но GPL и маскот. Свой риг — рабочий путь.
+
+
+### 2026-10-23 — Rive panel (два персонажа)
+
+- Шаблон `character-rive-panel`: два canvas, один `.riv`/буфер, два пресета
+  (host + cohost), общий seek. Демо `/p/6`.
+- `RIVE_PANEL_JS` берёт `props.cast[]` (character/mood/visemes/gestures) и
+  создаёт отдельный `RiveCharacter` на каждый canvas.
+- Проверено: 16:9, `/p/6`, консоль чистая; характеры двигаются/говорят
+  синхронно.
+
+
+### 2026-10-23 (вечер) — готовые Rive-актёры: state machine вместо scrub
+
+- `RiveActor` получил режим `stateMachine`: после загрузки вызывается
+  `play(stateMachine)`, затем `stopRendering()`, а `seek(t)` двигает
+  `StateMachine.advanceAndApply(dt)` шагами 1/60 и вызывает `drawFrame()`.
+- View model: `mouth` (enum `Default/OO/AAA`), `face` (`Normal/wow`),
+  `leftHand` (trigger). 10 визёмов маппятся в три формы рта.
+- Добавлено вторичное движение (наклон/дыхание/смещение canvas) и
+  периодический жест, иначе на общем плане персонаж читается как стоп-кадр.
+- `character-oldman-panel`: два независимых актёра, второй отзеркален и
+  тонирован; подписи «Летописец» / «Старец»; `/p/8`.
+- `scripts/seed_oldman.py` и `seed_oldman_panel.py` генерируют виземы из
+  текста через `scripts/text_to_visemes.py`.
+- API `GET /scene-library/characters`, редактор — вкладка Characters.
+- `/p/8` отрендерен в mp4: 1920×1080, 30 fps, 8.9 с; кадры проверены.
+
+#### Ошибка 16. «Персонаж только моргает»
+**Симптом:** в сцене видно моргание/дыхание, но руки, тело и рот не двигаются.
+**Причина:** ассет содержит state machine, а драйвер скрабил отдельные линейные
+анимации (`Talking`, `Foot Tap`, `Mouth A`). При наличии state machine Rive
+игнорирует линейные анимации; последовательные `scrub()` перетирают друг друга.
+**Решение:** играть state machine и управлять им через view model, а не
+скрабить клипы. Для детерминизма — `stopRendering()` + `advanceAndApply(dt)`.
+**Урок:** если у `.riv` есть state machine, единственный честный путь — view model.
+
+#### Ошибка 17. Панель в 9:16 наезжала персонажами друг на друга
+**Причина:** оба персонажа имели высоту 103vmin и нижнюю привязку 34%/2%.
+**Решение:** в портрете — два персонажа по 46vmin шириной, 82vmin высотой,
+слева/справа; подписи над головами.

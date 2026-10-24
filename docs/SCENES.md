@@ -172,6 +172,37 @@ const layers = SceneKit.parallax([{ el, depth: 0.2 }])
 
 `SceneKit` — не обязателен, но рекомендован для механизмов и ключей.
 
+### Справочник SceneKit
+
+| Метод | Что делает |
+|---|---|
+| `cues(list, {smooth})` | Ключи локального таймлайна: `stateAt(t)`, `integrate(key,t)`, `valueAt(key,t)`. `smooth: true` — плавная (smoothstep) интерполяция между ключами вместо ступенейки |
+| `mechanism({start,speed,loop,update})` | Механизм с фазой (колёса, качание, пар) |
+| `parallax(layers, {speed})` | Параллакс слоёв по глубине |
+| `camera(layers, {path})` | 2.5D-камера: `path(t) → {x,y,z,zoom,rot}` |
+| `scatter(root, {count,x,y,scale,rotate,seed})` | Массовое размножение объекта с детерминированным PRNG |
+| `mulberry32(seed)` | Seeded PRNG (без `Math.random`) |
+| `views(root, map)` | Переключение вида объектов (`.view-front`, `.view-side`…) |
+| `compose(...items)` | Свести несколько `seek(t)`-драйверов в один |
+| `visemeAt(visemes, t)` | Номер визема в момент `t` |
+| `visemeBlend(visemes, t, blend)` | `{cur, next, k}` — кроссфейд форм рта |
+| `lipsync({visemes, blend, onViseme, onVisemePair})` | Драйвер липсинка |
+| `characterRig(el, opts)` | Управляемый персонаж: виземы, моргание, взгляд, дыхание, брови-настроение, жесты, ходьба |
+| `particles(canvas, opts)` | Детерминированные частицы на canvas (пыль, снег, искры) |
+| `idle(root, {index})` | Микро-анимация: дыхание, качание, моргание (портрет или SVG-риг) |
+| `grain(root, opts)` | Пост-обработка кадра: зерно + виньетка + цветовая коррекция |
+| `shadow(el, opts)` | Контактная тень под объектом |
+
+Пример премиум-кадра:
+
+```js
+const tl = gsap.timeline({ paused: true });
+tl.from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out' });
+const dust = SceneKit.particles(root.querySelector('.dust'), { count: 40, seed: 7 });
+SceneKit.grain(root);
+window.scene = { seek(t) { tl.seek(t / 1000); dust.seek(t); } };
+```
+
 ---
 
 ## 5. Редактор

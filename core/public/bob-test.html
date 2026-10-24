@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Bob test</title>
+<style>body{margin:0;background:#0b1018;color:#e8eef7;font:12px system-ui;padding:12px}#bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}button,select{background:#16203a;color:#e8eef7;border:1px solid #2a3b5c;border-radius:6px;padding:5px 8px}button{background:#1d4ed8;border:0;cursor:pointer}#stage{width:min(70vw,680px);aspect-ratio:3/4;background:radial-gradient(circle at 50% 35%,#1b2435,#0b1018 70%);border-radius:8px;overflow:hidden}canvas{width:100%;height:100%;display:block}</style></head><body>
+<div id="bar"><input id="t" type="range" min="0" max="7000" value="0" step="10" style="flex:1;min-width:220px"><span id="tv">t=0</span><select id="vis"></select><select id="expr"></select><button id="wave">wave</button><button id="play">play</button></div>
+<div id="stage"><canvas id="c" width="720" height="960"></canvas></div>
+<script src="/vendor/rive.js"></script><script src="/vendor/rive-actor.js"></script>
+<script>
+const VN=['neutral','AEI','BMP','FV','CDGKNRST','U','ChJSh','L','O','QW'];
+const vis=document.getElementById('vis'); VN.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i+' '+n;vis.appendChild(o)});
+const ex=document.getElementById('expr'); ['neutral','joy','smile','sad','surprise','thinking','warm','proud','focus'].forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;ex.appendChild(o)});
+let rig=null, raf=null;
+rig=RiveActor.create(document.getElementById('c'),{visemes:[{t:0,viseme:0}], gestures:[{at:5200,type:'wave',dur:1800}], mood:'neutral',onReady(){seek(0)}});
+window.__rig=rig;
+function seek(t){document.getElementById('t').value=t;document.getElementById('tv').textContent='t='+Math.round(t);rig.seek(t)}
+document.getElementById('t').oninput=e=>seek(Number(e.target.value));
+vis.onchange=()=>{ rig.setViseme(Number(vis.value)); };
+ex.onchange=()=>{ rig.setExpression(ex.value); };
+document.getElementById('wave').onclick=()=>seek(5200);
+document.getElementById('play').onclick=()=>{ if(raf){cancelAnimationFrame(raf);raf=null;return} let t=0,last=performance.now(); const loop=(now)=>{t=(t+(now-last))%7000;last=now;seek(t);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop)};
+</script></body></html>

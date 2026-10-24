@@ -154,6 +154,163 @@
             <p v-if="!objects.length && !libraryError" class="text-xs text-text-muted">Загрузка…</p>
           </div>
 
+          <div v-else-if="activeTab === 'characters'" class="h-full overflow-y-auto space-y-2 pr-1">
+            <p v-if="libraryError" class="text-xs text-red-300">{{ libraryError }}</p>
+            <p class="text-[10px] uppercase tracking-wide text-text-muted">
+              Готовые персонажи: скелет, липсинк, жесты
+            </p>
+            <textarea
+              v-model="characterLine"
+              rows="2"
+              placeholder="Реплика для липсинка: «Братья и сестры, слово о главном»"
+              class="w-full resize-none rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60"
+            ></textarea>
+            <p class="text-[9px] text-text-muted">
+              Текст превратится в виземы (7 с). Пусто — откроется демо-сцена.
+            </p>
+            <button
+              v-for="c in characters" :key="c.slug"
+              class="w-full text-left rounded-lg border border-text-muted/30 bg-bg-base px-3 py-2.5 hover:border-brand-amber/60 transition-colors"
+              :disabled="characterBusy"
+              @click="openCharacter(c)"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm font-bold text-text-primary">{{ c.title }}</span>
+                <span class="text-[9px] font-mono uppercase tracking-wide" :class="c.full_body ? 'text-brand-green' : 'text-brand-light-blue'">
+                  {{ c.full_body ? 'full body' : 'bust' }}
+                </span>
+              </div>
+              <div class="mt-0.5 text-[11px] leading-snug text-text-secondary">
+                {{ c.mode }} · {{ c.visemes }} visemes · {{ (c.body || []).join(' · ') }}
+              </div>
+              <div class="mt-1 text-[9px] font-mono uppercase tracking-wide text-text-muted">
+                {{ c.license }} · {{ c.author }}
+              </div>
+            </button>
+            <p v-if="!characters.length && !libraryError" class="text-xs text-text-muted">Загрузка…</p>
+          </div>
+
+          <div v-else-if="activeTab === 'avatar'" class="h-full overflow-y-auto space-y-3 pr-1">
+            <div v-if="!isAvatarScene" class="rounded-lg border border-brand-amber/40 bg-brand-amber/10 p-3 text-xs text-text-secondary">
+              В текущей сцене нет 3D-аватара.
+              <button
+                class="mt-2 w-full rounded-md bg-brand-amber px-3 py-1.5 text-[11px] font-bold text-black hover:brightness-110"
+                @click="openAvatarTemplate"
+              >Открыть сцену «3D avatar»</button>
+            </div>
+            <template v-else>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Кадр</span>
+                  <select v-model="avatar.preset" @change="postAvatar('preset')" class="mt-0.5 w-full rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60">
+                    <option v-for="v in ['face', 'bust', 'full', 'wide']" :key="v" :value="v">{{ v }}</option>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Настроение</span>
+                  <select v-model="avatar.mood" @change="postAvatar('mood')" class="mt-0.5 w-full rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60">
+                    <option v-for="v in ['neutral', 'joy', 'sad', 'surprise', 'anger']" :key="v" :value="v">{{ v }}</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Базовый клип</span>
+                  <select v-model="avatar.idleClip" @change="postAvatar('clips')" class="mt-0.5 w-full rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60">
+                    <option v-for="v in clipOptions" :key="v" :value="v">{{ v }}</option>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Клип речи</span>
+                  <select v-model="avatar.talkClip" @change="postAvatar('clips')" class="mt-0.5 w-full rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60">
+                    <option v-for="v in clipOptions" :key="v" :value="v">{{ v }}</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="block">
+                <span class="flex items-center justify-between text-[9px] uppercase tracking-wide text-text-muted">
+                  <span>Вес речи</span><span class="font-mono text-brand-light-blue">{{ avatar.talk_weight.toFixed(2) }}</span>
+                </span>
+                <input v-model.number="avatar.talk_weight" type="range" min="0" max="1" step="0.05" class="w-full accent-brand-blue" @input="postAvatar('clips')" />
+              </label>
+
+              <div class="grid grid-cols-2 gap-2">
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Взгляд X</span>
+                  <input v-model.number="avatar.gaze.x" type="range" min="-1" max="1" step="0.05" class="w-full accent-brand-blue" @input="postAvatar('gaze')" />
+                </label>
+                <label class="block">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Взгляд Y</span>
+                  <input v-model.number="avatar.gaze.y" type="range" min="-1" max="1" step="0.05" class="w-full accent-brand-blue" @input="postAvatar('gaze')" />
+                </label>
+              </div>
+
+              <div>
+                <span class="text-[9px] uppercase tracking-wide text-text-muted">Реплика</span>
+                <textarea
+                  v-model="avatarLine"
+                  rows="2"
+                  placeholder="Что она говорит: «Привет, это трёхмерный аватар»"
+                  class="mt-0.5 w-full resize-none rounded-md border border-text-muted/30 bg-bg-base px-2 py-1.5 text-[11px] text-text-primary outline-none focus:border-brand-amber/60"
+                ></textarea>
+                <div class="mt-1 flex items-center gap-2">
+                  <button class="rounded-md bg-brand-amber px-3 py-1.5 text-[10px] font-bold text-black hover:brightness-110 disabled:opacity-50" :disabled="avatarBusy" @click="speakAvatar">
+                    {{ avatarBusy ? '…' : 'Озвучить' }}
+                  </button>
+                  <button class="rounded-md border border-text-muted/40 px-2 py-1.5 text-[10px] text-text-secondary hover:bg-bg-surface" @click="clearVisemes">Тишина</button>
+                  <span class="text-[9px] font-mono text-text-muted">{{ avatar.visemes.length }} виземов</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[9px] uppercase tracking-wide text-text-muted">Жесты</span>
+                <div class="mt-1 grid grid-cols-3 gap-1.5">
+                  <button
+                    v-for="g in gestureOptions" :key="g.id"
+                    class="rounded-md border border-text-muted/30 bg-bg-base px-1.5 py-1.5 text-[10px] text-text-secondary hover:border-brand-amber/60 hover:text-text-primary"
+                    @click="addGesture(g.id)"
+                  >{{ g.label }}</button>
+                </div>
+                <div v-for="(g, i) in avatar.gestures" :key="'g' + i" class="mt-1 flex items-center justify-between rounded-md bg-bg-base px-2 py-1 text-[10px] text-text-secondary">
+                  <span class="font-mono">{{ (g.at / 1000).toFixed(2) }}s · {{ g.type }}</span>
+                  <button class="text-red-300 hover:text-red-200" @click="removeGesture(i)">×</button>
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-text-muted/30 bg-bg-base p-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] uppercase tracking-wide text-text-muted">Поза (смещение)</span>
+                  <span class="text-[9px] font-mono text-brand-light-blue">{{ avatarBone }}</span>
+                </div>
+                <select v-model="avatarBone" class="mt-1 w-full rounded-md border border-text-muted/30 bg-bg-surface px-2 py-1 text-[10px] text-text-primary outline-none" @change="loadBonePose">
+                  <option v-for="b in boneOptions" :key="b" :value="b">{{ b }}</option>
+                </select>
+                <label v-for="axis in ['x', 'y', 'z']" :key="axis" class="mt-1 block">
+                  <span class="flex items-center justify-between text-[9px] uppercase tracking-wide text-text-muted">
+                    <span>{{ axis.toUpperCase() }}</span><span class="font-mono">{{ poseAngles[axis] }}°</span>
+                  </span>
+                  <input v-model.number="poseAngles[axis]" type="range" min="-120" max="120" step="5" class="w-full accent-brand-blue" @input="applyPoseSlider" />
+                </label>
+                <div class="mt-1 flex gap-1.5">
+                  <button class="flex-1 rounded-md bg-brand-blue px-2 py-1.5 text-[10px] font-bold text-white hover:brightness-110" @click="addPoseKey">
+                    Ключ в {{ (previewTime / 1000).toFixed(2) }}s
+                  </button>
+                  <button class="rounded-md border border-text-muted/40 px-2 py-1.5 text-[10px] text-text-secondary hover:bg-bg-surface" @click="resetBonePose">Сброс</button>
+                </div>
+                <div v-for="(k, i) in avatar.pose_keys" :key="'p' + i" class="mt-1 flex items-center justify-between rounded-md bg-bg-surface px-2 py-1 text-[10px] text-text-secondary">
+                  <span class="font-mono">{{ (k.at / 1000).toFixed(2) }}s · {{ k.bone }} · {{ k.x }}/{{ k.y }}/{{ k.z }}</span>
+                  <button class="text-red-300 hover:text-red-200" @click="removePoseKey(i)">×</button>
+                </div>
+              </div>
+
+              <button class="w-full rounded-md border border-brand-amber/50 bg-brand-amber/10 px-3 py-2 text-[11px] font-bold text-brand-amber hover:bg-brand-amber/20" @click="applyAvatarProps">
+                Записать в props
+              </button>
+            </template>
+          </div>
+
           <div v-else-if="activeTab === 'layers'" class="h-full flex flex-col gap-2">
             <div class="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1">
               <button
@@ -366,7 +523,7 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } fr
 import SceneHost from './SceneHost.vue'
 const CodeEditor = defineAsyncComponent(() => import('./CodeEditor.vue'))
 import { DEMO_SCENE, normalizeScenePayload } from './demoScene'
-import { fetchSceneEnvironments, fetchSceneObjects, fetchSceneTemplates, fetchSceneTemplate, uploadMedia } from '../services/api'
+import { fetchSceneCharacters, fetchSceneEnvironments, fetchSceneObjects, fetchSceneTemplates, fetchSceneTemplate, fetchTextToVisemes, uploadMedia } from '../services/api'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -406,6 +563,8 @@ const tabs = [
   { id: 'templates', label: 'Scenes' },
   { id: 'environments', label: 'Worlds' },
   { id: 'objects', label: 'Objects' },
+  { id: 'characters', label: 'Characters' },
+  { id: 'avatar', label: '3D' },
   { id: 'layers', label: 'Layers' },
   { id: 'cues', label: 'Cues' },
   { id: 'media', label: 'Media' },
@@ -425,6 +584,9 @@ const jsonError = ref('')
 const templates = ref([])
 const environments = ref([])
 const objects = ref([])
+const characters = ref([])
+const characterLine = ref('')
+const characterBusy = ref(false)
 const libraryError = ref('')
 const activeEnvironment = ref('')
 const showAllObjects = ref(false)
@@ -434,6 +596,167 @@ const mediaError = ref('')
 const selectedLayer = ref(0)
 const selectedCue = ref(0)
 const sceneHostRef = ref(null)
+
+// ── 3D avatar panel ────────────────────────────────────────────────────────
+const clipOptions = ['Neutral_Idle', 'Idle', 'Talking', 'Thinking', 'Look_Around', 'Standing_Idle', 'Standing_Greeting']
+const boneOptions = ['Head', 'Neck', 'Spine', 'Spine1', 'Spine2', 'Hips', 'RightArm', 'RightForeArm', 'RightHand', 'LeftArm', 'LeftForeArm', 'LeftHand', 'LeftUpLeg', 'RightUpLeg', 'LeftLeg', 'RightLeg']
+const gestureOptions = [
+  { id: 'wave', label: 'Помахать' },
+  { id: 'point', label: 'Указать' },
+  { id: 'nod', label: 'Кивнуть' },
+  { id: 'shrug', label: 'Плечи' },
+  { id: 'think', label: 'Задуматься' },
+  { id: 'clap', label: 'Хлопать' },
+]
+const isAvatarScene = computed(() => /av-canvas/.test(String(form.value.code.html || '')))
+const avatar = ref({
+  preset: 'bust', idleClip: 'Neutral_Idle', talkClip: 'Talking', talk_weight: 0.4,
+  mood: 'neutral', gaze: { x: 0, y: 0 }, visemes: [], gestures: [], pose: {}, pose_keys: [],
+  headline: '', kicker: '3D STUDIO',
+})
+const avatarLine = ref('')
+const avatarBusy = ref(false)
+const avatarBone = ref('RightArm')
+const poseAngles = ref({ x: 0, y: 0, z: 0 })
+
+function syncAvatarFromProps() {
+  if (!isAvatarScene.value) return
+  let p = {}
+  try { p = JSON.parse(propsText.value || '{}') } catch (e) { p = {} }
+  avatar.value = {
+    preset: p.preset || 'bust',
+    idleClip: p.idleClip || 'Neutral_Idle',
+    talkClip: p.talkClip || 'Talking',
+    talk_weight: p.talk_weight !== undefined ? Number(p.talk_weight) : 0.4,
+    mood: p.mood || 'neutral',
+    gaze: { x: Number(p.gaze?.x) || 0, y: Number(p.gaze?.y) || 0 },
+    visemes: Array.isArray(p.visemes) ? p.visemes.slice() : [],
+    gestures: Array.isArray(p.gestures) ? p.gestures.slice() : [],
+    pose: p.pose && typeof p.pose === 'object' ? { ...p.pose } : {},
+    pose_keys: Array.isArray(p.pose_keys) ? p.pose_keys.slice() : [],
+    headline: p.headline || '',
+    kicker: p.kicker || '3D STUDIO',
+  }
+  avatarLine.value = p.spoken || ''
+  loadBonePose()
+}
+
+function postAvatar(kind) {
+  const a = avatar.value
+  const map = {
+    preset: ['avatar-preset', { preset: a.preset }],
+    clips: ['avatar-clips', { clips: { idle: a.idleClip, talk: a.talkClip, talkWeight: a.talk_weight } }],
+    mood: ['avatar-mood', { mood: a.mood }],
+    gaze: ['avatar-gaze', { gaze: { x: a.gaze.x, y: a.gaze.y } }],
+    visemes: ['avatar-visemes', { visemes: a.visemes }],
+    gestures: ['avatar-gestures', { gestures: a.gestures }],
+    pose: ['avatar-pose', { pose: a.pose }],
+    'pose-keys': ['avatar-pose-keys', { keys: a.pose_keys }],
+    text: ['avatar-text', { headline: a.headline, kicker: a.kicker }],
+  }
+  const item = map[kind]
+  if (item) sceneHostRef.value?.post(item[0], item[1])
+}
+
+async function speakAvatar() {
+  const line = String(avatarLine.value || '').trim()
+  if (!line) { clearVisemes(); return }
+  avatarBusy.value = true
+  try {
+    const end = Math.min(6000, Math.max(1400, Number(form.value.duration) - 600))
+    const visemes = await fetchTextToVisemes(line, 700, end)
+    avatar.value.visemes = Array.isArray(visemes) ? visemes : []
+    postAvatar('visemes')
+  } catch (e) {
+    libraryError.value = e?.message || 'Не удалось получить виземы'
+  } finally {
+    avatarBusy.value = false
+  }
+}
+
+function clearVisemes() {
+  avatar.value.visemes = []
+  postAvatar('visemes')
+}
+
+function addGesture(id) {
+  avatar.value.gestures = avatar.value.gestures.concat([{ at: Math.round(previewTime.value), type: id }])
+  avatar.value.gestures.sort((a, b) => (a.at || 0) - (b.at || 0))
+  postAvatar('gestures')
+}
+
+function removeGesture(i) {
+  avatar.value.gestures.splice(i, 1)
+  postAvatar('gestures')
+}
+
+function loadBonePose() {
+  const v = avatar.value.pose[avatarBone.value] || [0, 0, 0]
+  poseAngles.value = { x: Number(v[0]) || 0, y: Number(v[1]) || 0, z: Number(v[2]) || 0 }
+}
+
+function applyPoseSlider() {
+  avatar.value.pose[avatarBone.value] = [poseAngles.value.x, poseAngles.value.y, poseAngles.value.z]
+  postAvatar('pose')
+}
+
+function resetBonePose() {
+  avatar.value.pose[avatarBone.value] = [0, 0, 0]
+  poseAngles.value = { x: 0, y: 0, z: 0 }
+  postAvatar('pose')
+}
+
+function addPoseKey() {
+  const key = {
+    at: Math.round(previewTime.value),
+    bone: avatarBone.value,
+    x: poseAngles.value.x, y: poseAngles.value.y, z: poseAngles.value.z,
+  }
+  avatar.value.pose_keys = avatar.value.pose_keys.concat([key]).sort((a, b) => (a.at || 0) - (b.at || 0))
+  avatar.value.pose[avatarBone.value] = [0, 0, 0]
+  poseAngles.value = { x: 0, y: 0, z: 0 }
+  postAvatar('pose')
+  postAvatar('pose-keys')
+}
+
+function removePoseKey(i) {
+  avatar.value.pose_keys.splice(i, 1)
+  postAvatar('pose-keys')
+}
+
+function avatarPropsPatch(p) {
+  const a = avatar.value
+  p.preset = a.preset
+  p.idleClip = a.idleClip
+  p.talkClip = a.talkClip
+  p.talk_weight = a.talk_weight
+  p.mood = a.mood
+  p.gaze = { x: a.gaze.x, y: a.gaze.y }
+  p.visemes = a.visemes
+  p.gestures = a.gestures
+  p.pose = a.pose
+  p.pose_keys = a.pose_keys
+  p.spoken = avatarLine.value
+  return p
+}
+
+function applyAvatarProps() {
+  let p = {}
+  try { p = JSON.parse(propsText.value || '{}') } catch (e) { p = {} }
+  propsText.value = JSON.stringify(avatarPropsPatch(p), null, 2)
+}
+
+async function openAvatarTemplate() {
+  try {
+    const t = await fetchSceneTemplate('character-3d')
+    if (!t) return
+    applyTemplate(t)
+    activeTab.value = 'avatar'
+    syncAvatarFromProps()
+  } catch (e) {
+    libraryError.value = e?.message || 'Не удалось открыть 3D-сцену'
+  }
+}
 
 const form = ref({
   title: '',
@@ -468,6 +791,7 @@ function resetFromScene(scene) {
   }
   form.value.code.html = ensureLayerIds(form.value.code.html)
   propsText.value = JSON.stringify(p.props || {}, null, 2)
+  syncAvatarFromProps()
   const envMatch = String(p.code.html || '').match(/env-([a-z-]+)/)
   activeEnvironment.value = envMatch ? envMatch[1] : ''
   previewTime.value = Math.min(1200, form.value.duration)
@@ -776,6 +1100,7 @@ function applyTemplate(t) {
   form.value.cues = Array.isArray(t.cues) ? t.cues.map((c) => ({ at: Number(c.at) || 0, set: { ...(c.set || {}) } })) : []
   form.value.status = 'draft' 
   propsText.value = JSON.stringify(t.default_props || {}, null, 2)
+  syncAvatarFromProps()
   previewTime.value = Math.min(1200, form.value.duration)
   previewError.value = ''
 }
@@ -812,16 +1137,49 @@ function insertObject(o) {
   activeTab.value = 'html'
 }
 
+async function openCharacter(c) {
+  if (!c) return
+  characterBusy.value = true
+  try {
+    if (c.template) {
+      const t = await fetchSceneTemplate(c.template)
+      if (t) {
+        const line = String(characterLine.value || '').trim()
+        if (line) {
+          const visemes = await fetchTextToVisemes(line, 700, 6000)
+          t.default_props = {
+            ...(t.default_props || {}),
+            headline: line.length > 48 ? line.slice(0, 47) + '…' : line,
+            visemes,
+          }
+          t.duration = Math.max(7000, Number(t.duration) || 7000)
+        }
+        applyTemplate(t)
+        activeTab.value = 'html'
+        return
+      }
+    }
+  } catch (e) {
+    libraryError.value = e?.message || 'Не удалось открыть персонажа'
+  } finally {
+    characterBusy.value = false
+  }
+  const o = objects.value.find((x) => x.slug === c.slug)
+  if (o) insertObject(o)
+}
+
 async function loadLibrary() {
   try {
-    const [t, e, o] = await Promise.all([
+    const [t, e, o, ch] = await Promise.all([
       fetchSceneTemplates(),
       fetchSceneEnvironments(),
       fetchSceneObjects(),
+      fetchSceneCharacters(),
     ])
     templates.value = Array.isArray(t) ? t : []
     environments.value = Array.isArray(e) ? e : []
     objects.value = Array.isArray(o) ? o : []
+    characters.value = Array.isArray(ch) ? ch : []
   } catch (e) {
     libraryError.value = e?.message || 'Не удалось загрузить библиотеку'
   }
@@ -847,6 +1205,7 @@ function save() {
   if (!props.scene) return
   let p = {}
   try { p = JSON.parse(propsText.value || '{}') } catch (e) { jsonError.value = e.message; return }
+  if (isAvatarScene.value) p = avatarPropsPatch(p)
   emit('save', {
     slide_id: props.scene.slide_id,
     component: '__scene__',

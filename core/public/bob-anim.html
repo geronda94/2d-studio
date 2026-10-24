@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bob anim scrub</title>
+<style>body{margin:0;background:#111;color:#eee;font:12px system-ui;padding:10px}canvas{width:600px;height:800px;background:#1a2233;display:block}#bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}select,input{background:#1b2740;color:#eee;border:1px solid #2a3b5c;border-radius:5px;padding:4px}</style></head>
+<body><div id="bar"><select id="anim"></select><input id="t" type="range" min="0" max="3000" value="100" step="10"><span id="tv">0.1s</span></div><canvas id="c" width="600" height="800"></canvas>
+<script src="/vendor/rive.js"></script><script>
+const c=document.getElementById('c'), sel=document.getElementById('anim'), t=document.getElementById('t'), tv=document.getElementById('tv');
+let r=null;
+const SRC=new URLSearchParams(location.search).get('src') || '/rive/ready/bob.riv';
+r=new rive.Rive({src:SRC,canvas:c,autoplay:false,
+ onLoad(){ const names=(r.animationNames||[]).slice().sort(); sel.innerHTML=names.map(n=>`<option>${n}</option>`).join(''); sel.value='Viseme A'; scrub(); window.__ready=true; },
+ onLoadError(e){document.title='ERR '+e}
+});
+function scrub(){ const v=Number(t.value)/1000; tv.textContent=v.toFixed(2)+'s'; try{r.scrub(sel.value,v); r.drawFrame()}catch(e){console.log(e)} }
+sel.onchange=scrub; t.oninput=scrub;
+window.__r=r;
+</script></body></html>

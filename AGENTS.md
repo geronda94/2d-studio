@@ -14,6 +14,7 @@ Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`d
 Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.
 Канал: **`docs/CHANNEL_PRAVOSLAVIE.md`**. Роли ИИ: **`docs/AGENT_ROLES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
+Аудит и конвейер DeepSeek: **`docs/CLAUDE_ANALYSIS.md`**.
 
 ---
 
@@ -95,12 +96,16 @@ GET http://localhost:8002/scene-library/environments
 GET http://localhost:8002/scene-library/environments/{slug}
 GET http://localhost:8002/scene-library/objects
 GET http://localhost:8002/scene-library/objects/{slug}
+GET http://localhost:8002/scene-library/characters
+GET http://localhost:8002/scene-library/characters/{slug}
 ```
 
 - `templates` — полные сцены (`code`, `props_schema`, `default_props`, `duration`, `tags`).
 - `environments` — миры: forest / city / mountains / office / studio.
 - `objects` — физические объекты: car / road / tree / pine / cloud / bird / lamp / ...
   (`html`, `css`, `mechanics`).
+- `characters` — готовые Rive-актёры (`character-oldman`, `character-bob`,
+  `character-rive`): режим драйвера, лицензия, виземы, возможности.
 
 Бери мир + объекты за основу и меняй `props`/код под сценарий.
 **Не делай UI-карточки и дашборды** — это не сцены.
@@ -139,6 +144,8 @@ Environment + Objects + Mechanisms + Cues = Scene
 - Массовые объекты (деревья/птицы) — `SceneKit.scatter(...)`, не дублировать вручную.
 - «3D-вид» — `SceneKit.camera` + слои/глубина, не плоский zoom.
 - Уникальные сцены можно писать с нуля; библиотека не обязательна.
+- Персонаж — объект `character` (SVG-риг) + `SceneKit.characterRig` (липсинк,
+  моргание, взгляд, настроение, жесты). Рот — только виземы, не `Math.sin`.
 
 Пример:
 
@@ -166,6 +173,22 @@ window.scene = { seek }
 - Числа и суммы сходятся со сценарием/озвучкой.
 - Одна сцена = один смысловой бит. Длительность 3–6 с, оптимум 5–7 с.
 - Между стартами соседних сцен ≥ 2000 мс.
+
+## 5.5. Стандарт кинематографичности (минимум 5 из 7)
+
+Подробно — `docs/ANIMATION.md`, раздел 1.5. Эталон — шаблон
+`character-talk`.
+
+1. Плавные кривые: `gsap.timeline({paused:true})` + `tl.seek(t/1000)`,
+   easing `power4.out` / `power2.inOut` / `expo.out`.
+2. Частицы: `SceneKit.particles(canvas, {...})` — пыль, снег, искры.
+3. Кадр, а не страница: `SceneKit.grain(root)` — зерно + виньетка + грейд.
+4. Объекты стоят на земле: `SceneKit.shadow(el, {...})`.
+5. Кинетическая типографика: маска + `yPercent` ревил, `letterSpacing`, stagger.
+6. Вторичные реакции: фон живой (качание, пыль, дрейф света, дрейф камеры).
+7. Рот — виземы (`SceneKit.characterRig`, `visemeBlend`), не `Math.sin`.
+
+Ключи — только плавно: `SceneKit.cues(list, { smooth: true })`.
 
 ---
 

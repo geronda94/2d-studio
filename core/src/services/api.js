@@ -500,6 +500,22 @@ export async function fetchSceneObjects() {
   return response.json();
 }
 
+export async function fetchSceneCharacters() {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/characters`);
+  if (!response.ok) throw new Error('Failed to fetch scene characters');
+  return response.json();
+}
+
+export async function fetchTextToVisemes(text, start = 700, end = 6000) {
+  const response = await apiFetch(`${API_BASE_URL}/scene-library/text-to-visemes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, start, end }),
+  });
+  if (!response.ok) throw new Error('Failed to convert text to visemes');
+  return response.json();
+}
+
 export async function uploadMedia(presentationId, file, fileType = null) {
   const formData = new FormData();
   formData.append('file', file);

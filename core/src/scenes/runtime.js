@@ -48,7 +48,7 @@ function escapeStyle(code) {
   return String(code || '').replace(/<\/style/gi, '<\\/style')
 }
 
-export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '' }) {
+export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '', charSource = '', riveSource = '', riveCharSource = '', riveBuffer = '', riveActorSource = '', riveActorBuffer = '', riveOldManBuffer = '' }) {
   const html = String(code.html || '')
   const css = escapeStyle(code.css || '')
   const js = escapeScript(code.js || '')
@@ -77,11 +77,18 @@ export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss 
 </style>
 ${gsapSource ? `<script>${escapeScript(gsapSource)}</script>` : ''}
 ${kitSource ? `<script>${escapeScript(kitSource)}</script>` : ''}
+${charSource ? `<script>${escapeScript(charSource)}</script>` : ''}
+${riveSource ? `<script>${escapeScript(riveSource)}</script>` : ''}
+${riveCharSource ? `<script>${escapeScript(riveCharSource)}</script>` : ''}
+${riveActorSource ? `<script>${escapeScript(riveActorSource)}</script>` : ''}
 </head>
 <body class="view-${view || 'default'}">
 ${html}
 <script>
   window.__sceneProps = ${propsJson};
+  window.__riveCharacterBuffer = ${JSON.stringify(riveBuffer || '')};
+  window.__riveActorBuffer = ${JSON.stringify(riveActorBuffer || '')};
+  window.__riveOldManBuffer = ${JSON.stringify(riveOldManBuffer || '')};
   window.__sceneCues = ${JSON.stringify(cues || []).replace(/</g, '\\u003c')};
   window.__sceneSend = function (type, data) {
     try { parent.postMessage(Object.assign({ type: type, __scene: true }, data || {}), '*'); } catch (e) {}
@@ -162,4 +169,96 @@ export function loadKitSource() {
       .catch(() => '')
   }
   return kitPromise
+}
+
+let charPromise = null
+export function loadCharSource() {
+  if (!charPromise) {
+    charPromise = fetch('/vendor/character-canvas.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return charPromise
+}
+
+// Rive runtime — 3.3 МБ, поэтому грузится только для сцен, которым он нужен.
+let rivePromise = null
+export function loadRiveSource() {
+  if (!rivePromise) {
+    rivePromise = fetch('/vendor/rive.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return rivePromise
+}
+
+let riveCharPromise = null
+export function loadRiveCharSource() {
+  if (!riveCharPromise) {
+    riveCharPromise = fetch('/vendor/rive-character.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return riveCharPromise
+}
+
+let riveActorPromise = null
+export function loadRiveActorSource() {
+  if (!riveActorPromise) {
+    riveActorPromise = fetch('/vendor/rive-actor.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return riveActorPromise
+}
+
+let riveOldManBufferPromise = null
+export function loadRiveOldManBuffer() {
+  if (!riveOldManBufferPromise) {
+    riveOldManBufferPromise = fetch('/rive/ready/oldman.riv')
+      .then(async (r) => {
+        if (!r.ok) return ''
+        const buf = new Uint8Array(await r.arrayBuffer())
+        let bin = ''
+        const chunk = 0x8000
+        for (let i = 0; i < buf.length; i += chunk) bin += String.fromCharCode.apply(null, buf.subarray(i, i + chunk))
+        return btoa(bin)
+      })
+      .catch(() => '')
+  }
+  return riveOldManBufferPromise
+}
+
+let riveActorBufferPromise = null
+export function loadRiveActorBuffer() {
+  if (!riveActorBufferPromise) {
+    riveActorBufferPromise = fetch('/rive/ready/bob.riv')
+      .then(async (r) => {
+        if (!r.ok) return ''
+        const buf = new Uint8Array(await r.arrayBuffer())
+        let bin = ''
+        const chunk = 0x8000
+        for (let i = 0; i < buf.length; i += chunk) bin += String.fromCharCode.apply(null, buf.subarray(i, i + chunk))
+        return btoa(bin)
+      })
+      .catch(() => '')
+  }
+  return riveActorBufferPromise
+}
+
+let riveBufferPromise = null
+export function loadRiveCharacterBuffer() {
+  if (!riveBufferPromise) {
+    riveBufferPromise = fetch('/rive/character.riv')
+      .then(async (r) => {
+        if (!r.ok) return ''
+        const buf = new Uint8Array(await r.arrayBuffer())
+        let bin = ''
+        const chunk = 0x8000
+        for (let i = 0; i < buf.length; i += chunk) bin += String.fromCharCode.apply(null, buf.subarray(i, i + chunk))
+        return btoa(bin)
+      })
+      .catch(() => '')
+  }
+  return riveBufferPromise
 }

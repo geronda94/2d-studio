@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Rive debug — матрица кадров</title>
+<style>
+  body{margin:0;padding:12px;background:#0A0E16;color:#DCE6F5;font:12px/1.4 system-ui}
+  h1{font-size:15px;margin:0 0 6px}
+  .hint{color:#8CA2C0;margin-bottom:10px}
+  .test{margin:10px 0 16px;border:1px solid #1C2740;border-radius:8px;padding:8px}
+  .test h3{font-size:12px;margin:0 0 6px;color:#9FC0F0;font-family:ui-monospace,monospace}
+  .strip{display:flex;gap:6px}
+  .cell{text-align:center}
+  .cell canvas{display:block;background:#121B2B;border-radius:4px;border:1px solid #22304A}
+  .cell span{font-size:10px;color:#7F93AF}
+  .verdict{margin-top:5px;font-size:11px}
+  .ok{color:#4ADE80}.bad{color:#F87171}.warn{color:#FBBF24}
+</style>
+</head>
+<body>
+<h1>Rive debug: меняется ли кадр при scrub</h1>
+<div class="hint">Каждая строка — способ управления. В ячейках один и тот же момент времени из разных прогонов. Считаем долю изменившихся пикселей.</div>
+<div id="out"></div>
+<script src="/vendor/rive.js"></script>
+<script src="/vendor/scene-kit.js"></script>
+<script>
+const SIZE = 150
+const TIMES = [0, 350, 800, 1400]
+const out = document.getElementById('out')
+
+function mkCanvas() {
+  const c = document.createElement('canvas')
+  c.width = SIZE; c.height = SIZE
+  c.style.width = SIZE + 'px'; c.style.height = SIZE + 'px'   // DOM-размер нужен для resize
+  document.body.appendChild(c)                                 // в DOM, иначе размеры нулевые
+  return c
+}
+
+async function loadAsset(src) {
+  const cv = mkCanvas()
+  const inst = await new Promise((res) => {
+    let r = null
+    r = new rive.Rive({ src, canvas: cv, autoplay: false,
+      layout: new rive.Layout({ fit: rive.Fit.Contain, alignment: rive.Alignment.Center }),
+      onLoad: () => { try { r.resizeDrawingSurfaceToCanvas() } catch (e) {} res(r) },
+      onLoadError: () => res(null) })
+    setTimeout(() => res(r), 20000)
+  })
+  return { inst, cv }
+}
+
+function pixels(wrapper) {
+  try { return wrapper.cv.getContext('2d').getImageData(0, 0, SIZE, SIZE).data } catch (e) { return null }
+}
+
+function diff(a, b) {
+  if (!a || !b) return -1
+  let n = 0, total = 0
+  for (let i = 3; i < a.length; i += 4) { total++; if (Math.abs(a[i] - b[i]) > 8) n++ }
+  return total ? n / total : 0
+}
+
+function opaque(a) {
+  if (!a) return -1
+  let n = 0
+  for (let i = 3; i < a.length; i += 4) if (a[i] > 8) n++
+  return n / (a.length / 4)
+}
+
+function makeTest(title, note) {
+  const box = document.createElement('div')
+  box.className = 'test'
+  box.innerHTML = `<h3>${title}</h3>${note ? `<div class="hint">${note}</div>` : ''}<div class="strip"></div><div class="verdict"></div>`
+  out.appendChild(box)
+  return box
+}
+
+function addCell(box, canvas, t) {
+  const cell = document.createElement('div')
+  cell.className = 'cell'
+  cell.innerHTML = `<span>t=${t}</span>`
+  const c = document.createElement('canvas')
+  c.width = SIZE; c.height = SIZE
+  c.getContext('2d').drawImage(canvas, 0, 0, SIZE, SIZE)
+  cell.insertBefore(c, cell.firstChild)
+  box.querySelector('.strip').appendChild(cell)
+}
+
+function report(box, label, cls) {
+  box.querySelector('.verdict').innerHTML = `<span class="${cls}">${label}</span>`
+}
+
+async function run() {
+  // ── TINY ────────────────────────────────────────────────────────────────
+  const tiny = await loadAsset('/rive/tiny.riv')
+  if (tiny.inst) {
+    const names = (tiny.inst.animationNames || [])
+    const sms = (tiny.inst.stateMachineNames || [])
+    const t1 = makeTest('tiny.riv — scrub("' + (names[0] || '') + '")', 'анимации: ' + names.join(', ') + ' | SM: ' + sms.join(','))
+    const snap = []
+    for (const t of TIMES) {
+      try { tiny.inst.scrub(names[0], t / 1000); tiny.inst.drawFrame() } catch (e) {}
+      const p = pixels(tiny); snap.push(p)
+      addCell(t1, tiny.cv, t)
+    }
+    const d = diff(snap[0], snap[1])
+    report(t1, 'прозрачных пикселей ' + Math.round((1 - opaque(snap[0])) * 100) + '%, смена кадра ' + (d * 100).toFixed(1) + '%',
+      d > 0.002 ? 'ok' : 'bad')
+  }
+
+  // ── TOSHI ───────────────────────────────────────────────────────────────
+  const toshi = await loadAsset('/rive/toshi.riv')
+  if (!toshi.inst) { report(makeTest('toshi.riv'), 'не загрузился', 'bad'); return }
+  const inst = toshi.inst
+  const anims = inst.animationNames || []
+  const sms = inst.stateMachineNames || []
+
+  // 1) scrub линейной анимации
+  const T1 = makeTest('toshi: scrub("idle")', 'анимаций: ' + anims.length + ', SM: ' + sms.join(','))
+  let snaps = []
+  for (const t of TIMES) {
+    try { inst.scrub('idle', t / 1000); inst.drawFrame() } catch (e) {}
+    const p = pixels(toshi); snaps.push(p); addCell(T1, toshi.cv, t)
+  }
+  let d1 = diff(snaps[0], snaps[1])
+  report(T1, 'заполнение ' + Math.round(opaque(snaps[0]) * 100) + '%, смена ' + (d1 * 100).toFixed(1) + '%', d1 > 0.002 ? 'ok' : 'bad')
+
+  // 2) play + scrub (анимация «играет», время задаём)
+  const T2 = makeTest('toshi: play("idle") + scrub("idle", t)')
+  snaps = []
+  try { inst.play('idle') } catch (e) {}
+  for (const t of TIMES) {
+    try { inst.scrub('idle', t / 1000); inst.drawFrame() } catch (e) {}
+    const p = pixels(toshi); snaps.push(p); addCell(T2, toshi.cv, t)
+  }
+  const d2 = diff(snaps[0], snaps[1])
+  report(T2, 'смена ' + (d2 * 100).toFixed(1) + '%', d2 > 0.002 ? 'ok' : 'bad')
+
+  // 3) мульти-скраб: тело + рот
+  const T3 = makeTest('toshi: scrub(["idle","mouth_AA"], t)')
+  snaps = []
+  for (const t of TIMES) {
+    try { inst.scrub(['idle', 'mouth_AA'], t / 1000); inst.drawFrame() } catch (e) {}
+    const p = pixels(toshi); snaps.push(p); addCell(T3, toshi.cv, t)
+  }
+  const d3 = diff(snaps[0], snaps[1])
+  report(T3, 'смена ' + (d3 * 100).toFixed(1) + '%', d3 > 0.002 ? 'ok' : 'bad')
+
+  // 4) разные формы рта — статичный кадр, должны отличаться друг от друга
+  const T4 = makeTest('toshi: формы рта (AA / OH / OU / PP / neutral) — кадр t=0.3')
+  const mouths = ['mouth_AA', 'mouth_OH', 'mouth_OU', 'mouth_PP', 'mouth_neutral']
+  const mSnap = []
+  for (const m of mouths) {
+    if (!anims.includes(m)) { continue }
+    try { inst.scrub([m, 'idle'], 0.3); inst.drawFrame() } catch (e) {}
+    const p = pixels(toshi); mSnap.push({ m, p })
+    addCell(T4, toshi.cv, m)
+  }
+  let mouthDiff = 0
+  for (let i = 1; i < mSnap.length; i++) mouthDiff = Math.max(mouthDiff, diff(mSnap[0].p, mSnap[i].p))
+  report(T4, 'макс. разница между формами ' + (mouthDiff * 100).toFixed(1) + '%', mouthDiff > 0.002 ? 'ok' : 'bad')
+
+  // 5) стейт-машина
+  const T5 = makeTest('toshi: play("MascotSM") + scrub("MascotSM", t)')
+  snaps = []
+  try { inst.play('MascotSM') } catch (e) {}
+  for (const t of TIMES) {
+    try { inst.scrub('MascotSM', t / 1000); inst.drawFrame() } catch (e) {}
+    const p = pixels(toshi); snaps.push(p); addCell(T5, toshi.cv, t)
+  }
+  try { inst.pause() } catch (e) {}
+  const d5 = diff(snaps[0], snaps[1])
+  report(T5, 'смена ' + (d5 * 100).toFixed(1) + '%', d5 > 0.002 ? 'ok' : 'bad')
+
+  window.__done = true
+}
+
+run().catch(e => { document.body.insertAdjacentHTML('beforeend', '<pre class="bad">' + e.message + '</pre>'); window.__done = true })
+</script>
+</body>
+</html>

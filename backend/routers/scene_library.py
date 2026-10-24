@@ -5,12 +5,15 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models, schemas
+from ..visemes import text_to_visemes
 
 from ..scene_library import (
     compatibility_matrix,
+    get_character,
     get_environment,
     get_object,
     get_template,
+    list_characters,
     list_environments,
     list_objects,
     list_templates,
@@ -24,6 +27,12 @@ router = APIRouter(prefix="/scene-library", tags=["scene-library"])
 class CompositionRequest(BaseModel):
     environment: str
     objects: List[str] = []
+
+
+class TextToVisemesRequest(BaseModel):
+    text: str
+    start: int = 700
+    end: int = 6000
 
 
 @router.get("/templates")
@@ -57,6 +66,24 @@ def read_environment_objects(slug: str):
     if not get_environment(slug):
         raise HTTPException(status_code=404, detail="Environment not found")
     return objects_for_environment(slug)
+
+
+@router.post("/text-to-visemes")
+def make_visemes(body: TextToVisemesRequest):
+    return text_to_visemes(body.text, body.start, body.end)
+
+
+@router.get("/characters")
+def read_characters():
+    return list_characters()
+
+
+@router.get("/characters/{slug}")
+def read_character(slug: str):
+    c = get_character(slug)
+    if not c:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return c
 
 
 @router.get("/objects")

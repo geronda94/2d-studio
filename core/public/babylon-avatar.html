@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Babylon avatar</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#0b0f16}
+  #stage{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 18%,#28354a 0%,#141a25 42%,#080b11 100%)}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+  #log{position:fixed;left:10px;top:10px;max-width:44vw;max-height:80vh;overflow:auto;
+       background:rgba(8,12,20,.82);color:#9fe3b0;font:11px/1.4 monospace;padding:10px;border-radius:8px;
+       white-space:pre-wrap;pointer-events:none}
+  #log.hide{display:none}
+</style></head><body>
+<div id="stage"></div>
+<canvas id="c"></canvas>
+<pre id="log"></pre>
+<script src="/vendor/babylon.js"></script>
+<script src="/vendor/babylonjs.loaders.min.js"></script>
+<script src="/models/anim/avatar-anims.js"></script>
+<script src="/vendor/babylon-character.js"></script>
+<script>
+const q = new URLSearchParams(location.search)
+const logEl = document.getElementById('log')
+if (!q.has('log')) logEl.classList.add('hide')
+const log = (...a) => { logEl.textContent += a.join(' ') + '\n' }
+
+const DEMO = [
+  { t: 700, viseme: 2 }, { t: 900, viseme: 1 }, { t: 1120, viseme: 4 }, { t: 1300, viseme: 3 },
+  { t: 1480, viseme: 1 }, { t: 1680, viseme: 4 }, { t: 1900, viseme: 0 },
+  { t: 2300, viseme: 1 }, { t: 2480, viseme: 4 }, { t: 2660, viseme: 8 },
+  { t: 2900, viseme: 2 }, { t: 3120, viseme: 1 }, { t: 3340, viseme: 5 },
+  { t: 3560, viseme: 4 }, { t: 3760, viseme: 1 }, { t: 3980, viseme: 4 },
+  { t: 4200, viseme: 7 }, { t: 4400, viseme: 1 }, { t: 4600, viseme: 4 },
+]
+
+const api = BabylonCharacter.create(document.getElementById('c'), {
+  src: q.get('src') || '/models/brunette.glb',
+  preset: q.get('preset') || 'bust',
+  idleClip: q.get('idle') || 'Idle',
+  talkClip: q.get('talk') || 'Talking',
+  talkWeight: q.has('talkw') ? Number(q.get('talkw')) : 0.7,
+  visemes: q.has('novis') ? [] : DEMO,
+  mood: q.get('mood') || 'neutral',
+  orbit: q.has('orbit'),
+  seed: Number(q.get('seed') || 0),
+  gaze: { x: Number(q.get('gx') || 0), y: Number(q.get('gy') || 0) },
+  gestures: q.has('gesture') ? [{ at: Number(q.get('gesture')) || 1200, clip: q.get('clip') || '', type: q.get('type') || 'wave', duration: Number(q.get('gdur')) || 0 }] : [],
+  onReady(info) {
+    log('ready', JSON.stringify({ bones: info.bones.length, morphs: info.morphs, targets: info.targets.length, error: info.error }))
+    window.__info = info
+    window.__ready = true
+  },
+  onError(e) { log('ERROR', String(e)); window.__error = String(e) },
+})
+window.__app = api
+
+// seek once ready; then apply ?t
+api.ready.then(() => {
+  const t = Number(q.get('t') || 0)
+  api.seek(t)
+  log('seek', t)
+})
+</script></body></html>
