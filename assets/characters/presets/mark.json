@@ -1,0 +1,20 @@
+{
+  "name": "mark",
+  "gender": "male",
+  "scale": 1.0,
+  "shoulder": 0.168,
+  "hip": 0.097,
+  "waist": 0.137,
+  "bust": 0.0,
+  "skin": "#bd8766",
+  "lip": "#8c423d",
+  "hair": "#17100d",
+  "eye": "#2e5943",
+  "top": "#24477a",
+  "bottom": "#292b33",
+  "dress": "#24477a",
+  "shoe": "#1f1f21",
+  "belt": "#141210",
+  "hair_style": "short",
+  "glasses": false
+}

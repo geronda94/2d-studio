@@ -1,7 +1,7 @@
 {
   "format": "scenerig/1",
   "id": "character-mark",
-  "title": "Mark — SceneRig",
+  "title": "Armature",
   "family": "human",
   "archetype": "humanoid",
   "geometry": {
@@ -9,8 +9,8 @@
     "units": "m",
     "up": "Y",
     "facing": "+Z",
-    "tris": 17242,
-    "sha256": "d61d1007f4526bdf90b5c6d0162089fb78f286b6b4515ab41934391079787386"
+    "tris": 31158,
+    "sha256": "ff96490111cf8dd3519a3d30dafc85cd786f47a0f3ab07b0d77dc69dc82a87ef"
   },
   "rest": {
     "pose": "A",
@@ -59,6 +59,8 @@
       "jawWidth",
       "chin",
       "cheek",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
       "viseme_sil",
       "viseme_PP",
       "viseme_FF",
@@ -111,6 +113,6 @@
     "humanoid"
   ],
   "source": {
-    "blender": "mark_v2_v2.blend"
+    "blender": "mark_v3.blend"
   }
 }

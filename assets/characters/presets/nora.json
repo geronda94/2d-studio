@@ -1,0 +1,20 @@
+{
+  "name": "nora",
+  "gender": "female",
+  "scale": 0.97,
+  "shoulder": 0.150,
+  "hip": 0.122,
+  "waist": 0.120,
+  "bust": 0.060,
+  "skin": "#8d5a3e",
+  "lip": "#7a3636",
+  "hair": "#120d0b",
+  "eye": "#4a3524",
+  "top": "#8a5a2b",
+  "bottom": "#33383f",
+  "dress": "#7b3148",
+  "shoe": "#2b2622",
+  "belt": "#1a1410",
+  "hair_style": "bun",
+  "glasses": false
+}

@@ -111,6 +111,46 @@
             <label>Губы<input id="lips" type="color" value="#8c3d38"></label>
             <label>Масштаб<input id="scale" type="number" min="0.6" max="1.6" step="0.01" value="1"></label>
           </div>
+          <div class="swatches" style="grid-template-columns:repeat(2,1fr)">
+            <label>Причёска
+              <select id="hairStyle">
+                <option value="short">short</option>
+                <option value="bob">bob</option>
+                <option value="ponytail">ponytail</option>
+                <option value="bun">bun</option>
+              </select>
+            </label>
+            <label>Верх
+              <select id="topStyle">
+                <option value="tee">tee</option>
+                <option value="shirt">shirt</option>
+                <option value="hoodie">hoodie</option>
+                <option value="dress">dress</option>
+              </select>
+            </label>
+            <label>Низ
+              <select id="bottomStyle">
+                <option value="pants">pants</option>
+                <option value="shorts">shorts</option>
+                <option value="skirt">skirt</option>
+              </select>
+            </label>
+            <label>Обувь
+              <select id="shoesStyle">
+                <option value="sneaker">sneaker</option>
+                <option value="boot">boot</option>
+              </select>
+            </label>
+          </div>
+          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
+            <span>Тело</span><span class="grow"></span>
+            <button id="resetShape" style="padding:2px 7px">Сброс</button>
+          </div>
+          <label>Плечи<input id="shapeShoulder" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Грудь<input id="shapeChest" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Талия<input id="shapeWaist" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Бёдра<input id="shapeHips" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Живот<input id="shapeBelly" type="range" min="0" max="0.4" step="0.01" value="0"></label>
           <label>Настроение
             <select id="mood">
               <option value="neutral" selected>neutral</option>
@@ -156,7 +196,16 @@
         <label>Движение
           <select id="motion">
             <option value="idle" selected>idle — дыхание</option>
-            <option value="talk">talk — жесты</option>
+            <option value="talk">talk — речь</option>
+            <option value="walk">walk — ходьба</option>
+          </select>
+        </label>
+        <label>Жест
+          <select id="gesture">
+            <option value="none" selected>нет</option>
+            <option value="wave">wave — рука вверх</option>
+            <option value="point">point — указать</option>
+            <option value="explain">explain — обе руки</option>
           </select>
         </label>
       </div>
@@ -175,15 +224,17 @@
 </div>
 <script src="/vendor/babylon.js"></script>
 <script src="/vendor/babylonjs.loaders.min.js"></script>
-<script src="/vendor/scene-clip.js"></script>
-<script src="/vendor/scene-rig.js"></script>
+<script src="/vendor/scene-clip.js?v=3"></script>
+<script src="/vendor/scene-rig.js?v=3"></script>
 <script>
 const $=(id)=>document.getElementById(id)
 const BASES={
   mark:{label:'Mark',glb:'/models/characters/character-mark.glb',rig:'/models/characters/character-mark.scenerig.json',skin:'#b8805e',hair:'#1a130f',top:'#294d8c',bottom:'#292b33',shoes:'#141417',eyes:'#2e6147',lips:'#8c3d38',glasses:false,hood:true},
   mira:{label:'Mira',glb:'/models/characters/character-mira.glb',rig:'/models/characters/character-mira.scenerig.json',skin:'#dba68a',hair:'#752914',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:true,hood:false},
 }
-const state={base:'mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'}}
+const state={base:'mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gesture:'none',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'},shape:{}}
+const SHAPE_KEYS={bodyShoulder:'shapeShoulder',bodyChest:'shapeChest',bodyWaist:'shapeWaist',bodyHips:'shapeHips',bodyBelly:'shapeBelly'}
+const OUTFIT_KEYS={hair:'hairStyle',top:'topStyle',bottom:'bottomStyle',shoes:'shoesStyle'}
 const setStatus=(t)=>{$('status').textContent=t}
 const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
 function appearance(){
@@ -195,6 +246,31 @@ function setAppearanceFields(a){
   if(a) { $('glasses').checked=!!a.glasses; $('hood').checked=!!a.hood }
 }
 function applyAppearance(){ if(state.rig) state.rig.setAppearance(appearance()); buildManifest() }
+function shape(){
+  const out={}
+  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) out[k]=Number(el.value)||0 }
+  return out
+}
+function setShapeFields(s){
+  s=s||{}
+  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) el.value=String(Number(s[k])||0) }
+}
+function applyShape(){
+  state.shape=shape()
+  if(state.rig && state.rig.setShape) state.rig.setShape(state.shape)
+  buildManifest()
+}
+function syncOutfitFields(){
+  for(const k in OUTFIT_KEYS){ const el=$(OUTFIT_KEYS[k]); if(el) el.value=state.outfit[k]||el.value }
+}
+function applyOutfitFromUI(){
+  state.outfit=Object.assign({},state.outfit,{
+    hair:$('hairStyle').value,top:$('topStyle').value,
+    bottom:$('bottomStyle').value,shoes:$('shoesStyle').value,
+  })
+  if(state.rig) state.rig.setOutfit(state.outfit)
+  buildManifest()
+}
 async function createRig(){
   if(state.rig){ try{state.rig.destroy()}catch(e){} state.rig=null }
   const base=BASES[state.base]
@@ -207,8 +283,10 @@ async function createRig(){
   try{ await rig.ready }catch(e){ fail('Не удалось загрузить персонажа: '+((e&&(e.error||e.message))||JSON.stringify(e))); return }
   rig.setAppearance(appearance())
   rig.setOutfit(state.outfit)
+  if(rig.setShape) rig.setShape(state.shape)
   if(state.visemes.length) rig.setVisemes(state.visemes)
   rig.setMotion(state.motion)
+  if(rig.setGesture) rig.setGesture(state.gesture)
   rig.setMood($('mood').value)
   seek(state.time)
   setStatus('loaded '+base.label)
@@ -251,7 +329,7 @@ function manifest(){
   return {format:'sceneasset/1',id:$('slug').value||('character-'+state.base),title:$('title').value||base.label,
     kind:'character',family:'human',archetype:'humanoid',category:'character',
     rig:base.rig,geometry:{type:'gltf',file:base.glb,units:'m',up:'Y',facing:'+Z'},
-    appearance:appearance(),gender:state.gender,outfit:state.outfit,
+    appearance:appearance(),gender:state.gender,outfit:state.outfit,shape:shape(),gesture:state.gesture,motion:state.motion,
     license:{name:'CC0',author:'SceneEngine'}}
 }
 function buildManifest(){ $('manifest').value=JSON.stringify(manifest(),null,2) }
@@ -291,12 +369,17 @@ async function loadCharacter(id){
     $('base').value=state.base
     $('slug').value=m.id||a.slug; $('title').value=m.title||a.title
     setAppearanceFields(m.appearance||{})
+    state.shape=m.shape||{}
+    state.gesture=m.gesture||'none'; $('gesture').value=state.gesture
+    state.motion=m.motion||'idle'; $('motion').value=state.motion
+    syncOutfitFields(); setShapeFields(state.shape)
     await createRig()
     await loadLibrary(); buildManifest(); setStatus('loaded '+a.slug)
   }catch(e){console.error(e);fail('Не удалось открыть: '+(e.message||e))}
 }
 function newCharacter(){
   state.assetId=null; state.visemes=[]; state.time=0; state.motion='idle'; $('motion').value='idle'
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'
   $('slug').value='character-'+state.base+'-'+Math.floor(Date.now()/1000)%10000
   $('title').value=BASES[state.base].label
   applyPreset(state.base); createRig(); loadLibrary(); buildManifest()
@@ -308,6 +391,7 @@ function applyPreset(name){
     ? {top:'shirt',bottom:'skirt',shoes:'boot',hair:'ponytail'}
     : {top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'}
   setAppearanceFields(b); $('base').value=name; state.base=name; state.assetId=null
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; syncOutfitFields()
   $('baseLabel').textContent=b.label
   $('slug').value='character-'+name+'-1'
   $('title').value=b.label
@@ -338,7 +422,11 @@ $('refreshLib').onclick=loadLibrary
 $('play').onclick=()=>{state.playing?pause():play()}
 $('time').oninput=()=>{pause();seek(Number($('time').value)/1000)}
 $('speak').onclick=speak
+for(const id of Object.values(OUTFIT_KEYS)){ const el=$(id); if(el) el.onchange=applyOutfitFromUI }
+for(const id of Object.values(SHAPE_KEYS)){ const el=$(id); if(el) el.oninput=applyShape }
+$('resetShape').onclick=()=>{ setShapeFields({}); applyShape() }
 $('motion').onchange=()=>{state.motion=$('motion').value;if(state.rig)state.rig.setMotion(state.motion);seek(state.time)}
+$('gesture').onchange=()=>{state.gesture=$('gesture').value;if(state.rig&&state.rig.setGesture)state.rig.setGesture(state.gesture);seek(state.time);buildManifest()}
 for(const id of ['skin','hair','top','bottom','shoes','eyes','lips','scale','glasses','hood'])$(id).addEventListener('input',applyAppearance)
 $('mood').onchange=()=>{if(state.rig)state.rig.setMood($('mood').value);buildManifest()}
 for(const b of document.querySelectorAll('[data-v]'))b.onclick=()=>setManual(b.dataset.v)

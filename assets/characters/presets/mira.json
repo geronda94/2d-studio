@@ -1,0 +1,20 @@
+{
+  "name": "mira",
+  "gender": "female",
+  "scale": 0.945,
+  "shoulder": 0.143,
+  "hip": 0.118,
+  "waist": 0.116,
+  "bust": 0.055,
+  "skin": "#dba888",
+  "lip": "#9e4747",
+  "hair": "#59210f",
+  "eye": "#336b8c",
+  "top": "#2e6152",
+  "bottom": "#4d2e42",
+  "dress": "#6b293d",
+  "shoe": "#52291f",
+  "belt": "#1f140f",
+  "hair_style": "ponytail",
+  "glasses": true
+}

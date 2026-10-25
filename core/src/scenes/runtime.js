@@ -186,7 +186,7 @@ export function loadCharSource() {
 let sceneClipPromise = null
 export function loadSceneClipSource() {
   if (!sceneClipPromise) {
-    sceneClipPromise = fetch('/vendor/scene-clip.js')
+    sceneClipPromise = fetch('/vendor/scene-clip.js?v=3')
       .then((r) => (r.ok ? r.text() : ''))
       .catch(() => '')
   }
@@ -196,7 +196,7 @@ export function loadSceneClipSource() {
 let sceneRigPromise = null
 export function loadSceneRigSource() {
   if (!sceneRigPromise) {
-    sceneRigPromise = fetch('/vendor/scene-rig.js')
+    sceneRigPromise = fetch('/vendor/scene-rig.js?v=3')
       .then((r) => (r.ok ? r.text() : ''))
       .catch(() => '')
   }

@@ -1,7 +1,7 @@
 {
   "format": "scenerig/1",
   "id": "character-mira",
-  "title": "Mira — SceneRig",
+  "title": "Armature",
   "family": "human",
   "archetype": "humanoid",
   "geometry": {
@@ -9,8 +9,8 @@
     "units": "m",
     "up": "Y",
     "facing": "+Z",
-    "tris": 18550,
-    "sha256": "6ff46e5579a2286a54a97f2fef27c212fb2e0c0a1f2356d75f81f18aad6b5876"
+    "tris": 33314,
+    "sha256": "8f0fce1b6ccff544c8c22650f07fc0b77442407992a4e8eb5a616634c8749c01"
   },
   "rest": {
     "pose": "A",
@@ -59,6 +59,8 @@
       "jawWidth",
       "chin",
       "cheek",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
       "viseme_sil",
       "viseme_PP",
       "viseme_FF",
@@ -111,6 +113,6 @@
     "humanoid"
   ],
   "source": {
-    "blender": "mira_v2_v2.blend"
+    "blender": "mira_v3.blend"
   }
 }
