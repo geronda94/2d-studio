@@ -111,6 +111,26 @@
     let appearance = opts.appearance || {}
     let mood = opts.mood || 'neutral'
     let motion = opts.motion === 'talk' ? 'talk' : 'idle'
+    let gestureName = 'none'
+    const GESTURES = {
+      // additive local-Euler offsets on top of the idle/talk pose
+      wave: {
+        'upperArm.R': [0, 0, 1.35],
+        'lowerArm.R': [0.65, 0, 0.80],
+        'hand.R': [0, 0, 0.25],
+      },
+      point: {
+        'upperArm.R': [0, 0, 1.45],
+        'lowerArm.R': [-0.75, 0, 0.20],
+        'hand.R': [0, 0, 0],
+      },
+      explain: {
+        'upperArm.L': [0, 0, -0.95],
+        'upperArm.R': [0, 0, 0.95],
+        'lowerArm.L': [-0.85, 0, -0.80],
+        'lowerArm.R': [-0.85, 0, 0.80],
+      },
+    }
     let gender = opts.gender === 'female' ? 'female' : 'male'
     let outfit = Object.assign({
       top: 'tee', bottom: 'pants', shoes: 'sneaker',
@@ -166,20 +186,61 @@
 
     function applyBody(t) {
       const talk = motion === 'talk' || opts.talk
+      const walk = motion === 'walk'
       const s = t / 1000
       const breath = Math.sin(s * Math.PI * 2 / 4.2)
       const sway = Math.sin(s * (talk ? 1.1 : 0.62))
       const nod = Math.sin(s * (talk ? 2.3 : 1.05))
       const gesture = Math.sin(s * (talk ? 1.35 : 0.62))
+      const weight = Math.sin(s * (talk ? 0.8 : 0.45))
 
-      const pose = {
-        chest: [breath * (talk ? 0.026 : 0.018), sway * (talk ? 0.05 : 0.04), 0],
-        neck: [nod * (talk ? 0.055 : 0.035), sway * 0.03, 0],
-        head: [nod * (talk ? 0.07 : 0.045), sway * (talk ? 0.06 : 0.05), 0],
-        'upperArm.L': [0, 0, 0.65 + gesture * (talk ? 0.12 : 0.05)],
-        'upperArm.R': [0, 0, -0.85 - gesture * (talk ? 0.10 : 0.05)],
-        'lowerArm.L': [talk ? 0.16 + gesture * 0.12 : 0.04 + gesture * 0.03, 0, 0],
-        'lowerArm.R': [talk ? 0.12 - gesture * 0.10 : 0.04 - gesture * 0.03, 0, 0],
+      let pose = {
+        hips: [0, sway * 0.025, weight * 0.015],
+        spine: [breath * 0.015, sway * 0.03, -weight * 0.01],
+        chest: [breath * (talk ? 0.05 : 0.035), sway * (talk ? 0.07 : 0.045), 0],
+        neck: [nod * (talk ? 0.08 : 0.05), sway * 0.04, 0],
+        head: [nod * (talk ? 0.12 : 0.07), sway * (talk ? 0.10 : 0.06), 0],
+        'shoulder.L': [0, 0, breath * 0.015],
+        'shoulder.R': [0, 0, -breath * 0.015],
+        'upperArm.L': [0, 0, 0.35 + gesture * (talk ? 0.12 : 0.04)],
+        'upperArm.R': [0, 0, -0.35 - gesture * (talk ? 0.08 : 0.04)],
+        // negative X bends the elbow FORWARD; positive folds it behind the back
+        'lowerArm.L': [talk ? -0.26 - gesture * 0.12 : -0.05 - gesture * 0.03, 0, 0],
+        'lowerArm.R': [talk ? -0.20 + gesture * 0.10 : -0.05 + gesture * 0.03, 0, 0],
+        'hand.L': [0, 0, gesture * 0.06],
+        'hand.R': [0, 0, -gesture * 0.06],
+      }
+      if (walk) {
+        // walk in place, 1 s cycle: legs alternate, knees lift, arms counter-swing
+        const p = s * Math.PI * 2
+        const sin = Math.sin(p)
+        pose = {
+          hips: [0, 0.02 * sin, 0],
+          spine: [0.01 * Math.sin(2 * p), 0.02 * sin, 0],
+          chest: [0.02 * Math.sin(2 * p), 0.03 * sin, 0],
+          neck: [0, 0.02 * sin, 0],
+          head: [0, 0.03 * sin, 0],
+          'upperLeg.L': [-0.30 * sin, 0, 0],
+          'lowerLeg.L': [0.45 * Math.max(0, -sin), 0, 0],
+          'upperLeg.R': [0.30 * sin, 0, 0],
+          'lowerLeg.R': [0.45 * Math.max(0, sin), 0, 0],
+          'upperArm.L': [0.14 * sin, 0, 0.03],
+          'upperArm.R': [-0.14 * sin, 0, -0.03],
+          'lowerArm.L': [-0.10, 0, 0],
+          'lowerArm.R': [-0.10, 0, 0],
+        }
+      }
+      const g = GESTURES[gestureName]
+      if (g) {
+        for (const name in g) {
+          const p = pose[name] || [0, 0, 0]
+          const o = g[name]
+          pose[name] = [p[0] + o[0], p[1] + o[1], p[2] + o[2]]
+        }
+      }
+      if (gestureName === 'wave') {
+        const h = pose['hand.R'] || [0, 0, 0]
+        pose['hand.R'] = [h[0], h[1], h[2] + Math.sin(s * 7) * 0.35]
       }
       for (const name in pose) {
         const node = nodes[name]
@@ -248,12 +309,17 @@
     }
 
     function setMotion(value) {
-      motion = value === 'talk' ? 'talk' : 'idle'
+      motion = value === 'talk' ? 'talk' : value === 'walk' ? 'walk' : 'idle'
       return seek(lastTime)
     }
 
     function setMood(value) {
       mood = MOOD_MORPHS[value] ? value : 'neutral'
+      return seek(lastTime)
+    }
+
+    function setGesture(value) {
+      gestureName = GESTURES[value] ? value : 'none'
       return seek(lastTime)
     }
 
@@ -280,7 +346,13 @@
         else if (isOn(n, ['Sideburn'])) on = outfit.hair === 'short'
         else if (isOn(n, ['HairTail'])) on = outfit.hair === 'ponytail'
         else if (isOn(n, ['HairSide', 'HairBack'])) on = outfit.hair === 'bob' || outfit.hair === 'ponytail'
+        else if (isOn(n, ['Collar.Tee'])) on = showTop('tee')
         else if (isOn(n, ['Collar.Shirt'])) on = showTop('shirt')
+        else if (isOn(n, ['Collar.Hoodie'])) on = showTop('hoodie')
+        else if (isOn(n, ['Button', 'Placket'])) on = showTop('shirt')
+        else if (isOn(n, ['Drawstring'])) on = showTop('hoodie')
+        else if (isOn(n, ['Belt', 'Buckle'])) on = !dress
+        else if (isOn(n, ['HairBun'])) on = outfit.hair === 'bun'
         else if (isOn(n, ['Pocket'])) on = showTop('hoodie')
         else if (isOn(n, ['Hood'])) on = showTop('hoodie') && appearance.hood !== false
         else if (isOn(n, ['Glass'])) on = appearance.glasses !== false
@@ -298,6 +370,19 @@
 
     function setAppearance(app) {
       applyAppearance(app)
+      return seek(lastTime)
+    }
+
+    function setMorphValue(name, weight) {
+      setMorph(name, weight)
+      if (scene) scene.render()
+      return weight
+    }
+
+    function setShape(shape) {
+      if (shape && typeof shape === 'object') {
+        for (const name in shape) setMorph(name, shape[name])
+      }
       return seek(lastTime)
     }
 
@@ -387,8 +472,11 @@
       setVisemes,
       setMotion,
       setMood,
+      setGesture,
       setOutfit,
       setAppearance,
+      setMorph: setMorphValue,
+      setShape,
       destroy,
     }
   }

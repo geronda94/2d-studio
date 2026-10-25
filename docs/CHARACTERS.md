@@ -4,9 +4,29 @@
 см. `docs/RIG_FORMAT.md`. Rive остаётся legacy-рантаймом; SVG-риг `character`
 используется для простых 2D-сцен.
 
-Готовые полигональные персонажи: **Mark** и **Mira**
-(`core/public/models/characters/`), 25 костей, 20 морфов, Oculus-15 липсинк,
+Готовые полигональные персонажи: **Mark** и **Mira** (генератор v3,
+`core/public/models/characters/`), 25 костей, 34 морфа (Oculus-15, blink,
+body/face), липсинк, idle/talk, жесты `wave / point / explain`.
 Character Studio: `core/public/character-studio.html`, демо `/p/11`.
+Генератор: `scripts/blender/make_poly_characters_v3.py`, пресеты —
+`assets/characters/presets/*.json`.
+
+### Управление SceneRig
+
+```js
+rig.setVisemes([{ t: 0, viseme: 1 }, ...])
+rig.setMotion('idle' | 'talk')
+rig.setMood('neutral' | 'joy' | 'sad')
+rig.setGesture('none' | 'wave' | 'point' | 'explain')
+rig.setShape({ bodyShoulder: 0.2, bodyWaist: 0.15, ... })
+rig.setOutfit({ top: 'hoodie', bottom: 'pants', shoes: 'sneaker', hair: 'short' })
+rig.setAppearance({ skin: '#bd8766', top: '#24477a', ... })
+```
+
+Руки: ладонь к бедру, пальцы вниз по предплечью, большой палец вперёд;
+`lowerArm` X < 0 сгибает локоть вперёд. Полное правило — `AGENTS.md` §3.7.1
+и `docs/LEARNINGS.md` §7. Любой roll кисти вокруг оси руки запрещён.
+
 Ниже — исходный research, сохранён для истории.
 
 ---
