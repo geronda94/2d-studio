@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchProjectsSummary, fetchProjectColors, createProject } from '../services/api'
 import AuthMenu from '../components/layout/AuthMenu.vue'
+import StudioMenu from '../components/layout/StudioMenu.vue'
 import PageSkeleton from '../components/ui/PageSkeleton.vue'
 
 const router = useRouter()
@@ -110,11 +111,12 @@ const getDisplayColors = (projectId) => {
 
       <!-- Быстрая навигация -->
       <div class="flex justify-end items-center gap-3">
+        <StudioMenu />
         <router-link
           to="/themes"
           class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors shadow-sm"
         >
-          🎨 Темы
+          Темы
         </router-link>
         <AuthMenu />
       </div>
@@ -139,6 +141,34 @@ const getDisplayColors = (projectId) => {
           Центральный пульт управления. Выберите проект, чтобы начать работу с папками и презентациями.
         </p>
       </header>
+
+      <!-- Студии: новые инструменты -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <a href="/character-studio.html" target="_blank" rel="noopener"
+           class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">CHARACTER</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Character Studio</div>
+          <div class="text-sm text-gray-500 mt-1">Полигональные персонажи, настройки внешности, липсинк и сохранение в библиотеку.</div>
+        </a>
+        <a href="/object-studio.html" target="_blank" rel="noopener"
+           class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">OBJECT</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Object Studio</div>
+          <div class="text-sm text-gray-500 mt-1">Создание и редактирование объектов: GLB, габариты, сокеты, манифест, сохранение в библиотеку.</div>
+        </a>
+        <a href="/rig-studio.html" target="_blank" rel="noopener"
+           class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">RIG</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Rig Studio</div>
+          <div class="text-sm text-gray-500 mt-1">Канонический скелет, морфы, валидация и манифест персонажа SceneRig.</div>
+        </a>
+        <a href="/clip-editor.html" target="_blank" rel="noopener"
+           class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">CLIP</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Clip Editor</div>
+          <div class="text-sm text-gray-500 mt-1">Ключи анимации на кости, таймлайн, экспорт *.sclip.json и bake в GLB.</div>
+        </a>
+      </div>
 
       <!-- Онбординг: как начать -->
       <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm mb-10">

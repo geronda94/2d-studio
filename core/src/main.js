@@ -18,9 +18,9 @@ if (new URLSearchParams(window.location.search).get('render') === 'true') {
 app.use(router)
 app.component('Icon', Icon)
 
-// v-click-outside — закрытие по клику вне элемента. Используется в
-// EmojiPickerModal (и потенциально других оверлеях). Раньше директива не была
-// зарегистрирована → Vue warn «Failed to resolve directive» и клик снаружи не работал.
+// v-click-outside — закрытие по клику вне элемента. Используется оверлеями.
+// Директива должна быть зарегистрирована глобально, иначе Vue warn
+// «Failed to resolve directive» и клик снаружи не работает.
 app.directive('click-outside', {
   mounted(el, binding) {
     el.__clickOutside__ = (event) => {

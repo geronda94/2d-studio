@@ -10,17 +10,20 @@ services:
     volumes:
       - scene_postgres_data:/var/lib/postgresql/data
     ports:
-      - "5436:5432"
+      - "5437:5432"
     restart: unless-stopped
 
   backend:
+    # Bootstrap uses a prebuilt image; rebuild with:
+    #   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build backend
     image: scene-saas-backend:latest
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://scene_user:scene_password@db:5432/scene_db
+      - STT_URL=${STT_URL:-http://host.docker.internal:8788}
+      - STT_KEY=${STT_KEY:-local-whisper-key}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8002:8000"
     volumes:
@@ -37,13 +40,15 @@ services:
     working_dir: /app
     volumes:
       - ./core:/app
+      - scene_node_modules:/app/node_modules
     environment:
       - BACKEND_URL=http://backend:8000
     ports:
       - "5175:5173"
-    command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run dev -- --host 0.0.0.0"
+    command: sh -c "if [ ! -f node_modules/.package-lock.json ]; then npm ci --no-audit --no-fund; fi && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
 
 volumes:
   scene_postgres_data:
+  scene_node_modules:

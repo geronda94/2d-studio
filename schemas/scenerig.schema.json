@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sceneengine.local/schemas/scenerig.schema.json",
+  "title": "SceneRig 1.0",
+  "description": "Canonical rig manifest: human, animal, winged.",
+  "type": "object",
+  "required": ["format", "id", "family", "archetype", "geometry", "license"],
+  "properties": {
+    "format": { "const": "scenerig/1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "family": { "enum": ["human", "animal", "winged"] },
+    "archetype": { "enum": ["humanoid", "quadruped", "avian", "insectoid"] },
+    "geometry": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "units": { "enum": ["m"] },
+        "up": { "enum": ["Y", "Z"] },
+        "facing": { "enum": ["+Z", "-Z", "+X", "-X"] },
+        "tris": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "rest": {
+      "type": "object",
+      "properties": {
+        "pose": { "enum": ["A", "T"] },
+        "origin": { "enum": ["feet", "hips", "center"] }
+      },
+      "additionalProperties": true
+    },
+    "bones": {
+      "type": "object",
+      "properties": {
+        "canonical": { "type": "boolean" },
+        "map": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "extra": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "face": {
+      "type": "object",
+      "properties": {
+        "morphs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "visemes": { "enum": ["oculus-15", "arkit-52", "scene-10", "none"] },
+        "engine_map": { "enum": ["scene-10", "none"] },
+        "jaw_bone": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "sockets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "bone"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "bone": { "type": "string", "minLength": 1 },
+          "offset": {
+            "type": "array", "items": { "type": "number" },
+            "minItems": 3, "maxItems": 3
+          },
+          "rotation": {
+            "type": "array", "items": { "type": "number" },
+            "minItems": 4, "maxItems": 4
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "clips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "file"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "file": { "type": "string", "minLength": 1 },
+          "loop": { "type": "boolean" },
+          "fps": { "type": "number", "exclusiveMinimum": 0, "maximum": 240 },
+          "duration": { "type": "number", "exclusiveMinimum": 0 },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["t", "name"],
+              "properties": {
+                "t": { "type": "number", "minimum": 0 },
+                "name": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "lod": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["level", "file"],
+        "properties": {
+          "level": { "type": "integer", "minimum": 0 },
+          "file": { "type": "string" },
+          "tris": { "type": "integer", "minimum": 0 },
+          "max_distance": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "slot": { "type": "string" },
+          "base_color": { "type": "string" },
+          "roughness": { "type": "number", "minimum": 0, "maximum": 1 },
+          "metallic": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "license": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "author": { "type": "string" },
+        "source": { "type": "string" },
+        "commercial": { "type": "boolean" },
+        "notice": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "blender": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      },
+      "additionalProperties": true
+    },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

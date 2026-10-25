@@ -2,6 +2,7 @@
 // Единая админ-рамка (UX_REDESIGN Ф1): хлебные крошки + заголовок + слот действий.
 // Светлая, контент-центричная. Креатив/плеер эту рамку не использует.
 import AuthMenu from './AuthMenu.vue'
+import StudioMenu from './StudioMenu.vue'
 
 defineProps({
   crumbs: { type: Array, default: () => [] }, // [{ label, to? }]
@@ -13,7 +14,8 @@ defineProps({
 
 <template>
   <div class="relative min-h-dvh bg-[#f5f5f7] text-gray-900 p-4 md:p-12 font-sans pt-[max(1rem,env(safe-area-inset-top))] md:pt-[max(3rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-    <div class="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 md:top-[max(3rem,env(safe-area-inset-top))] md:right-12 z-40">
+    <div class="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 md:top-[max(3rem,env(safe-area-inset-top))] md:right-12 z-40 flex items-center gap-2">
+      <StudioMenu />
       <AuthMenu />
     </div>
     <div :class="maxWidth" class="mx-auto">

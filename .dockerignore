@@ -1,0 +1,10 @@
+.git
+.env
+**/__pycache__
+**/*.pyc
+core/node_modules
+uploads
+backend/media
+dump.sql
+dump.sql.gz
+dist

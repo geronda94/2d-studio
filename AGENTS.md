@@ -10,7 +10,7 @@
 Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
 Липсинк: **`docs/LIPSYNC.md`**.
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
-Ассеты: **`docs/ASSETS.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
+Ассеты: **`docs/ASSETS.md`**. Риги: **`docs/RIG_FORMAT.md`**, студия: **`docs/RIG_STUDIO.md`**. Объекты/окружения: **`docs/ASSET_FORMAT.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
 Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.
 Канал: **`docs/CHANNEL_PRAVOSLAVIE.md`**. Роли ИИ: **`docs/AGENT_ROLES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
@@ -135,11 +135,27 @@ GET http://localhost:8002/scene-library/characters/{slug}
 
 - Шаблон `character-3d`, драйвер `SceneKit.babylonCharacter`
   (`core/public/vendor/babylon-character.js`).
-- GLB + мокап-клипы: `core/public/models/`, harness `babylon-avatar.html`.
+- GLB + мокап-клипы: `core/public/models/`; для iframe — base64-обёртка `.glb.js`.
 - Mixamo-клипы не коммитить в публичный репозиторий; скачивать
   `scripts/fetch_avatar_anims.py` + `scripts/extract_avatar_anims.py`.
 - Управление: `setPose`, `setVisemes`, `setClips`, `setGestures`, `setMood`,
   `setGaze`; из редактора — сообщения `avatar-*`.
+
+## 3.7. Риги и персонажи (SceneRig 1.0)
+
+- Канон: `human` / `animal` / `winged` (`humanoid`, `quadruped`, `avian`, `insectoid`).
+- Формат и правила: `docs/RIG_FORMAT.md`; объекты/окружения: `docs/ASSET_FORMAT.md`.
+- Skeletons — glTF 2.0, A-pose, метры, взгляд `+Z`, origin между ступнями.
+- Не ретаргетить в рантайме: клип авторится на каноне; адаптеры — только импорт.
+- Перед сдачей: `python -m backend.rig validate <manifest>` без ошибок,
+  затем `python -m backend.rig compile <manifest> --out dist/`;
+  клип: `python -m backend.rig bake <manifest> <clip> --out dist/`.
+- Объект/персонаж: `core/public/rig-studio.html`, `core/public/object-studio.html`,
+  `core/public/clip-editor.html`.
+- Blender: `scripts/blender/scene_rig_export.py` (GLB + манифест + проверка);
+  генератор полигональных персонажей `scripts/blender/make_poly_characters.py`.
+- Rive остаётся legacy-рантаймом; round-trip в Rive не делаем.
+- Mixamo-клипы не коммитить в публичный репозиторий.
 
 ## 4. Модель 2D-сцены
 
@@ -245,5 +261,5 @@ docker compose exec -T backend python scripts/seed_scene_demo.py
 
 - Frontend: http://localhost:5175
 - Backend: http://localhost:8002
-- Postgres: localhost:5436
+- Postgres: localhost:5437
 - Демо: http://localhost:5175/p/1

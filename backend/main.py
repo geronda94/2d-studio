@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from . import models
 from .database import engine
-from .routers import presentations, components, projects, ai, renders, variants, presets, api_keys, auth, admin, audit as audit_router, revisions as revisions_router, ai_runs as ai_runs_router, delegations as delegations_router, scene_library
+from .routers import presentations, components, projects, ai, renders, variants, presets, api_keys, auth, admin, audit as audit_router, revisions as revisions_router, ai_runs as ai_runs_router, delegations as delegations_router, scene_library, rig as rig_router, scene_assets
 from . import audit
 
 models.Base.metadata.create_all(bind=engine)
@@ -229,6 +229,8 @@ app.include_router(revisions_router.router)
 app.include_router(ai_runs_router.router)
 app.include_router(delegations_router.router)
 app.include_router(scene_library.router)
+app.include_router(rig_router.router)
+app.include_router(scene_assets.router)
 
 @app.get("/")
 def read_root():

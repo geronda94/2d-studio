@@ -48,7 +48,7 @@ function escapeStyle(code) {
   return String(code || '').replace(/<\/style/gi, '<\\/style')
 }
 
-export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '', charSource = '', riveSource = '', riveCharSource = '', riveBuffer = '', riveActorSource = '', riveActorBuffer = '', riveOldManBuffer = '' }) {
+export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '', charSource = '', sceneClipSource = '', sceneRigSource = '', riveSource = '', riveCharSource = '', riveBuffer = '', riveActorSource = '', riveActorBuffer = '', riveOldManBuffer = '' }) {
   const html = String(code.html || '')
   const css = escapeStyle(code.css || '')
   const js = escapeScript(code.js || '')
@@ -78,6 +78,8 @@ export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss 
 ${gsapSource ? `<script>${escapeScript(gsapSource)}</script>` : ''}
 ${kitSource ? `<script>${escapeScript(kitSource)}</script>` : ''}
 ${charSource ? `<script>${escapeScript(charSource)}</script>` : ''}
+${sceneClipSource ? `<script>${escapeScript(sceneClipSource)}</script>` : ''}
+${sceneRigSource ? `<script>${escapeScript(sceneRigSource)}</script>` : ''}
 ${riveSource ? `<script>${escapeScript(riveSource)}</script>` : ''}
 ${riveCharSource ? `<script>${escapeScript(riveCharSource)}</script>` : ''}
 ${riveActorSource ? `<script>${escapeScript(riveActorSource)}</script>` : ''}
@@ -179,6 +181,26 @@ export function loadCharSource() {
       .catch(() => '')
   }
   return charPromise
+}
+
+let sceneClipPromise = null
+export function loadSceneClipSource() {
+  if (!sceneClipPromise) {
+    sceneClipPromise = fetch('/vendor/scene-clip.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return sceneClipPromise
+}
+
+let sceneRigPromise = null
+export function loadSceneRigSource() {
+  if (!sceneRigPromise) {
+    sceneRigPromise = fetch('/vendor/scene-rig.js')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return sceneRigPromise
 }
 
 // Rive runtime — 3.3 МБ, поэтому грузится только для сцен, которым он нужен.

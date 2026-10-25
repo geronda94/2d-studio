@@ -126,7 +126,7 @@ const isMobile = inject('isMobile', ref(false))
 
 const { currentTime } = useDirector()
 
-// Поддержка динамического изменения лейаута из дочерних компонентов (например, ChatMockup, PremiumChecklist)
+// Поддержка динамического изменения лейаута из дочерних компонентов
 const dynamicLayout = ref(null)
 const setSlideLayout = (layout) => {
   dynamicLayout.value = layout

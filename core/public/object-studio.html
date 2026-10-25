@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SceneAsset Studio — объекты</title>
+<style>
+  :root{--bg:#070b12;--panel:#0e1522;--panel2:#121c2c;--line:#22304a;--text:#e8eefc;
+    --muted:#8da0bf;--accent:#38bdf8;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:13px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
+  button:hover{border-color:var(--accent)}button.primary{background:#0b3a52;border-color:#155e7a;color:#dff6ff}
+  input,select,textarea{background:#08101c;border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
+  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  #app{display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header .title{font-weight:700;margin-right:6px}header .title span{color:var(--accent)}
+  header .grow{flex:1}header .status{font:11px var(--mono);color:var(--muted);white-space:nowrap}
+  main{display:grid;grid-template-columns:260px 1fr 410px;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;min-width:0}.col+.col{border-left:1px solid var(--line)}
+  .panel-h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);
+    background:var(--panel);font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .panel-h .grow{flex:1}.scroll{overflow:auto;min-height:0}
+  #stage{position:relative;background:radial-gradient(120% 90% at 50% 18%,#22314a 0%,#111a27 45%,#070b12 100%)}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+  .facts{padding:8px 10px;font:11px var(--mono);color:var(--muted);border-bottom:1px solid var(--line)}
+  .facts b{color:var(--text);font-weight:600}
+  .mat{display:flex;justify-content:space-between;gap:8px;padding:4px 10px;font:11px var(--mono);border-bottom:1px solid #101a2a}
+  .mat span:last-child{color:var(--muted)}
+  .lib-item{padding:6px 10px;border-bottom:1px solid #101a2a;cursor:pointer;display:flex;gap:8px;align-items:center}
+  .lib-item:hover{background:#13213a}.lib-item.sel{background:#0b2434;border-left:2px solid var(--accent)}
+  .lib-item .t{font:12px Inter,sans-serif;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lib-item .s{font:10px var(--mono);color:var(--muted);white-space:nowrap}
+  button.danger{border-color:#5b1c1c;color:#ffb4b4}
+  .fields{padding:10px;display:grid;gap:8px;border-bottom:1px solid var(--line)}
+  .fields label{display:grid;gap:4px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .row{display:flex;gap:6px;align-items:center}.row>*{flex:1}
+  .sock{display:grid;grid-template-columns:1fr 54px 54px 54px 28px;gap:4px;align-items:center;margin-bottom:6px}
+  .sock input{padding:4px 6px;font:11px var(--mono)}.sock button{padding:4px 6px}
+  #manifest{flex:1;width:100%;resize:none;border:0;border-radius:0;background:#08101c;font:11px/1.5 var(--mono);padding:10px}
+  #issues{padding:8px 10px;font:11px var(--mono)}
+  .issue{border-radius:6px;padding:6px 8px;margin-bottom:6px;border:1px solid #1e2b42;background:#0b1421}
+  .issue.error{border-color:#5b1c1c;background:#1a0d0f}.issue.warning{border-color:#5a4210;background:#1a1508}
+  .issue .code{font-weight:700}.issue.error .code{color:var(--err)}.issue.warning .code{color:var(--warn)}
+  .issue.info .code{color:var(--accent)}.empty{padding:16px;color:var(--muted);font-size:12px;text-align:center}
+  .hidden{display:none!important}.pill{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);font:10px var(--mono);color:var(--muted);cursor:pointer}
+  @media(max-width:1150px){main{grid-template-columns:230px 1fr 350px}}
+  @media(max-width:900px){main{grid-template-columns:1fr;grid-template-rows:260px 340px 1fr}.col+.col{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Scene<span>Asset</span> Studio</div>
+    <select id="kind" title="Тип">
+      <option value="prop3d">prop3d</option>
+      <option value="prop2d">prop2d</option>
+      <option value="environment">environment</option>
+      <option value="fx">fx</option>
+    </select>
+    <input id="url" style="width:230px" value="/models/brunette.glb" spellcheck="false">
+    <button id="loadUrl" class="primary">Загрузить URL</button>
+    <label class="pill">Локальный .glb<input id="file" type="file" accept=".glb,.gltf" class="hidden"></label>
+    <button id="newAsset">Новый</button>
+    <button id="saveAsset" class="primary">Сохранить</button>
+    <button id="deleteAsset" class="danger">Удалить</button>
+    <span class="grow"></span>
+    <a href="/" class="pill" style="text-decoration:none">← Проект</a>
+    <span id="status" class="status">idle</span>
+  </header>
+  <main>
+    <section class="col">
+      <div class="panel-h"><span>Библиотека</span><span class="grow"></span><button id="refreshLib" style="padding:2px 7px" title="Обновить">↻</button></div>
+      <div class="scroll" id="library" style="max-height:38%"><div class="empty">Нет объектов</div></div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Модель</span><span class="grow"></span><span id="meshCount">0</span></div>
+      <div class="facts" id="facts">Загрузите GLB</div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Материалы</span><span class="grow"></span><span id="matCount">0</span></div>
+      <div class="scroll" id="mats"><div class="empty">Нет материалов</div></div>
+    </section>
+    <section class="col" id="stage"><canvas id="c"></canvas></section>
+    <section class="col">
+      <div class="panel-h"><span>Ассет</span><span class="grow"></span><button id="validate" class="primary">Проверить GLB</button></div>
+      <div class="scroll" style="max-height:52%">
+        <div class="fields">
+          <label>ID<input id="id" value="prop"></label>
+          <label>Название<input id="title" value="Prop"></label>
+          <label>Категория
+            <select id="category">
+              <option>nature</option><option>vehicle</option><option>furniture</option><option>architecture</option>
+              <option>interior</option><option>instrument</option><option>food</option><option>other</option>
+            </select>
+          </label>
+          <div class="row">
+            <label>Pivot<select id="pivot"><option>bottom</option><option>center</option><option>top</option><option>custom</option></select></label>
+            <label>Взгляд<select id="facing"><option>+Z</option><option>-Z</option><option>+X</option><option>-X</option></select></label>
+          </div>
+          <label style="display:flex;flex-direction:row;gap:8px;align-items:center;text-transform:none;font-size:12px">
+            <input id="ground" type="checkbox" checked style="width:auto"> ставить на землю
+          </label>
+          <div class="row">
+            <label>W<input id="bw" type="number" step="0.01" value="0"></label>
+            <label>H<input id="bh" type="number" step="0.01" value="0"></label>
+            <label>D<input id="bd" type="number" step="0.01" value="0"></label>
+          </div>
+          <div class="row">
+            <label>Лицензия<input id="license" value="TBD"></label>
+            <label>Автор<input id="author" value=""></label>
+          </div>
+          <label>Сокеты <button id="addSock" style="padding:2px 8px">+</button></label>
+          <div id="socks"><div class="empty" style="padding:4px">Нет сокетов</div></div>
+        </div>
+        <div class="panel-h"><span>Валидатор</span><span class="grow"></span><span id="verdict">—</span></div>
+        <div id="issues"><div class="empty">Загрузите модель и нажмите «Проверить GLB»</div></div>
+      </div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Манифест</span><span class="grow"></span>
+        <button id="copy">Copy</button><button id="download">Download</button></div>
+      <textarea id="manifest" spellcheck="false"></textarea>
+    </section>
+  </main>
+</div>
+<script>
+const $=(id)=>document.getElementById(id)
+const state={assetId:null,uploadedUrl:null,file:null,url:null,filename:'',bounds:null,materials:[],meshes:0,sockets:[],report:null,library:[]}
+const setStatus=(t)=>{$('status').textContent=t}
+const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();
+  const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('cannot load '+src));document.head.appendChild(s)})}
+async function ensureBabylon(){if(!window.BABYLON){await loadScript('/vendor/babylon.js');await loadScript('/vendor/babylonjs.loaders.min.js')}}
+const canvas=$('c');let engine,scene,camera,container
+async function initScene(){await ensureBabylon();if(engine)return
+  engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true})
+  scene=new BABYLON.Scene(engine);scene.clearColor=new BABYLON.Color4(0.02,0.03,0.055,1)
+  camera=new BABYLON.ArcRotateCamera('camera',-Math.PI/2,Math.PI/2.35,3.2,new BABYLON.Vector3(0,0,0),scene)
+  camera.attachControl(canvas,true);camera.wheelPrecision=35;camera.lowerRadiusLimit=0.2
+  const hemi=new BABYLON.HemisphericLight('hemi',new BABYLON.Vector3(0.2,1,0.1),scene);hemi.intensity=0.85
+  hemi.groundColor=new BABYLON.Color3(0.10,0.13,0.18)
+  const key=new BABYLON.DirectionalLight('key',new BABYLON.Vector3(-0.6,-1,-0.5),scene)
+  key.position=new BABYLON.Vector3(4,7,5);key.intensity=1.1
+  const grid=new BABYLON.MeshBuilder.CreateGround('grid',{width:6,height:6},scene)
+  grid.material=new BABYLON.StandardMaterial('gridmat',scene);grid.material.wireframe=true
+  grid.material.diffuseColor=new BABYLON.Color3(0.10,0.16,0.24);grid.isPickable=false
+  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize())}
+function disposeModel(){if(container){try{container.removeAllFromScene()}catch(e){}try{container.dispose()}catch(e){}container=null}
+  state.bounds=null;state.materials=[];state.meshes=0}
+
+function applyManifest(asset) {
+  const m = asset.manifest || {}
+  const g = m.geometry || {}
+  const a = m.anchors || {}
+  const lic = m.license || {}
+  $('kind').value = m.kind || asset.kind || 'prop3d'
+  $('id').value = m.id || asset.slug || ''
+  $('title').value = m.title || asset.title || ''
+  $('category').value = m.category || asset.category || 'other'
+  $('pivot').value = a.pivot || 'bottom'
+  $('facing').value = g.facing || a.forward || '+Z'
+  $('ground').checked = a.ground !== false
+  const b = a.bounds || []
+  $('bw').value = b[0] ?? 0; $('bh').value = b[1] ?? 0; $('bd').value = b[2] ?? 0
+  $('license').value = lic.name || 'TBD'
+  $('author').value = lic.author || ''
+  state.sockets = Array.isArray(m.sockets) ? m.sockets.map(s => ({name: s.name, offset: s.offset || [0,0,0]})) : []
+  renderSockets()
+  state.assetId = asset.id
+  state.uploadedUrl = asset.source_url || g.file || null
+  $('url').value = state.uploadedUrl || ''
+  buildManifest()
+}
+
+async function loadLibrary(){
+  try {
+    const res = await fetch('/api/scene-assets')
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    state.library = await res.json()
+  } catch (e) {
+    console.error(e); state.library = []
+  }
+  const host = $('library'); host.innerHTML = ''
+  if (!state.library.length) { host.innerHTML = '<div class="empty">Нет сохранённых объектов</div>'; return }
+  for (const asset of state.library) {
+    const row = document.createElement('div')
+    row.className = 'lib-item' + (asset.id === state.assetId ? ' sel' : '')
+    row.innerHTML = `<span class="t">${escapeHtml(asset.title || asset.slug)}</span><span class="s">${escapeHtml(asset.kind || '')}</span>`
+    row.title = asset.slug
+    row.onclick = () => loadAsset(asset.id)
+    host.appendChild(row)
+  }
+}
+
+async function loadAsset(id){
+  setStatus('loading asset…')
+  try {
+    const res = await fetch('/api/scene-assets/' + id)
+    const asset = await res.json()
+    if (!res.ok) throw new Error(asset.detail || ('HTTP ' + res.status))
+    const file = (asset.manifest && asset.manifest.geometry && asset.manifest.geometry.file) || asset.source_url
+    if (!file) throw new Error('asset has no geometry.file')
+    const filename = String(file).split('/').pop() || (asset.slug + '.glb')
+    await loadSource(file, filename, {asset})
+    setStatus('loaded asset ' + asset.slug)
+    await loadLibrary()
+  } catch (e) { console.error(e); fail('Не удалось открыть объект: ' + (e.message || e)) }
+}
+
+function newAsset(){
+  disposeModel(); state.assetId = null; state.uploadedUrl = null; state.file = null; state.url = null; state.filename = ''
+  state.sockets = []; renderSockets(); state.report = null
+  $('id').value = 'prop'; $('title').value = 'Prop'; $('category').value = 'other'
+  $('pivot').value = 'bottom'; $('facing').value = '+Z'; $('ground').checked = true
+  $('bw').value = 0; $('bh').value = 0; $('bd').value = 0
+  $('license').value = 'TBD'; $('author').value = ''; $('url').value = ''
+  $('facts').textContent = 'Загрузите GLB'; $('meshCount').textContent = '0'; $('matCount').textContent = '0'
+  $('mats').innerHTML = '<div class="empty">Нет материалов</div>'
+  $('issues').innerHTML = '<div class="empty">Загрузите модель и нажмите «Проверить GLB»</div>'
+  $('verdict').textContent = '—'
+  buildManifest(); loadLibrary(); setStatus('new asset')
+}
+
+async function saveAsset(){
+  if (!state.file && !state.url && !state.uploadedUrl) { fail('Сначала загрузите GLB или SVG'); return }
+  const slug = ($('id').value || '').trim()
+  if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(slug)) { fail('ID: латиница, цифры и дефис, 2–64 символа'); return }
+  setStatus('saving…')
+  try {
+    if (state.file && !state.uploadedUrl) {
+      const fd = new FormData()
+      fd.append('file', state.file, state.filename || 'asset.glb')
+      const up = await fetch('/api/scene-assets/upload', {method: 'POST', body: fd})
+      const ud = await up.json()
+      if (!up.ok) throw new Error(ud.detail || ('upload HTTP ' + up.status))
+      state.uploadedUrl = ud.url
+      $('url').value = ud.url
+    }
+    const manifest = buildManifest()
+    const payload = {
+      slug,
+      title: ($('title').value || slug).trim(),
+      kind: $('kind').value,
+      category: $('category').value || 'other',
+      manifest,
+      source_url: state.uploadedUrl || state.url || null,
+      preview_url: null,
+    }
+    const url = state.assetId ? '/api/scene-assets/' + state.assetId : '/api/scene-assets'
+    const res = await fetch(url, {
+      method: state.assetId ? 'PUT' : 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status))
+    state.assetId = data.id
+    setStatus('saved ' + data.slug)
+    await loadLibrary()
+  } catch (e) { console.error(e); fail('Не удалось сохранить: ' + (e.message || e)) }
+}
+
+async function deleteAsset(){
+  if (!state.assetId) { newAsset(); return }
+  if (!confirm('Удалить объект из библиотеки?')) return
+  try {
+    const res = await fetch('/api/scene-assets/' + state.assetId, {method: 'DELETE'})
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    state.assetId = null
+    await loadLibrary()
+    newAsset()
+    setStatus('deleted')
+  } catch (e) { console.error(e); fail('Не удалось удалить: ' + (e.message || e)) }
+}
+function frameCamera(c){
+  let min=null,max=null
+  for(const m of c.meshes){if(!m.getTotalVertices||!m.getTotalVertices())continue;m.computeWorldMatrix(true);m.refreshBoundingInfo()
+    const bi=m.getBoundingInfo&&m.getBoundingInfo();if(!bi)continue;const bb=bi.boundingBox
+    min=min?BABYLON.Vector3.Minimize(min,bb.minimumWorld):bb.minimumWorld.clone()
+    max=max?BABYLON.Vector3.Maximize(max,bb.maximumWorld):bb.maximumWorld.clone()}
+  if(!min||!max)return
+  const center=min.add(max).scale(0.5),size=max.subtract(min)
+  camera.setTarget(center);camera.radius=Math.max(0.6,size.length()*1.5)
+  state.bounds={w:+size.x.toFixed(3),h:+size.y.toFixed(3),d:+size.z.toFixed(3)}
+  $('bw').value=state.bounds.w;$('bh').value=state.bounds.h;$('bd').value=state.bounds.d}
+function collectFacts(c){
+  let verts=0,tris=0
+  for(const m of c.meshes){if(!m.getTotalVertices||!m.getTotalVertices())continue
+    verts+=m.getTotalVertices();tris+=(m.getTotalIndices?m.getTotalIndices():0)/3}
+  state.meshes=c.meshes.length
+  const mats=[];const seen=new Set()
+  for(const m of c.meshes){if(!m.material)continue
+    const name=m.material.name||'material'
+    if(!seen.has(name)){seen.add(name);mats.push({name,meshes:1})}}
+  state.materials=mats
+  $('meshCount').textContent=String(state.meshes);$('matCount').textContent=String(mats.length)
+  $('facts').innerHTML=`<b>${state.filename}</b><br>${state.meshes} meshes · ${Math.round(verts)} verts · ${Math.round(tris)} tris`+
+    (state.bounds?`<br>${state.bounds.w} × ${state.bounds.h} × ${state.bounds.d} m`:'')
+  const host=$('mats');host.innerHTML=''
+  if(!mats.length){host.innerHTML='<div class="empty">Нет материалов</div>'}
+  for(const m of mats){const row=document.createElement('div');row.className='mat';row.innerHTML=`<span>${m.name}</span><span>slot</span>`;host.appendChild(row)}}
+async function loadSource(source,filename,opts={}){await initScene();disposeModel();setStatus('loading '+filename+'…')
+  try{let c
+    if(source instanceof File)c=await BABYLON.SceneLoader.LoadAssetContainerAsync('',source,scene)
+    else{const i=source.lastIndexOf('/');c=await BABYLON.SceneLoader.LoadAssetContainerAsync(i>=0?source.slice(0,i+1):'',i>=0?source.slice(i+1):source,scene)}
+    container=c;c.addAllToScene()
+    state.file=source instanceof File?source:null;state.url=source instanceof File?null:source;state.filename=filename
+    state.uploadedUrl=null
+    frameCamera(c);collectFacts(c)
+    if (opts.asset) {
+      applyManifest(opts.asset)
+    } else {
+      $('id').value=filename.replace(/\.(glb|gltf)$/i,'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'prop'
+      $('title').value=filename.replace(/\.(glb|gltf)$/i,'')
+      state.sockets=[]
+      renderSockets()
+      buildManifest()
+    }
+    setStatus('loaded '+filename);validateCurrent()
+  }catch(e){console.error(e);fail('Не удалось загрузить: '+(e.message||e))}}
+function addSocket(name,offset){state.sockets.push({name:name||('socket-'+(state.sockets.length+1)),offset:offset||[0,0,0]});renderSockets()}
+function renderSockets(){const host=$('socks');host.innerHTML=''
+  if(!state.sockets.length){host.innerHTML='<div class="empty" style="padding:4px">Нет сокетов</div>';return}
+  state.sockets.forEach((s,i)=>{const row=document.createElement('div');row.className='sock'
+    const n=document.createElement('input');n.value=s.name;n.oninput=()=>{s.name=n.value;buildManifest()}
+    const xs=['x','y','z'].map((ax,k)=>{const inp=document.createElement('input');inp.type='number';inp.step='0.01';inp.value=s.offset[k]
+      inp.oninput=()=>{s.offset[k]=Number(inp.value)||0;buildManifest()};return inp})
+    const del=document.createElement('button');del.textContent='×';del.onclick=()=>{state.sockets.splice(i,1);renderSockets();buildManifest()}
+    row.append(n,...xs,del);host.appendChild(row)})}
+function buildManifest(){
+  const kind=$('kind').value
+  const m={format:'sceneasset/1',id:$('id').value||'prop',title:$('title').value||'Prop',kind,
+    category:$('category').value,
+    geometry:{type:String(state.uploadedUrl||state.url||'').toLowerCase().endsWith('.svg')?'svg':'gltf',file:state.uploadedUrl||state.url||state.filename||'prop.glb',units:'m',up:'Y',facing:$('facing').value},
+    anchors:{pivot:$('pivot').value,ground:$('ground').checked,forward:$('facing').value,
+      bounds:[Number($('bw').value)||0,Number($('bh').value)||0,Number($('bd').value)||0]},
+    sockets:state.sockets.map(s=>({name:s.name,offset:s.offset})),
+    materials:state.materials.map(x=>({slot:x.name})),
+    license:{name:$('license').value||'TBD'}}
+  if($('author').value)m.license.author=$('author').value
+  $('manifest').value=JSON.stringify(m,null,2)
+  renderIssues()
+  return m}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderIssues(){const rep=state.report;const host=$('issues')
+  if(!rep){$('verdict').textContent='—';host.innerHTML='<div class="empty">Загрузите модель и нажмите «Проверить GLB»</div>';return}
+  $('verdict').innerHTML=`<b style="color:${rep.ok?'var(--ok)':'var(--err)'}">${rep.ok?'OK':'FAIL'}</b> · errors ${rep.errors} · warnings ${rep.warnings}`
+  const flat=[];const walk=(r)=>{for(const i of r.issues||[])flat.push(i);for(const c of r.children||[])walk(c)};walk(rep)
+  host.innerHTML='';if(!flat.length){host.innerHTML='<div class="empty">Ошибок нет</div>';return}
+  for(const i of flat){const d=document.createElement('div');d.className='issue '+i.level
+    d.innerHTML=`<div class="code">${i.code}</div><div>${escapeHtml(i.message)}</div>`;host.appendChild(d)}}
+async function validateCurrent(){if(!state.file&&!state.url)return;setStatus('validating…')
+  try{const blob=state.file||await (await fetch(state.url)).blob();const fd=new FormData()
+    fd.append('file',blob,state.filename||'prop.glb');fd.append('require_rig','false')
+    const res=await fetch('/api/rig/validate',{method:'POST',body:fd});const data=await res.json()
+    if(!res.ok)throw new Error(data.detail||('HTTP '+res.status))
+    state.report=data;renderIssues();setStatus(data.ok?'valid':'invalid')
+  }catch(e){console.error(e);setStatus('validate failed');$('issues').innerHTML=`<div class="issue error"><div class="code">api.error</div><div>${escapeHtml(e.message||e)}</div></div>`}}
+$('loadUrl').onclick=()=>{const u=$('url').value.trim();if(u)loadSource(u,u.slice(u.lastIndexOf('/')+1)||'prop.glb')}
+$('url').addEventListener('keydown',(e)=>{if(e.key==='Enter')$('loadUrl').click()})
+$('file').onchange=(e)=>{const f=e.target.files&&e.target.files[0];if(f)loadSource(f,f.name)}
+$('validate').onclick=validateCurrent
+$('addSock').onclick=()=>addSocket()
+$('saveAsset').onclick=saveAsset
+$('newAsset').onclick=newAsset
+$('deleteAsset').onclick=deleteAsset
+$('refreshLib').onclick=loadLibrary
+$('kind').onchange=()=>buildManifest()
+for(const id of ['id','title','category','pivot','facing','ground','bw','bh','bd','license','author'])$(id).addEventListener('input',buildManifest)
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('manifest').value);setStatus('manifest copied')}catch(e){fail('Clipboard unavailable')}}
+$('download').onclick=()=>{const blob=new Blob([$('manifest').value],{type:'application/json'});const a=document.createElement('a')
+  a.href=URL.createObjectURL(blob);a.download=($('id').value||'prop')+'.sceneasset.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+initScene().then(loadLibrary).catch((e)=>fail('Babylon: '+(e.message||e)))
+</script>
+</body>
+</html>

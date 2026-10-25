@@ -449,3 +449,22 @@ class RenderJob(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     presentation = relationship("Presentation", backref="render_jobs")
+
+class SceneAsset(Base):
+    """User-authored object/character/environment manifest (SceneAsset 1.0).
+
+    The GLB/SVG itself lives under /uploads/scene-assets; this row stores the
+    editable manifest and metadata. Built-in library entries stay in
+    scene_library.py and are not duplicated here.
+    """
+    __tablename__ = "scene_assets"
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    title = Column(String, nullable=False)
+    kind = Column(String, default="prop3d", index=True)
+    category = Column(String, nullable=True)
+    manifest = Column(JSON, nullable=False)
+    preview_url = Column(String, nullable=True)
+    source_url = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

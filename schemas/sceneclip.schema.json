@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sceneengine.local/schemas/sceneclip.schema.json",
+  "title": "SceneClip 1.0",
+  "description": "Authored animation clip: sparse keyframes, pure function of t.",
+  "type": "object",
+  "required": ["format", "name", "fps", "duration", "tracks"],
+  "properties": {
+    "format": { "const": "sceneclip/1" },
+    "name": { "type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$" },
+    "fps": { "type": "number", "exclusiveMinimum": 0, "maximum": 240 },
+    "duration": { "type": "number", "exclusiveMinimum": 0 },
+    "loop": { "type": "boolean" },
+    "tracks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "rotation": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 5,
+              "maxItems": 5
+            }
+          },
+          "translation": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "scale": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["t", "name"],
+        "properties": {
+          "t": { "type": "number", "minimum": 0 },
+          "name": { "type": "string", "minLength": 1 },
+          "data": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "meta": { "type": "object" }
+  },
+  "additionalProperties": true
+}

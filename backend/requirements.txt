@@ -56,7 +56,4 @@ websockets==16.1.1
 yarl==1.24.5
 python-multipart
 playwright==1.42.0
-openai-whisper==20250625
-torch==2.13.0+cpu
-torchaudio==2.11.0+cpu
 segno==1.6.6

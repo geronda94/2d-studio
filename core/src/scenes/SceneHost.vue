@@ -22,7 +22,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDirector } from '../composables/useDirector'
-import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer } from './runtime'
+import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadSceneClipSource, loadSceneRigSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer } from './runtime'
 
 const props = defineProps({
   code: { type: Object, default: () => ({}) },
@@ -54,6 +54,8 @@ const format = ref(props.format || 'landscape')
 let gsapSource = ''
 let kitSource = ''
 let charSource = ''
+let sceneClipSource = ''
+let sceneRigSource = ''
 let riveSource = ''
 let riveCharSource = ''
 let riveBuffer = ''
@@ -102,6 +104,9 @@ async function rebuild() {
   if (!kitSource) kitSource = await loadKitSource()
   if (!charSource) charSource = await loadCharSource()
   const sceneJs = String((props.code && props.code.js) || '')
+  const wantsSceneRig = /SceneRig|scene-rig/i.test(sceneJs)
+  if (wantsSceneRig && !sceneClipSource) sceneClipSource = await loadSceneClipSource()
+  if (wantsSceneRig && !sceneRigSource) sceneRigSource = await loadSceneRigSource()
   const wantsRive = /rive/i.test(sceneJs)
   const wantsRiveChar = /RiveCharacter|riveCharacter|rive-character/i.test(sceneJs)
   const wantsRiveActor = /RiveActor|riveActor|rive-actor/i.test(sceneJs)
@@ -121,6 +126,8 @@ async function rebuild() {
     gsapSource,
     kitSource,
     charSource,
+    sceneClipSource: wantsSceneRig ? sceneClipSource : '',
+    sceneRigSource: wantsSceneRig ? sceneRigSource : '',
     riveSource: wantsRive ? riveSource : '',
     riveCharSource: wantsRiveChar ? riveCharSource : '',
     riveBuffer: wantsRiveChar ? riveBuffer : '',

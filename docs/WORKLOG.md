@@ -498,3 +498,131 @@ skinned-меша; при повороте костей меш выходит з�
 **Решение:** `SceneHost.post()` + сообщения `avatar-pose`, `avatar-visemes`,
 `avatar-clips`, `avatar-gestures`, `avatar-preset`, `avatar-mood`,
 `avatar-gaze`, `avatar-text`; props пишутся только по кнопке/Save.
+
+### 2026-10-25 — SceneRig 1.0: свой контракт ригов и валидатор
+
+- Решение: не изобретать бинарный формат скелета, а зафиксировать канон поверх
+  glTF 2.0. Blender и Babylon работают с GLB нативно, JSON-манифест описывает
+  риг, сокеты, клипы и лицо.
+- Семейства: `human` (humanoid), `animal` (quadruped), `winged`
+  (avian, insectoid). 21 обязательная кость у humanoid, крылья/лапы/хвост у
+  животных и насекомых.
+- Добавлены `docs/RIG_FORMAT.md`, `docs/ASSET_FORMAT.md`, JSON-схемы в
+  `schemas/`.
+- Добавлен stdlib-валидатор `backend/rig/`:
+  - GLB/GLTF-парсер без зависимостей (JSON/BIN-чанки, аксессоры, world-матрицы);
+  - алиасы Mixamo / RPM / Rigify / VRM;
+  - проверки костей, весов (≤4 влияния, сумма ≈1), морфов, клипов, A-pose,
+    взгляда `+Z`, роста, бюджета;
+  - CLI `python -m backend.rig scan|validate|archetypes`.
+- API `/rig/archetypes`, `/rig/health`, `POST /rig/validate` (upload).
+- Прототип `core/public/rig-studio.html`: Babylon-превью, дерево костей,
+  морфы, валидация через API, редактор/экспорт манифеста.
+- Импорт `scripts/rig_import.py` → `core/public/models/brunette.scenerig.json`
+  (67 костей, 72 морфа, 0 ошибок).
+- Прототип `core/public/object-studio.html`: GLB-объект, габариты,
+  pivot/ground/facing, сокеты, черновик `sceneasset/1`.
+- API `/rig/validate` получил `require_rig` для статических объектов.
+- Компилятор `backend/rig/compile.py`: переименование skin-джойнтов в канон,
+  сборка GLB без внешних зависимостей. На brunette переименованы 67 костей;
+  выходной манифест валиден без `bones.map`.
+- Blender-экспортёр `scripts/blender/scene_rig_export.py`: проверка костей,
+  весов, A-pose, взгляда; GLB + манифест + валидация. Проверен round-trip
+  на тестовом риге (21 кость) и на RPM brunette (67 костей, 72 морфа).
+- Проверено на `brunette.glb`: 67 костей, 72 морфа, 13 317 треугольников,
+  0 ошибок, 2 предупреждения. 16 unit-тестов.
+
+#### Ошибка 24. Валидатор показывал «head below hips»
+**Симптом:** корректный RPM-аватар получал warning `pose.upside_down`, угол рук
+был отрицательным.
+**Причина:** `joint_names()` возвращает имена в порядке массива `skin.joints`,
+а `joint_world_positions()` ключуется индексами **узлов** glTF. Словарь
+канонических костей строился по индексам массива joints, а не по node index.
+**Решение:** сопоставлять `zip(joint_names, skin_joint_indices)`.
+**Урок:** в glTF индекс сустава в `skin.joints` и индекс узла в `nodes` — разные
+пространства; смешивать их нельзя.
+
+#### Ошибка 25. Компилятор не переименовывал кости
+**Симптом:** `compile` писал `renamed_nodes=0`, хотя манифест содержал map.
+**Причина:** `_source_map` возвращал `canonical -> source`, а цикл переименования
+искал `source -> canonical`. Плюс переименовывались **все** узлы, включая меши
+(`EyeLeft` конфликтовал с костью `LeftEye`).
+**Решение:** возвращать `source -> canonical`; переименовывать только индексы
+из `skin.joints`.
+**Урок:** в GLB меши и кости живут в одном массиве `nodes`; трогать надо только
+skin-джойнты.
+
+#### 2026-10-25 — bake клипа и полный round-trip
+
+- `backend/rig/bake.py`: `*.sclip.json` → glTF `animations[]` (body channels,
+  resample 30 fps, quaternion slerp, accessors + bufferViews в BIN-чанк).
+- Проверено end-to-end: `wave` (2 канала, 2 с) → baked GLB → Blender import
+  (`action wave`, 0–48 кадров) → exporter → GLB снова валиден, анимация на месте.
+- Лицо (morph weights) пока не печётся: warning `bake.face`.
+
+### 2026-10-25 — чистка репозитория и подготовка к SceneRig
+
+- Удалено **393** файла мусора и мёртвого кода:
+  - 158 неиспользуемых Vue-компонентов (`components/slides`, `components/ui`,
+    `_template`, `HelloWorld`), граф импортов от `main.js`/router пуст;
+  - 78 старых slide/seed/fix/probe-скриптов (`build_*`, `fix_*`,
+    `seed_components`, `seed_manifests`, `_orthodox_meta`, `_inbox` и т.п.);
+  - ad-hoc тесты/пробы в `backend/` (`test_422`, `test_render*`, `fix_db*`);
+  - root-мусор (`fix*.py`, `manual_fix*`, `probe_*`, `dump.sql.gz`,
+    `test_bg*.html`);
+  - legacy Rive-тест-страницы и неиспользуемые `.riv`-эксперименты;
+  - собственный исходник Rive-рига `core/rive/` и его генератор.
+- Из `backend/scene_library.py` убраны собственный Rive-объект
+  `character-rive`, его шаблоны и capability-карточка. Остались готовые
+  актёры `oldman`/`bob` и 3D-аватар как legacy-bridge; старые сцены в БД
+  `/p/5`/`/p/6` продолжают работать на замороженном runtime.
+- `.dockerignore` сокращает контекст сборки; `.gitignore` больше не обещает
+  коммитить `dump.sql.gz`.
+- Документация обновлена: SceneRig — основной путь, Rive — frozen legacy,
+  порт Postgres на хосте `5437`.
+- Проверки после чистки: все роутеры импортируются, 25 Python-тестов + 14 Node
+  assertions проходят, Blender round-trip 0 ошибок.
+- **Ошибка 26. Удалил `style_lint.py`, который импортируется роутерами.**
+  Симптом: `presentations.py`/`components.py` падают на импорте.
+  Решение: восстановил из архива, проверил импорт всех роутеров.
+  Урок: перед удалением backend-модуля — `grep` по `from ..<module>`.
+
+### 2026-10-25 — меню студий и библиотека объектов
+
+- Добавлено меню «Студии» на главной и в `AppShell`:
+  Object Studio, Rig Studio, Clip Editor (открываются в новой вкладке).
+- Object Studio научился создавать/редактировать/удалять объекты:
+  загрузка GLB в `/uploads/scene-assets`, список сохранённых, `POST/PUT/DELETE /scene-assets`.
+- Новая таблица `scene_assets` (slug, title, kind, category, manifest, source_url)
+  создаётся через `Base.metadata.create_all`.
+- API `/scene-assets` + `/scene-assets/upload`; GLB валидируется SceneRig
+  (`require_rig=false`).
+- Проверено Playwright: сохранение URL-объекта, локальный upload, загрузка из
+  библиотеки, удаление; меню на `/` и `/themes`.
+
+### 2026-10-25 — Mark/Mira, Character Studio и первый SceneRig-дуэт
+
+- Сгенерированы два low-poly персонажа из примитивов
+  (`scripts/blender/make_poly_characters.py`): Mark (1.80 м) и Mira (1.69 м).
+  Канонический humanoid-риг, 25 костей, 20 морфов (Oculus-15, blink, jawOpen,
+  smile/frown), 2 клипа, CC0.
+- `scene-rig.js` — канонический runtime: `seek(t)`, материалы/аксессуары,
+  визёмы с кроссфейдом, моргание, idle/talk, камера/свет/тень.
+- `character-studio.html` — настройки внешности и тест липсинка по тексту;
+  сохранение/загрузка через `scene_assets`.
+- `character-poly-duo` + `/p/11`; в библиотеке `character-mark`/`character-mira`.
+- CORS для `/models`, `/vendor`, `/rive`, чтобы sandbox-iframe мог грузить GLB.
+- Проверено: Character Studio (внешность, speak, library), `/p/11` в 16:9 и
+  9:16, морфы визёмов в сцене, render `/p/11` → mp4 1920×1080/30fps/9.9 с.
+
+#### Ошибка 27. Рот исчезал в Babylon, хотя в Blender был
+**Симптом:** в Character Studio и сцене лицо без рта; при отключении скелета
+рот появлялся.
+**Причина:** у joined-объекта `Mouth` origin находился в центре рта, а shape
+keys строились вокруг **мирового** центра. После экспорта это давало морфу
+смещение ~1.57 м по Z. Runtime ставил `viseme_sil = 1`, и рот уезжал из кадра.
+**Решение:** shape keys вокруг **локального** центра (centroid вершин), как и
+для глаз. Плюс исправлена нормализация JOINTS_0 в `backend/rig/glb.py`
+(не применять `normalized`, если флаг не выставлен).
+**Урок:** для shape keys всегда локальные координаты; world-центр допустим
+только для объектов с origin в 0.

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SceneClip Editor — анимация персонажа</title>
+<style>
+  :root{--bg:#070b12;--panel:#0e1522;--panel2:#121c2c;--line:#22304a;--text:#e8eefc;
+    --muted:#8da0bf;--accent:#38bdf8;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:13px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
+  button:hover{border-color:var(--accent)}button.primary{background:#0b3a52;border-color:#155e7a;color:#dff6ff}
+  button.danger{border-color:#5b1c1c;color:#ffb4b4}
+  input,select,textarea{background:#08101c;border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
+  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  #app{display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header .title{font-weight:700;margin-right:6px}header .title span{color:var(--accent)}
+  header .grow{flex:1}header .status{font:11px var(--mono);color:var(--muted);white-space:nowrap}
+  header label{display:flex;gap:5px;align-items:center;font:10px var(--mono);color:var(--muted);text-transform:uppercase}
+  header input[type=number]{width:72px}
+  main{display:grid;grid-template-columns:250px 1fr 390px;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;min-width:0}.col+.col{border-left:1px solid var(--line)}
+  .panel-h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);
+    background:var(--panel);font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .panel-h .grow{flex:1}.scroll{overflow:auto;min-height:0}
+  #stage{display:grid;grid-template-rows:1fr auto;min-height:0}
+  #canvasWrap{position:relative;min-height:0;background:radial-gradient(120% 90% at 50% 18%,#22314a 0%,#111a27 45%,#070b12 100%)}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+  #timeline{border-top:1px solid var(--line);background:var(--panel);padding:10px}
+  .timeRow{display:flex;gap:10px;align-items:center;font:11px var(--mono);color:var(--muted)}
+  .timeRow input[type=range]{flex:1;padding:0}
+  #keys{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;min-height:22px}
+  .key{font:10px var(--mono);padding:2px 6px;border-radius:99px;border:1px solid #1e3a52;background:#0b2434;color:#bfeaff;cursor:pointer}
+  .key.now{border-color:var(--accent);color:#fff}
+  .node{display:flex;justify-content:space-between;gap:6px;padding:3px 8px;font:11px var(--mono);cursor:pointer;border-left:2px solid transparent}
+  .node:hover{background:#13213a}.node.sel{background:#0b2434;border-left-color:var(--accent);color:#dff6ff}
+  .node span:last-child{color:var(--muted)}
+  .pose{padding:10px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+  .axis{display:grid;grid-template-columns:18px 1fr 54px;gap:8px;align-items:center;font:11px var(--mono);color:var(--muted)}
+  .axis input[type=range]{padding:0}.axis input[type=number]{width:54px}
+  .actions{display:flex;gap:6px;flex-wrap:wrap}
+  #manifest{flex:1;width:100%;resize:none;border:0;border-radius:0;background:#08101c;font:11px/1.5 var(--mono);padding:10px}
+  #issues{padding:8px 10px;font:11px var(--mono)}
+  .issue{border-radius:6px;padding:6px 8px;margin-bottom:6px;border:1px solid #1e2b42;background:#0b1421}
+  .issue.error{border-color:#5b1c1c;background:#1a0d0f}.issue.warning{border-color:#5a4210;background:#1a1508}
+  .issue .code{font-weight:700}.issue.error .code{color:var(--err)}.issue.warning .code{color:var(--warn)}
+  .empty{padding:14px;color:var(--muted);font-size:12px;text-align:center}
+  .hidden{display:none!important}.pill{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);font:10px var(--mono);color:var(--muted);cursor:pointer}
+  @media(max-width:1150px){main{grid-template-columns:220px 1fr 340px}}
+  @media(max-width:900px){main{grid-template-columns:1fr;grid-template-rows:230px 1fr 320px}.col+.col{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Scene<span>Clip</span> Editor</div>
+    <input id="url" style="width:230px" value="/models/brunette.glb" spellcheck="false">
+    <button id="loadUrl" class="primary">Загрузить GLB</button>
+    <label class="pill">Локальный GLB<input id="file" type="file" accept=".glb,.gltf" class="hidden"></label>
+    <label class="pill">Импорт клипа<input id="clipFile" type="file" accept=".json,.sclip.json" class="hidden"></label>
+    <label>Имя<input id="clipName" value="idle" style="width:90px;text-transform:none"></label>
+    <label>Сек<input id="duration" type="number" min="0.1" step="0.1" value="4"></label>
+    <label>FPS<input id="fps" type="number" min="1" max="120" step="1" value="30"></label>
+    <label style="text-transform:none"><input id="loop" type="checkbox" checked> loop</label>
+    <span class="grow"></span>
+    <span id="status" class="status">idle</span>
+  </header>
+  <main>
+    <section class="col">
+      <div class="panel-h"><span>Кости</span><span class="grow"></span><span id="boneCount">0</span></div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><input id="search" placeholder="Поиск…" style="width:100%"></div>
+      <div class="scroll" id="bones"><div class="empty">Загрузите GLB</div></div>
+    </section>
+    <section class="col" id="stage">
+      <div id="canvasWrap"><canvas id="c"></canvas></div>
+      <div id="timeline">
+        <div class="timeRow">
+          <button id="play" class="primary" style="min-width:70px">▶ Play</button>
+          <input id="time" type="range" min="0" max="4000" step="1" value="0">
+          <span id="timeLabel">0.00 / 4.00 с</span>
+        </div>
+        <div id="keys"><span class="empty" style="padding:0">Ключей нет</span></div>
+      </div>
+    </section>
+    <section class="col">
+      <div class="panel-h"><span>Поза</span><span class="grow"></span><span id="selName">—</span></div>
+      <div class="pose">
+        <div class="axis"><span>X</span><input id="rx" type="range" min="-180" max="180" step="1" value="0"><input id="rxv" type="number" step="1" value="0"></div>
+        <div class="axis"><span>Y</span><input id="ry" type="range" min="-180" max="180" step="1" value="0"><input id="ryv" type="number" step="1" value="0"></div>
+        <div class="axis"><span>Z</span><input id="rz" type="range" min="-180" max="180" step="1" value="0"><input id="rzv" type="number" step="1" value="0"></div>
+        <div class="actions">
+          <button id="keyBone" class="primary">Ключ кости</button>
+          <button id="keyAll">Ключ всех</button>
+          <button id="resetBone">Сброс</button>
+          <button id="clearBone" class="danger">Очистить кость</button>
+        </div>
+        <div class="actions">
+          <button id="deleteKey" class="danger">Удалить ключ на времени</button>
+        </div>
+      </div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Клип</span><span class="grow"></span>
+        <button id="validateClip">Проверить</button><button id="copy">Copy</button><button id="download">Download</button></div>
+      <div id="issues"><div class="empty">Ключи пока не проверены</div></div>
+      <textarea id="manifest" spellcheck="false"></textarea>
+    </section>
+  </main>
+</div>
+<script src="/vendor/scene-clip.js"></script>
+<script>
+const $=(id)=>document.getElementById(id)
+const state={bones:[],nodes:{},rest:{},tracks:{},skeleton:null,selected:null,time:0,duration:4,fps:30,loop:true,playing:false,raf:0,last:0,filename:'',container:null}
+const setStatus=(t)=>{$('status').textContent=t}
+const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();
+  const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('cannot load '+src));document.head.appendChild(s)})}
+async function ensureBabylon(){if(!window.BABYLON){await loadScript('/vendor/babylon.js');await loadScript('/vendor/babylonjs.loaders.min.js')}}
+const canvas=$('c');let engine,scene,camera
+async function initScene(){await ensureBabylon();if(engine)return
+  engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true})
+  scene=new BABYLON.Scene(engine);scene.clearColor=new BABYLON.Color4(0.02,0.03,0.055,1)
+  camera=new BABYLON.ArcRotateCamera('camera',-Math.PI/2,Math.PI/2.35,3.2,new BABYLON.Vector3(0,1,0),scene)
+  camera.attachControl(canvas,true);camera.wheelPrecision=35;camera.lowerRadiusLimit=0.4;camera.upperRadiusLimit=30
+  const hemi=new BABYLON.HemisphericLight('hemi',new BABYLON.Vector3(0.2,1,0.1),scene);hemi.intensity=0.85
+  hemi.groundColor=new BABYLON.Color3(0.10,0.13,0.18)
+  const key=new BABYLON.DirectionalLight('key',new BABYLON.Vector3(-0.5,-1,-0.4),scene)
+  key.position=new BABYLON.Vector3(4,6,4);key.intensity=1.15
+  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize())}
+function disposeModel(){if(state.container){try{state.container.removeAllFromScene()}catch(e){}try{state.container.dispose()}catch(e){}}
+  state.container=null;state.skeleton=null;state.nodes={};state.rest={};state.bones=[];state.tracks={};state.selected=null}
+function frameCamera(c){let min=null,max=null
+  for(const m of c.meshes){if(!m.getTotalVertices||!m.getTotalVertices())continue;m.computeWorldMatrix(true);m.refreshBoundingInfo()
+    const bi=m.getBoundingInfo&&m.getBoundingInfo();if(!bi)continue;const bb=bi.boundingBox
+    min=min?BABYLON.Vector3.Minimize(min,bb.minimumWorld):bb.minimumWorld.clone()
+    max=max?BABYLON.Vector3.Maximize(max,bb.maximumWorld):bb.maximumWorld.clone()}
+  if(!min||!max)return;const center=min.add(max).scale(0.5),size=max.subtract(min)
+  camera.setTarget(center);camera.radius=Math.max(0.8,size.length()*1.35)}
+async function loadSource(source,filename){await initScene();disposeModel();setStatus('loading '+filename+'…')
+  try{let c
+    if(source instanceof File)c=await BABYLON.SceneLoader.LoadAssetContainerAsync('',source,scene)
+    else{const i=source.lastIndexOf('/');c=await BABYLON.SceneLoader.LoadAssetContainerAsync(i>=0?source.slice(0,i+1):'',i>=0?source.slice(i+1):source,scene)}
+    state.container=c;c.addAllToScene();state.filename=filename;frameCamera(c)
+    const sk=(c.skeletons||[])[0]
+    if(!sk){fail('В модели нет скелета');return}
+    state.skeleton=sk
+    for(const b of sk.bones){
+      const node=(b.getTransformNode&&b.getTransformNode())||b
+      if(!node)continue
+      const r=node.rotationQuaternion?node.rotationQuaternion.clone():BABYLON.Quaternion.FromEulerVector(node.rotation)
+      node.rotationQuaternion=r.clone()
+      state.nodes[b.name]=node;state.bones.push(b.name);state.rest[b.name]=[r.x,r.y,r.z,r.w]
+    }
+    state.bones.sort()
+    state.selected=state.bones.includes('hips')?'hips':(state.bones.includes('chest')?state.bones[0]:state.bones[0])
+    renderBones();applyPose(0);setStatus('loaded '+filename)
+    buildClip()
+  }catch(e){console.error(e);fail('Не удалось загрузить: '+(e.message||e))}}
+function renderBones(){const host=$('bones');host.innerHTML=''
+  const q=$('search').value.trim().toLowerCase()
+  const list=state.bones.filter(n=>!q||n.toLowerCase().includes(q))
+  $('boneCount').textContent=String(state.bones.length)
+  if(!list.length){host.innerHTML='<div class="empty">Нет костей</div>';return}
+  for(const name of list){const row=document.createElement('div');row.className='node'+(name===state.selected?' sel':'')
+    const has=state.tracks[name]&&state.tracks[name].rotation&&state.tracks[name].rotation.length
+    row.innerHTML=`<span>${name}</span><span>${has?has+'k':''}</span>`
+    row.onclick=()=>{state.selected=name;renderBones();syncSliders();renderKeys();$('selName').textContent=name}
+    host.appendChild(row)}}
+function applyPose(t){state.time=Math.max(0,Math.min(state.duration,t))
+  if(!state.skeleton)return
+  const data=SceneClip.evaluate({tracks:state.tracks,face:{}},state.time,state.rest)
+  for(const name in data.bones){const node=state.nodes[name];if(!node)continue
+    const q=data.bones[name].rotation;if(!q)continue
+    node.rotationQuaternion.copyFromFloats(q[0],q[1],q[2],q[3])}
+  state.skeleton.prepare();syncTimeUI();syncSliders()}
+function syncTimeUI(){$('time').value=String(Math.round(state.time*1000));$('timeLabel').textContent=state.time.toFixed(2)+' / '+state.duration.toFixed(2)+' с';renderKeys()}
+function syncSliders(){const sel=state.selected;if(!sel||!state.nodes[sel]){return}
+  $('selName').textContent=sel
+  const node=state.nodes[sel];const rest=new BABYLON.Quaternion(...state.rest[sel])
+  const cur=node.rotationQuaternion||rest
+  const delta=BABYLON.Quaternion.Inverse(rest).multiply(cur)
+  const e=delta.toEulerAngles();const deg=(v)=>Math.round(v*180/Math.PI)
+  const x=deg(e.x),y=deg(e.y),z=deg(e.z)
+  for(const [id,val] of [['rx',x],['ry',y],['rz',z]]){$(id).value=String(val);$(id+'v').value=String(val)}}
+function setSelectedPose(){const sel=state.selected;if(!sel||!state.nodes[sel])return
+  const toRad=(v)=>Number(v)*Math.PI/180
+  const delta=SceneClip.qFromEuler(toRad($('rx').value),toRad($('ry').value),toRad($('rz').value))
+  const rest=new BABYLON.Quaternion(...state.rest[sel])
+  const q=rest.multiply(new BABYLON.Quaternion(delta[0],delta[1],delta[2],delta[3]))
+  state.nodes[sel].rotationQuaternion=q
+  if(state.skeleton)state.skeleton.prepare()}
+function addKey(bone,time,q){if(!state.tracks[bone])state.tracks[bone]={rotation:[]}
+  const keys=state.tracks[bone].rotation
+  for(let i=keys.length-1;i>=0;i--){if(Math.abs(keys[i][0]-time)<0.001)keys.splice(i,1)}
+  keys.push([+time.toFixed(4),q[0],q[1],q[2],q[3]]);keys.sort((a,b)=>a[0]-b[0]);renderKeys();renderBones();buildClip()}
+function keyBone(){const sel=state.selected;if(!sel||!state.nodes[sel])return
+  const node=state.nodes[sel];const q=node.rotationQuaternion||new BABYLON.Quaternion(...state.rest[sel])
+  addKey(sel,state.time,[q.x,q.y,q.z,q.w]);setStatus('key '+sel+' @ '+state.time.toFixed(2))}
+function keyAll(){for(const name of state.bones){const node=state.nodes[name];if(!node)continue
+    const q=node.rotationQuaternion||new BABYLON.Quaternion(...state.rest[name])
+    addKey(name,state.time,[q.x,q.y,q.z,q.w])}
+  setStatus('key all @ '+state.time.toFixed(2))}
+function resetBone(){const sel=state.selected;if(!sel||!state.nodes[sel])return
+  state.nodes[sel].rotationQuaternion=new BABYLON.Quaternion(...state.rest[sel])
+  if(state.skeleton)state.skeleton.prepare();syncSliders()}
+function clearBone(){const sel=state.selected;if(!sel)return;delete state.tracks[sel];applyPose(state.time);renderBones();buildClip()}
+function deleteKey(){const sel=state.selected;if(!sel||!state.tracks[sel])return
+  const keys=state.tracks[sel].rotation||[]
+  const next=keys.filter(k=>Math.abs(k[0]-state.time)>=0.001)
+  if(next.length)state.tracks[sel].rotation=next;else delete state.tracks[sel]
+  applyPose(state.time);renderBones();buildClip()}
+function renderKeys(){const host=$('keys');host.innerHTML=''
+  const sel=state.selected
+  const keySet=new Set()
+  if(sel&&state.tracks[sel]&&state.tracks[sel].rotation)for(const k of state.tracks[sel].rotation)keySet.add(+k[0].toFixed(3))
+  if(!keySet.size){host.innerHTML='<span class="empty" style="padding:0">'+(sel?'У кости нет ключей':'Ключей нет')+'</span>';return}
+  for(const t of [...keySet].sort((a,b)=>a-b)){const el=document.createElement('span')
+    el.className='key'+(Math.abs(t-state.time)<0.01?' now':'');el.textContent=t.toFixed(2)+'с'
+    el.onclick=()=>{pause();applyPose(t)};host.appendChild(el)}}
+function buildClip(){const clip={format:'sceneclip/1',name:$('clipName').value||'clip',fps:Number($('fps').value)||30,
+    duration:Number($('duration').value)||4,loop:$('loop').checked,tracks:state.tracks,face:{},events:[]}
+  $('manifest').value=JSON.stringify(clip,null,2);return clip}
+function setTimeFromSlider(){pause();const t=Number($('time').value)/1000;applyPose(t)}
+function play(){if(state.playing||!state.skeleton)return
+  state.playing=true;$('play').textContent='❚❚ Pause';state.last=performance.now()
+  const step=(now)=>{if(!state.playing)return
+    const dt=(now-state.last)/1000;state.last=now
+    let t=state.time+dt
+    if(t>=state.duration){if(state.loop)t=0;else{t=state.duration;pause()}}
+    applyPose(t);if(state.playing)state.raf=requestAnimationFrame(step)}
+  state.raf=requestAnimationFrame(step)}
+function pause(){state.playing=false;cancelAnimationFrame(state.raf);$('play').textContent='▶ Play';if(state.skeleton)applyPose(state.time)}
+function importClipFile(f){const reader=new FileReader();reader.onload=()=>{try{const c=JSON.parse(reader.result)
+    if(!c.tracks)throw new Error('no tracks');state.tracks=c.tracks||{}
+    if(c.name)$('clipName').value=c.name;if(c.duration)$('duration').value=c.duration;if(c.fps)$('fps').value=c.fps
+    $('loop').checked=!!c.loop;state.duration=Number(c.duration)||4;state.fps=Number(c.fps)||30
+    $('time').max=String(Math.round(state.duration*1000));applyPose(0);renderBones();buildClip();setStatus('clip imported')}
+    catch(e){fail('Не удалось импортировать клип: '+e.message)}};reader.readAsText(f)}
+async function validateClip(){const clip=buildClip();setStatus('validating…')
+  try{const fd=new FormData();fd.append('manifest',JSON.stringify(clip))
+    const res=await fetch('/api/rig/validate-manifest',{method:'POST',body:fd});const data=await res.json()
+    if(!res.ok)throw new Error(data.detail||('HTTP '+res.status));renderIssues(data);setStatus(data.ok?'clip valid':'clip invalid')}
+  catch(e){setStatus('validate failed');$('issues').innerHTML=`<div class="issue error"><div class="code">api.error</div><div>${escapeHtml(e.message||e)}</div></div>`}}
+function renderIssues(rep){const flat=[];const walk=(r)=>{for(const i of r.issues||[])flat.push(i);for(const c of r.children||[])walk(c)};walk(rep)
+  const host=$('issues');host.innerHTML=''
+  if(!flat.length){host.innerHTML='<div class="empty">Ошибок нет</div>';return}
+  for(const i of flat){const d=document.createElement('div');d.className='issue '+i.level
+    d.innerHTML=`<div class="code">${i.code}</div><div>${escapeHtml(i.message)}</div>`;host.appendChild(d)}}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('loadUrl').onclick=()=>{const u=$('url').value.trim();if(u)loadSource(u,u.slice(u.lastIndexOf('/')+1)||'model.glb')}
+$('url').addEventListener('keydown',(e)=>{if(e.key==='Enter')$('loadUrl').click()})
+$('file').onchange=(e)=>{const f=e.target.files&&e.target.files[0];if(f)loadSource(f,f.name)}
+$('clipFile').onchange=(e)=>{const f=e.target.files&&e.target.files[0];if(f)importClipFile(f)}
+$('search').oninput=renderBones
+$('time').oninput=setTimeFromSlider
+$('play').onclick=()=>{state.playing?pause():play()}
+for(const id of ['rx','ry','rz']){$(id).oninput=()=>{$(id+'v').value=$(id).value;setSelectedPose()}
+  $(id+'v').oninput=()=>{$(id).value=$(id+'v').value;setSelectedPose()}}
+$('keyBone').onclick=keyBone;$('keyAll').onclick=keyAll;$('resetBone').onclick=resetBone
+$('clearBone').onclick=clearBone;$('deleteKey').onclick=deleteKey
+$('duration').oninput=()=>{state.duration=Math.max(0.1,Number($('duration').value)||4);$('time').max=String(Math.round(state.duration*1000));buildClip()}
+$('fps').oninput=()=>{state.fps=Number($('fps').value)||30;buildClip()}
+$('clipName').oninput=buildClip;$('loop').onchange=buildClip
+$('validateClip').onclick=validateClip
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('manifest').value);setStatus('clip copied')}catch(e){fail('Clipboard unavailable')}}
+$('download').onclick=()=>{const clip=buildClip();const blob=new Blob([JSON.stringify(clip,null,2)],{type:'application/json'})
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(clip.name||'clip')+'.sclip.json';a.click()
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+initScene().catch((e)=>fail('Babylon: '+(e.message||e)))
+</script>
+</body>
+</html>

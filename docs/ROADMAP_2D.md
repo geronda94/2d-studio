@@ -18,7 +18,7 @@
 
 ## Текущий этап: Phase 1 — фундамент (DONE)
 
-- [x] Форк и отдельная инфраструктура (порты 5175 / 8002 / 5436).
+- [x] Форк и отдельная инфраструктура (порты 5175 / 8002 / 5437).
 - [x] Scene runtime: sandboxed iframe, тема, GSAP, `seek(t)`, `scene-ready`.
 - [x] Редактор сцены: HTML/CSS/JS/Props, превью, таймлайн-скраб.
 - [x] API сцен: `GET/POST/PUT/DELETE /presentations/{id}/scenes`.
@@ -27,6 +27,30 @@
 - [x] Библиотека: 5 окружений, 16 объектов, 5 шаблонов сцен.
 - [x] Демо `forest-drive` — машина, дорога, лес, колёса, разметка.
 - [x] Документация: `SCENES.md`, `DEV.md`, `PROCESSES.md`, `STATUS.md`, `SERVER.md`.
+
+## Phase 1.5 — SceneRig: свой контракт персонажей (IN PROGRESS)
+
+Цель: один канонический скелет, один формат клипов, экспорт в Blender и обратно.
+
+- [x] Контракт SceneRig 1.0: human / animal / winged (`docs/RIG_FORMAT.md`).
+- [x] Схемы `scenerig` / `sceneclip` / `sceneasset`.
+- [x] Stdlib-валидатор GLB и манифестов (`backend/rig/`), CLI.
+- [x] Алиасы Mixamo / RPM / Rigify / VRM.
+- [x] API `/rig/archetypes`, `/rig/validate`.
+- [x] Прототип Rig Studio в браузере (превью, кости, морфы, валидатор).
+- [x] Импорт/конвертер существующих GLB в канон (RPM/Mixamo): `scripts/rig_import.py`.
+- [x] Компилятор канона: `python -m backend.rig compile` → `dist/*.glb` без `bones.map`.
+- [x] Формат клипа `*.sclip.json` + валидатор.
+- [x] Bake клипа в GLB (`python -m backend.rig bake`).
+- [x] Clip Editor v1: поза, ключи, таймлайн, экспорт `*.sclip.json`.
+- [ ] Clip Editor v2: кривые/easing, onion skin, события, превью клипа в сцене.
+- [x] Blender-скрипт: экспорт манифеста, проверка rest-позы, GLB (`scripts/blender/scene_rig_export.py`).
+- [ ] Blender-аддон с кнопками в UI (обёртка над скриптом).
+- [ ] Wardrobe/сокеты: одежда skinned и rigid.
+- [x] Object Studio (прототип `prop3d`): `core/public/object-studio.html`.
+- [ ] Object Studio для `prop2d` и публикации в библиотеку.
+- [ ] Environment Composer (слои, палитры, скаттер).
+- [ ] Пилоты: человек, животное (квадро), птица, пчела.
 
 ## Phase 2 — 2D-мир и механизмы (IN PROGRESS)
 

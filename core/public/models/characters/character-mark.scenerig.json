@@ -1,0 +1,116 @@
+{
+  "format": "scenerig/1",
+  "id": "character-mark",
+  "title": "Mark — SceneRig",
+  "family": "human",
+  "archetype": "humanoid",
+  "geometry": {
+    "file": "character-mark.glb",
+    "units": "m",
+    "up": "Y",
+    "facing": "+Z",
+    "tris": 17242,
+    "sha256": "d61d1007f4526bdf90b5c6d0162089fb78f286b6b4515ab41934391079787386"
+  },
+  "rest": {
+    "pose": "A",
+    "origin": "feet"
+  },
+  "bones": {
+    "canonical": true,
+    "map": {
+      "root": "root",
+      "hips": "hips",
+      "spine": "spine",
+      "chest": "chest",
+      "neck": "neck",
+      "head": "head",
+      "jaw": "jaw",
+      "eye.L": "eye.L",
+      "eye.R": "eye.R",
+      "shoulder.L": "shoulder.L",
+      "upperArm.L": "upperArm.L",
+      "lowerArm.L": "lowerArm.L",
+      "hand.L": "hand.L",
+      "shoulder.R": "shoulder.R",
+      "upperArm.R": "upperArm.R",
+      "lowerArm.R": "lowerArm.R",
+      "hand.R": "hand.R",
+      "upperLeg.L": "upperLeg.L",
+      "lowerLeg.L": "lowerLeg.L",
+      "foot.L": "foot.L",
+      "toe.L": "toe.L",
+      "upperLeg.R": "upperLeg.R",
+      "lowerLeg.R": "lowerLeg.R",
+      "foot.R": "foot.R",
+      "toe.R": "toe.R"
+    },
+    "extra": []
+  },
+  "face": {
+    "morphs": [
+      "bodyShoulder",
+      "bodyChest",
+      "bodyWaist",
+      "bodyHips",
+      "bodyBelly",
+      "faceWidth",
+      "faceLength",
+      "jawWidth",
+      "chin",
+      "cheek",
+      "viseme_sil",
+      "viseme_PP",
+      "viseme_FF",
+      "viseme_TH",
+      "viseme_DD",
+      "viseme_kk",
+      "viseme_CH",
+      "viseme_SS",
+      "viseme_nn",
+      "viseme_RR",
+      "viseme_aa",
+      "viseme_E",
+      "viseme_I",
+      "viseme_O",
+      "viseme_U",
+      "jawOpen",
+      "mouthSmile",
+      "mouthFrown",
+      "mouthPress",
+      "mouthPucker",
+      "mouthStretch",
+      "lipFull"
+    ],
+    "visemes": "oculus-15",
+    "engine_map": "scene-10"
+  },
+  "sockets": [],
+  "clips": [
+    {
+      "name": "idle",
+      "file": "character-mark.glb",
+      "loop": false,
+      "fps": 30,
+      "duration": 4.0
+    },
+    {
+      "name": "talk",
+      "file": "character-mark.glb",
+      "loop": false,
+      "fps": 30,
+      "duration": 4.0
+    }
+  ],
+  "license": {
+    "name": "CC0",
+    "author": "SceneEngine"
+  },
+  "tags": [
+    "human",
+    "humanoid"
+  ],
+  "source": {
+    "blender": "mark_v2_v2.blend"
+  }
+}

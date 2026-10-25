@@ -1,7 +1,13 @@
 # CHARACTERS — персонажи, риги и липсинк
 
-Статус: **research / placeholder**. В библиотеке уже есть объект `character`
-(SVG-заготовка с частями рига), но полноценный движок персонажей ещё не выбран.
+Статус: **решение принято (2026-10-25)** — SceneRig 1.0 поверх glTF 2.0,
+см. `docs/RIG_FORMAT.md`. Rive остаётся legacy-рантаймом; SVG-риг `character`
+используется для простых 2D-сцен.
+
+Готовые полигональные персонажи: **Mark** и **Mira**
+(`core/public/models/characters/`), 25 костей, 20 морфов, Oculus-15 липсинк,
+Character Studio: `core/public/character-studio.html`, демо `/p/11`.
+Ниже — исходный research, сохранён для истории.
 
 ---
 
@@ -256,9 +262,11 @@ window.scene = { seek(t) { rig.seek(t); } };
 
 ### Что собрано
 
-- `core/rive/character/` — исходник проекта Rive CLI:
+- ~~`core/rive/character/`~~ — исходник собственного Rive-рига удалён из
+  активного репозитория (frozen legacy). Ниже — историческая справка:
   `rive.yaml`, `scene.rml` (генерируется).
-- `scripts/build_rive_character.py` — генератор RML и сборка `.riv`.
+- ~~`scripts/build_rive_character.py`~~ — удалён; собственный Rive-риг больше
+  не поддерживается. Новые риги — SceneRig (`docs/RIG_FORMAT.md`).
 - `core/public/rive/character.riv` — рантайм-ассет.
 - `core/public/vendor/rive-character.js` — детерминированный контроллер:
   `RiveCharacter.create(canvas, opts)` / `SceneKit.riveCharacter`.
@@ -297,8 +305,7 @@ shirt, pants, shoe, lip, iris, scarf, skirt, cassock) и флаги
 
 ```bash
 # Rive CLI 1.7: ~/.rive/bin/rive (или rive в PATH)
-python3 scripts/build_rive_character.py          # RML + .riv + копия в public
-python3 scripts/build_rive_character.py --rml    # только RML
+# Удалено. Новый путь: docs/RIG_FORMAT.md + scripts/blender/scene_rig_export.py
 ```
 
 ### Грабли (важно)
@@ -316,14 +323,14 @@ python3 scripts/build_rive_character.py --rml    # только RML
 5. **Шея как Shape в neck-кости закрывает рот** (она рисуется раньше головы).
    Шею не рисуем отдельно; её закрывает голова/торс.
 6. **Портреты** (`core/public/portraits`) остаются для старого `character-talk`;
-   Rive-риг — основной путь.
+   основной новый путь — SceneRig (`docs/RIG_FORMAT.md`).
 
 ### Ограничения текущего арта
 
 - Это **cutout-риг** (жёсткие части на костях), без mesh-скиннинга; швы
   скрываются накладками/суставами.
 - Арт — стилизованный вектор-база; детализацию (лица, одежда, волосы, обувь)
-  можно наращивать в `scripts/build_rive_character.py`, не меняя скелет.
+  можно было наращивать в удалённом `scripts/build_rive_character.py`; новый путь — SceneRig.
 - Нет head yaw/3D-поворота, нет IK, нет физики волос; ходьба in-place.
 
 ### Legacy SVG/портреты
@@ -385,7 +392,7 @@ python3 scripts/build_rive_character.py --rml    # только RML
   (`scripts/extract_avatar_anims.py`).
 - `core/public/vendor/babylon-character.js` — драйвер.
 - `core/public/vendor/babylon.js`, `babylonjs.loaders.min.js` — движок.
-- `core/public/babylon-avatar.html` — harness: `?preset=&t=&idle=&clip=&gx=`.
+- `core/public/babylon-avatar.html` — удалён вместе с legacy-харнессами.
 
 ### Как устроен драйвер
 

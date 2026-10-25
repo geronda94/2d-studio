@@ -471,3 +471,29 @@ class SceneLearning(SceneLearningBase):
     created_at: Optional[datetime.datetime] = None
     class Config:
         orm_mode = True
+
+class SceneAssetBase(BaseModel):
+    slug: str
+    title: str
+    kind: str = "prop3d"
+    category: Optional[str] = None
+    manifest: Dict[str, Any]
+    preview_url: Optional[str] = None
+    source_url: Optional[str] = None
+
+
+class SceneAssetCreate(SceneAssetBase):
+    pass
+
+
+class SceneAssetUpdate(SceneAssetBase):
+    pass
+
+
+class SceneAsset(SceneAssetBase):
+    id: int
+    created_at: Optional[datetime.datetime] = None
+    updated_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True

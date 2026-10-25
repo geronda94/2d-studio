@@ -9,6 +9,7 @@ import struct
 import time
 import subprocess
 import json
+import httpx
 from pydantic import BaseModel
 from typing import List, Optional
 from google import genai
@@ -384,10 +385,17 @@ class TranscribeRequest(BaseModel):
     model_size: Optional[str] = "base"
 
 
+STT_URL = os.environ.get("STT_URL", "http://127.0.0.1:8788").rstrip("/")
+STT_KEY = os.environ.get("STT_KEY", "local-whisper-key")
+STT_TIMEOUT = float(os.environ.get("STT_TIMEOUT", "900"))
+
+
 @router.post("/transcribe")
 def transcribe_audio(request: TranscribeRequest):
-    """Transcribe audio file with word-level timestamps using OpenAI Whisper."""
-    # Resolve path
+    """Transcribe audio via the local OpenAI-compatible Whisper service (faster-whisper).
+
+    STT_URL: http://127.0.0.1:8788 for local runs, http://host.docker.internal:8788 in Docker.
+    """
     if request.file_path.startswith("/media/"):
         abs_path = os.path.join(MEDIA_DIR, request.file_path[len("/media/"):])
     else:
@@ -396,41 +404,43 @@ def transcribe_audio(request: TranscribeRequest):
     if not os.path.exists(abs_path):
         raise HTTPException(status_code=404, detail=f"File not found: {abs_path}")
 
+    headers = {"Authorization": f"Bearer {STT_KEY}"} if STT_KEY else {}
     try:
-        import whisper
-        model = whisper.load_model(request.model_size)
-        result = model.transcribe(
-            abs_path,
-            language=request.language,
-            word_timestamps=True
-        )
+        with open(abs_path, "rb") as fh:
+            resp = httpx.post(
+                f"{STT_URL}/audio/transcriptions",
+                headers=headers,
+                files={"file": (os.path.basename(abs_path), fh, "application/octet-stream")},
+                data={"model": "whisper-1", "response_format": "verbose_json",
+                      **({"language": request.language} if request.language else {})},
+                timeout=STT_TIMEOUT,
+            )
+        resp.raise_for_status()
+        payload = resp.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail=f"STT service unavailable at {STT_URL}")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=502, detail=f"STT error: {e.response.text[:300]}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"STT error: {e}")
 
-        # Extract word-level timestamps
-        words = []
-        for segment in result.get("segments", []):
-            for word_info in segment.get("words", []):
-                words.append({
-                    "word": word_info["word"].strip(),
-                    "start": round(word_info["start"] * 1000, 1),  # ms
-                    "end": round(word_info["end"] * 1000, 1),      # ms
-                })
-
-        # Extract segment-level timestamps
-        segments = []
-        for seg in result.get("segments", []):
-            segments.append({
-                "text": seg["text"].strip(),
-                "start": round(seg["start"] * 1000, 1),
-                "end": round(seg["end"] * 1000, 1),
+    words, segments = [], []
+    for seg in payload.get("segments") or []:
+        segments.append({
+            "text": (seg.get("text") or "").strip(),
+            "start": round(float(seg.get("start", 0)) * 1000, 1),
+            "end": round(float(seg.get("end", 0)) * 1000, 1),
+        })
+        for w in seg.get("words") or []:
+            words.append({
+                "word": (w.get("word") or "").strip(),
+                "start": round(float(w.get("start", 0)) * 1000, 1),
+                "end": round(float(w.get("end", 0)) * 1000, 1),
             })
 
-        return {
-            "text": result["text"],
-            "language": result.get("language", request.language),
-            "words": words,
-            "segments": segments,
-        }
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Whisper not installed")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Whisper error: {str(e)}")
+    return {
+        "text": payload.get("text", ""),
+        "language": payload.get("language", request.language),
+        "words": words,
+        "segments": segments,
+    }

@@ -23,7 +23,7 @@ SceneEngine — движок для производства **2D-сцен** и 
 |---|---|---|
 | Frontend | Vue 3 + Vite + Tailwind | `5175` |
 | Backend | FastAPI + SQLAlchemy | `8002` |
-| БД | PostgreSQL (`scene_db`) | `5436` |
+| БД | PostgreSQL (`scene_db`) | `5437` |
 | Compose | `scene-saas` | — |
 
 Запуск: `docker compose up -d`. Сиды: `docs/DEV.md`.
@@ -54,8 +54,7 @@ core/src/
     runtime.js                   srcdoc, GSAP, SceneKit, Rive rig, cues, patch-style
     demoScene.js                 fallback
 
-core/rive/character/           исходник Rive-рига (RML, rive.yaml)
-core/public/rive/              character.riv + эксперименты
+core/public/rive/              только готовые актёры (oldman/bob) + legacy character.riv
 core/public/vendor/
   rive-character.js            RiveCharacter: VM-числа из seek(t)
   composables/useDirector.js     глобальные часы

@@ -3,7 +3,20 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    {
+      name: 'sceneengine-static-cors',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && /^\/(models|vendor|rive)\//.test(req.url)) {
+            res.setHeader('Access-Control-Allow-Origin', '*')
+          }
+          next()
+        })
+      },
+    },
+  ],
   server: {
     allowedHosts: true,
     proxy: {

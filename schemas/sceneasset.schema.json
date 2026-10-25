@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sceneengine.local/schemas/sceneasset.schema.json",
+  "title": "SceneAsset 1.0",
+  "description": "Objects, characters, environments and effects.",
+  "type": "object",
+  "required": ["format", "id", "kind", "geometry", "license"],
+  "properties": {
+    "format": { "const": "sceneasset/1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "kind": { "enum": ["character", "prop3d", "prop2d", "environment", "fx"] },
+    "category": {
+      "enum": [
+        "nature", "vehicle", "furniture", "architecture", "interior",
+        "instrument", "food", "character", "effect", "environment", "other"
+      ]
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "family": { "enum": ["human", "animal", "winged"] },
+    "archetype": { "enum": ["humanoid", "quadruped", "avian", "insectoid"] },
+    "rig": { "type": ["string", "null"] },
+    "geometry": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["gltf", "svg", "html", "gltf-scene", "primitive"] },
+        "file": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "viewbox": { "type": "string" },
+        "units": { "enum": ["m"] },
+        "up": { "enum": ["Y", "Z"] },
+        "facing": { "enum": ["+Z", "-Z", "+X", "-X"] }
+      },
+      "additionalProperties": true
+    },
+    "anchors": {
+      "type": "object",
+      "properties": {
+        "pivot": { "enum": ["bottom", "center", "custom", "top"] },
+        "ground": { "type": "boolean" },
+        "forward": { "enum": ["+Z", "-Z", "+X", "-X"] },
+        "bounds": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "additionalProperties": true
+    },
+    "compat": {
+      "type": "object",
+      "properties": {
+        "domain": { "type": "array", "items": { "enum": ["outdoor", "indoor", "stage"] } },
+        "environments": { "type": "array", "items": { "type": "string" } },
+        "surface": {
+          "type": "array",
+          "items": { "enum": ["ground", "road", "sky", "wall", "desk", "ceiling", "water"] }
+        },
+        "views": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "sockets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "bone": { "type": "string", "minLength": 1 },
+          "offset": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+          "rotation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "clip": { "type": "string" },
+          "mechanism": { "type": "string" },
+          "params": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "materials": { "type": "array", "items": { "type": "object" } },
+    "lod": { "type": "array", "items": { "type": "object" } },
+    "parts": { "type": "array", "items": { "type": "string" } },
+    "views": { "type": "array", "items": { "type": "string" } },
+    "wardrobe": { "type": "array", "items": { "type": "object" } },
+    "clips": { "type": "array", "items": { "type": "string" } },
+    "domain": { "enum": ["outdoor", "indoor", "stage"] },
+    "perspective": { "enum": ["side", "front", "isometric", "2.5d"] },
+    "palette": { "type": "object" },
+    "layers": { "type": "array", "items": { "type": "object" } },
+    "scatter": { "type": "array", "items": { "type": "object" } },
+    "fx": {},
+    "camera": { "type": "object" },
+    "formats": { "type": "object" },
+    "license": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "author": { "type": "string" },
+        "source": { "type": "string" },
+        "commercial": { "type": "boolean" },
+        "notice": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "source": { "type": "object" },
+    "version": { "type": "string" }
+  },
+  "additionalProperties": true
+}

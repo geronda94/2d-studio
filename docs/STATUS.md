@@ -1,6 +1,78 @@
 # STATUS — текущее состояние SceneEngine
 
-Обновлено: 2026-10-24.
+Обновлено: 2026-10-25.
+
+## Полигональные персонажи + Character Studio (2026-10-25)
+
+- Сгенерированы два низкополигональных персонажа **Mark** и **Mira** (CC0,
+  Blender → GLB): 25 костей, ~9.4–10k треугольников, 20 морфов
+  (Oculus-15 визёмы, blink, jawOpen, smile/frown), клипы `idle`/`talk`.
+- Валидатор SceneRig: 0 ошибок; манифесты
+  `core/public/models/characters/character-{mark,mira}.scenerig.json`.
+- `core/public/vendor/scene-rig.js` — детерминированный runtime:
+  внешность (цвета/аксессуары/масштаб), визёмы, моргание, idle/talk, камера.
+- `core/public/character-studio.html` — Character Studio: выбор базы,
+  настройки внешности, липсинк по тексту, сохранение в библиотеку.
+- Демо `/p/11` «Poly duo»: два персонажа, визёмы, подписи; сцена готова.
+- Проверено: `/p/11` рендерится в mp4 1920×1080, 30 fps, 9.9 с; морфы
+  `viseme_aa/DD/O/P` реально применяются; Character Studio сохраняет/загружает
+  персонажей из `scene_assets`.
+- GLB-ассеты в sandbox-iframe теперь грузятся с CORS (`/models`, `/vendor`).
+- В библиотеке: `character-mark`, `character-mira` (`scene_assets`).
+
+## Чистка и рабочее состояние (2026-10-25)
+
+- Удалено 393 файла мусора/мёртвого кода: 158 Vue-компонентов, 78 старых
+  seed/fix/probe-скриптов, ad-hoc backend-тесты, root-мусор, собственный Rive-риг.
+- `backend/scene_library.py`: 21 шаблон, 35 объектов, 3 персонажа; собственные
+  Rive-шаблоны убраны, ready-актёры `oldman`/`bob` и 3D-аватар сохранены.
+- Поднято: `db` (5437), `backend` (8002), `frontend` (5175).
+- Проверено Playwright: `/p/1`, `/p/2`, `/p/4`, `/p/5`, `/p/6`, `/p/7`,
+  `/p/8`, `/p/9`, `/p/10` — `__sceneReady`, без ошибок; студии
+  `rig-studio`/`object-studio`/`clip-editor` загружают GLB и валидируют.
+- Рендер: `/renders/realtime` для `/p/1` → mp4 1920×1080, 30 fps, 16.5 с.
+- STT: локальный Whisper (large-v3-turbo) доступен из контейнера через
+  `scripts/stt_proxy.py`; `/ai/transcribe` отвечает 200.
+- Меню «Студии» на главной и в AppShell: Object Studio, Rig Studio, Clip Editor.
+- Object Studio: создание/редактирование/удаление объектов, загрузка GLB в
+  `/uploads/scene-assets`, библиотека `scene_assets` (`/scene-assets` CRUD).
+
+## SceneRig 1.0 + Rig Studio (2026-10-25)
+
+- Зафиксирован канонический контракт ригов: **human / animal / winged**
+  (`humanoid`, `quadruped`, `avian`, `insectoid`) —
+  `docs/RIG_FORMAT.md`.
+- Формат объектов/окружений/эффектов: `docs/ASSET_FORMAT.md`.
+- JSON-схемы: `schemas/scenerig.schema.json`, `schemas/sceneclip.schema.json`,
+  `schemas/sceneasset.schema.json`.
+- Stdlib-валидатор GLB и манифестов: `backend/rig/`
+  (`python -m backend.rig scan|validate|archetypes`).
+  Алиасы Mixamo / RPM / Rigify / VRM, проверка костей, весов, морфов,
+  клипов, A-pose, взгляда `+Z`, бюджета.
+- API: `GET /rig/archetypes`, `GET /rig/health`,
+  `POST /rig/validate` (upload .glb/.gltf).
+- Прототип браузерного инспектора: `core/public/rig-studio.html`
+  (Babylon-превью, дерево костей, морфы, валидация, редактор манифеста).
+- Прототип Object Studio: `core/public/object-studio.html` — GLB-объекты,
+  габариты, pivot/ground/facing, сокеты, черновик `sceneasset/1`.
+- Прототип Clip Editor: `core/public/clip-editor.html` — поза, ключи,
+  таймлайн, play, импорт/экспорт `*.sclip.json`, проверка через API.
+- Чистое ядро клипов: `core/public/vendor/scene-clip.js`
+  (slerp, evaluate, rest-fallback) + Node-тесты `scripts/test_scene_clip.mjs`.
+- Импорт существующего GLB в манифест: `scripts/rig_import.py`
+  (сгенерирован `core/public/models/brunette.scenerig.json` — 0 ошибок).
+- Компилятор канона: `python -m backend.rig compile ...` переименовывает
+  кости в GLB (RPM/Mixamo → `hips`, `upperArm.L`, …), пишет `dist/*.glb`
+  и манифест без `bones.map`. Проверено на brunette: 67 костей переименованы.
+- Blender-экспортёр: `scripts/blender/scene_rig_export.py` (проверка рига,
+  GLB, манифест, валидация). Проверен round-trip: тестовый риг 21 кость и
+  RPM brunette → Blender → GLB → 0 ошибок, 67 костей/72 морфа сохранены.
+- Bake клипа в GLB: `python -m backend.rig bake` (тело: rotation/translation/
+  scale, 30 fps, кватернионы). Проверено: `wave` → GLB → Blender → GLB,
+  анимация сохранена.
+- Проверено на `core/public/models/brunette.glb`: 67 костей, 72 морфа,
+  13 317 треугольников, 0 ошибок, 2 предупреждения (toeEnd, 9 материалов).
+- Тесты: `python -m unittest backend.tests.test_rig_validate backend.tests.test_rig_api` — 25 Python OK + 14 Node assertions.
 
 
 ## 3D-аватар (2026-10-24)
@@ -27,7 +99,7 @@
   `core/public/models/anim/*.glb` (Mixamo) и `avatar-anims.js`.
   **Mixamo-клипы не коммитить в публичный репозиторий** (лицензия Adobe);
   скачивать `scripts/fetch_avatar_anims.py` + `scripts/extract_avatar_anims.py`.
-- Проверено: `/p/10`, harness `babylon-avatar.html`, липсинк, жесты,
+- Проверено: `/p/10`, липсинк, жесты,
   pose-оверрайды, live-сообщения редактора.
 
 ## Готовые Rive-персонажи (2026-10-23, вечер)
@@ -68,8 +140,8 @@
 - 5 пресетов: `host`, `cohost`, `priest`, `historian`, `sociologist`
   (цвета, борода, очки, платок, юбка, ряса, блейзер).
 - Клипы: idle, talk, wave, point, open, shrug, walk (in-place).
-- Исходник: `core/rive/character/` (`scene.rml` + `rive.yaml`).
-  Генератор: `scripts/build_rive_character.py` (Rive CLI 1.7).
+- ~~Исходник `core/rive/character/` и генератор `scripts/build_rive_character.py`~~
+  удалены (frozen legacy); остались только runtime и готовые актёры.
   Рантайм-ассет: `core/public/rive/character.riv`.
 - Контроллер: `core/public/vendor/rive-character.js`.
 - Шаблоны `character-rive` (один ведущий, `/p/5`) и `character-rive-panel`
@@ -85,7 +157,7 @@
 ### Инфраструктура
 - Отдельный compose-проект `scene-saas`.
 - Frontend `http://localhost:5175`, backend `http://localhost:8002`,
-  Postgres `localhost:5436` (`scene_db` / `scene_user`).
+  Postgres `localhost:5437` (`scene_db` / `scene_user`).
 - Чистая БД, сиды тем/вариантов/пресетов, демо `http://localhost:5175/p/1`.
 
 ### Сцена
@@ -231,9 +303,8 @@
 6. **Нет AI-генерации сцены** (только ручной редактор/API).
 7. **Нет сохранения пользовательских объектов/миров** в библиотеку.
 8. **Персонажи**: готовый Old Man и панель двух старцев работают; осталось добавить других актёров (молодой ведущий, женщина, массовка), разобрать numeric view model у Bob и довести арт собственного рига.
-9. **Старые 117 Vue-компонентов и 16 slide-обёрток остались на диске**
-   как мёртвый код; не импортируются (registry пуст), но репозиторий можно
-   почистить в Phase 2.
+9. **Старые Vue-компоненты и slide-обёртки удалены** (2026-10-25):
+   158 неиспользуемых файлов, registry пуст.
 10. **Таблица называется `slides`**, хотя домен — сцены. Переименование
     запланировано отдельной миграцией, чтобы не ломать аудио/рендер.
 
@@ -250,8 +321,8 @@
 8. **Перевести портреты канала на виземы** (слой рта поверх фото или SVG-риг).
 9. AI: `POST /presentations/{id}/scenes/generate` из сценария + JSON-контракт
    промпта и валидатор ответа (см. `docs/CLAUDE_ANALYSIS.md`, шаг 3).
-10. Почистить legacy: удалить неиспользуемые `components/ui`, `components/slides`,
-    старые seed-скрипты и docs.
+10. ~~Почистить legacy~~ — сделано 2026-10-25: удалены мёртвые Vue-файлы,
+    старые seed/fix/probe-скрипты, root-мусор, собственный Rive-риг.
 
 ## Как проверить, что всё живо
 

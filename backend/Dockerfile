@@ -2,8 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends \
     libpq-dev \
     gcc \
     ffmpeg \
@@ -27,9 +27,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .
-# Install python packages (pip handles timeouts better for small packages)
-RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir playwright==1.42.0
+# Lightweight requirements: Whisper runs as a local service (STT_URL), not in-process.
+RUN pip install --no-cache-dir --timeout 120 -r requirements.txt
 
 # Download Chromium + ffmpeg for Playwright (avoids playwright install timeouts)
 RUN mkdir -p /root/.cache/ms-playwright/chromium-1105 && \

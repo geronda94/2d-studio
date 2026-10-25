@@ -165,6 +165,90 @@
 
 ---
 
+## 7.5. Риги (SceneRig)
+
+| Метод | Путь | Что делает |
+|---|---|---|
+| GET | `/rig/archetypes` | канонические архетипы и кости |
+| GET | `/rig/health` | версия валидатора |
+| POST | `/rig/validate` | валидировать загруженный `.glb`/`.gltf` |
+| POST | `/rig/validate-manifest` | валидировать `scenerig`/`sceneasset`/`sceneclip` + GLB |
+
+`POST /rig/validate` — `multipart/form-data`:
+
+```bash
+curl -X POST http://localhost:8002/rig/validate   -F "file=@core/public/models/brunette.glb"   -F "archetype=humanoid"
+```
+
+Для статического объекта: `-F "require_rig=false"`.
+
+`POST /rig/validate-manifest` — `multipart/form-data` с полем `manifest`
+(JSON-строка) и необязательным `file` (GLB). Путь в `geometry.file` заменяется
+на имя загруженного файла.
+
+Ответ — отчёт:
+
+```json
+{
+  "ok": true,
+  "archetype": "human/humanoid",
+  "errors": 0,
+  "warnings": 2,
+  "facts": { "joints": 67, "morphs": 72, "triangles": 13317 },
+  "issues": [ { "level": "warning", "code": "budget.materials", "message": "…" } ],
+  "children": []
+}
+```
+
+CLI:
+
+```bash
+python -m backend.rig scan model.glb --archetype humanoid
+python -m backend.rig validate character.scenerig.json
+python -m backend.rig compile character.scenerig.json --out dist/
+```
+
+---
+
+## 7.6. Scene-ассеты (пользовательские объекты)
+
+Сохранённые объекты/персонажи/окружения из Object Studio. Встроенная библиотека
+(`scene_library.py`) здесь не дублируется.
+
+| Метод | Путь | Что делает |
+|---|---|---|
+| GET | `/scene-assets?kind=prop3d&q=` | список сохранённых ассетов |
+| GET | `/scene-assets/{id\|slug}` | ассет + манифест |
+| POST | `/scene-assets` | создать (slug уникален) |
+| PUT | `/scene-assets/{id}` | обновить |
+| DELETE | `/scene-assets/{id}` | удалить |
+| POST | `/scene-assets/upload` | загрузить `.glb`/`.svg`/картинку в `/uploads/scene-assets` |
+
+Создание:
+
+```json
+{
+  "slug": "chair-wooden",
+  "title": "Деревянный стул",
+  "kind": "prop3d",
+  "category": "furniture",
+  "source_url": "/uploads/scene-assets/abc-chair.glb",
+  "manifest": {
+    "format": "sceneasset/1",
+    "id": "chair-wooden",
+    "title": "Деревянный стул",
+    "kind": "prop3d",
+    "geometry": { "type": "gltf", "file": "/uploads/scene-assets/abc-chair.glb" },
+    "license": { "name": "CC0" }
+  }
+}
+```
+
+`POST /scene-assets/upload` возвращает `url`, `filename`, `size`, `kind` и
+`validation` (для GLB — отчёт SceneRig с `require_rig=false`).
+
+---
+
 ## 8. Ошибки
 
 - `422` — валидация; тело: `{ message, errors: [{ path, type, message }] }`.

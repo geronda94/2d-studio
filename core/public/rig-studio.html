@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SceneRig Studio — инспектор рига</title>
+<style>
+  :root{
+    --bg:#070b12; --panel:#0e1522; --panel2:#121c2c; --line:#22304a;
+    --text:#e8eefc; --muted:#8da0bf; --accent:#38bdf8; --ok:#10b981;
+    --warn:#f59e0b; --err:#ef4444; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:13px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+    padding:6px 10px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:#0b3a52;border-color:#155e7a;color:#dff6ff}
+  input,select,textarea{background:#08101c;border:1px solid var(--line);border-radius:7px;
+    padding:6px 8px;min-width:0}
+  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  #app{display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header .title{font-weight:700;letter-spacing:.02em;margin-right:6px}
+  header .title span{color:var(--accent)}
+  header .grow{flex:1}
+  header .status{font:11px var(--mono);color:var(--muted);white-space:nowrap}
+  main{display:grid;grid-template-columns:270px 1fr 390px;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;min-width:0}
+  .col+.col{border-left:1px solid var(--line)}
+  .panel-h{display:flex;align-items:center;gap:8px;padding:8px 10px;
+    border-bottom:1px solid var(--line);background:var(--panel);font:11px var(--mono);
+    text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .panel-h .grow{flex:1}
+  .scroll{overflow:auto;min-height:0}
+  #stage{position:relative;background:radial-gradient(120% 90% at 50% 18%,#22314a 0%,#111a27 45%,#070b12 100%)}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+  #overlay{position:absolute;left:12px;bottom:12px;right:12px;display:flex;gap:10px;
+    align-items:center;font:11px var(--mono);color:var(--muted);pointer-events:none}
+  #overlay input{pointer-events:auto;flex:1}
+  .tree{font:12px var(--mono);padding:6px}
+  .tree ul{list-style:none;margin:0;padding-left:14px;border-left:1px dashed #1b2a42}
+  .tree>ul{padding-left:4px;border-left:0}
+  .tree li{margin:1px 0}
+  .tree .b{display:flex;gap:6px;align-items:center;border-radius:5px;padding:2px 4px;cursor:pointer}
+  .tree .b:hover{background:#13213a}
+  .tree .b .n{color:var(--text)}
+  .tree .b .tag{font-size:9px;color:var(--accent)}
+  .morph{display:flex;justify-content:space-between;gap:8px;padding:3px 8px;
+    font:11px var(--mono);border-bottom:1px solid #101a2a}
+  .morph span:last-child{color:var(--muted)}
+  .meta{padding:8px 10px;font:11px var(--mono);color:var(--muted);border-bottom:1px solid var(--line)}
+  .meta b{color:var(--text);font-weight:600}
+  #issues{padding:8px 10px;font:11px var(--mono)}
+  .issue{border-radius:6px;padding:6px 8px;margin-bottom:6px;border:1px solid #1e2b42;background:#0b1421}
+  .issue.error{border-color:#5b1c1c;background:#1a0d0f}
+  .issue.warning{border-color:#5a4210;background:#1a1508}
+  .issue .code{font-weight:700}
+  .issue.error .code{color:var(--err)} .issue.warning .code{color:var(--warn)}
+  .issue.info .code{color:var(--accent)}
+  #manifest{flex:1;width:100%;resize:none;border:0;border-radius:0;background:#08101c;
+    font:11px/1.5 var(--mono);padding:10px}
+  .row{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .pill{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);
+    font:10px var(--mono);color:var(--muted)}
+  .empty{padding:16px;color:var(--muted);font-size:12px;text-align:center}
+  .hidden{display:none!important}
+  @media(max-width:1150px){main{grid-template-columns:230px 1fr 330px}}
+  @media(max-width:900px){main{grid-template-columns:1fr;grid-template-rows:280px 340px 1fr}
+    .col+.col{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Scene<span>Rig</span> Studio</div>
+    <select id="archetype" title="Архетип">
+      <option value="">auto</option>
+      <option value="humanoid">human / humanoid</option>
+      <option value="quadruped">animal / quadruped</option>
+      <option value="avian">winged / avian</option>
+      <option value="insectoid">winged / insectoid</option>
+    </select>
+    <input id="url" style="width:250px" value="/models/brunette.glb" spellcheck="false">
+    <button id="loadUrl" class="primary">Загрузить URL</button>
+    <label class="pill" style="cursor:pointer">Локальный .glb/.gltf
+      <input id="file" type="file" accept=".glb,.gltf" class="hidden">
+    </label>
+    <span class="grow"></span>
+    <span id="status" class="status">idle</span>
+  </header>
+
+  <main>
+    <section class="col">
+      <div class="panel-h"><span>Скелет</span><span class="grow"></span><span id="boneCount">0</span></div>
+      <div class="meta" id="rigMeta">Загрузите GLB</div>
+      <div class="panel-h" style="border-top:1px solid var(--line)">
+        <input id="boneSearch" placeholder="Поиск кости…" style="width:100%">
+      </div>
+      <div class="scroll tree" id="boneTree"><div class="empty">Нет скелета</div></div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Морфы</span><span class="grow"></span><span id="morphCount">0</span></div>
+      <div class="scroll" id="morphList"><div class="empty">Нет морфов</div></div>
+    </section>
+
+    <section class="col" id="stage">
+      <canvas id="c"></canvas>
+      <div id="overlay">
+        <span id="animLabel">анимации: —</span>
+        <input id="frame" type="range" min="0" max="100" value="0" step="1" disabled>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="panel-h">
+        <span>Валидатор</span><span class="grow"></span>
+        <button id="validate" class="primary">Проверить</button>
+      </div>
+      <div class="meta" id="verdict">—</div>
+      <div class="scroll" id="issues"><div class="empty">Загрузите модель и нажмите «Проверить»</div></div>
+
+      <div class="panel-h" style="border-top:1px solid var(--line)">
+        <span>Манифест</span><span class="grow"></span>
+        <button id="copy">Copy</button><button id="download">Download</button>
+      </div>
+      <textarea id="manifest" spellcheck="false"></textarea>
+    </section>
+  </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const state = { file: null, url: null, filename: '', report: null, groups: [], bones: [], morphs: [], family: 'human', archetype: 'humanoid' }
+
+function setStatus(text) { $('status').textContent = text }
+function fail(text) { setStatus('error'); console.error(text); alert(text) }
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve()
+    const s = document.createElement('script')
+    s.src = src
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('cannot load ' + src))
+    document.head.appendChild(s)
+  })
+}
+
+async function ensureBabylon() {
+  if (!window.BABYLON) {
+    await loadScript('/vendor/babylon.js')
+    await loadScript('/vendor/babylonjs.loaders.min.js')
+  }
+}
+
+const canvas = $('c')
+let engine, scene, camera, currentContainer
+
+async function initScene() {
+  await ensureBabylon()
+  if (engine) return
+  engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true })
+  scene = new BABYLON.Scene(engine)
+  scene.clearColor = new BABYLON.Color4(0.02, 0.03, 0.055, 1)
+  camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 2, Math.PI / 2.35, 3.2,
+    new BABYLON.Vector3(0, 1.0, 0), scene)
+  camera.attachControl(canvas, true)
+  camera.wheelPrecision = 35
+  camera.panningSensibility = 900
+  camera.lowerRadiusLimit = 0.4
+  camera.upperRadiusLimit = 40
+
+  const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0.2, 1, 0.1), scene)
+  hemi.intensity = 0.85
+  hemi.groundColor = new BABYLON.Color3(0.10, 0.13, 0.18)
+  const key = new BABYLON.DirectionalLight('key', new BABYLON.Vector3(-0.6, -1, -0.5), scene)
+  key.position = new BABYLON.Vector3(3, 6, 4)
+  key.intensity = 1.15
+  const rim = new BABYLON.DirectionalLight('rim', new BABYLON.Vector3(0.7, -0.3, 0.8), scene)
+  rim.position = new BABYLON.Vector3(-4, 3, -4)
+  rim.intensity = 0.55
+  rim.diffuse = new BABYLON.Color3(0.45, 0.7, 1)
+
+  engine.runRenderLoop(() => scene.render())
+  window.addEventListener('resize', () => engine.resize())
+}
+
+function disposeModel() {
+  if (currentContainer) {
+    try { currentContainer.removeAllFromScene() } catch (e) {}
+    try { currentContainer.dispose() } catch (e) {}
+    currentContainer = null
+  }
+  state.groups = []
+  state.bones = []
+  state.morphs = []
+  $('frame').disabled = true
+  $('animLabel').textContent = 'анимации: —'
+}
+
+function frameCamera(container) {
+  let min = null, max = null
+  for (const mesh of container.meshes) {
+    if (!mesh.getTotalVertices || mesh.getTotalVertices() === 0) continue
+    mesh.computeWorldMatrix(true)
+    mesh.refreshBoundingInfo()
+    const bi = mesh.getBoundingInfo && mesh.getBoundingInfo()
+    if (!bi) continue
+    const bb = bi.boundingBox
+    min = min ? BABYLON.Vector3.Minimize(min, bb.minimumWorld) : bb.minimumWorld.clone()
+    max = max ? BABYLON.Vector3.Maximize(max, bb.maximumWorld) : bb.maximumWorld.clone()
+  }
+  if (!min || !max) return
+  const center = min.add(max).scale(0.5)
+  const size = max.subtract(min)
+  camera.setTarget(center)
+  camera.radius = Math.max(0.8, size.length() * 1.35)
+  camera.lowerRadiusLimit = Math.max(0.2, size.length() * 0.15)
+  camera.upperRadiusLimit = size.length() * 8
+}
+
+function collectBones(container) {
+  const skeleton = (container.skeletons || [])[0]
+  if (!skeleton) return []
+  return skeleton.bones.map((b) => ({ name: b.name, parent: b.parent ? b.parent.name : null }))
+}
+
+function collectMorphs(container) {
+  const seen = new Set()
+  for (const mesh of container.meshes || []) {
+    const mm = mesh.morphTargetManager
+    if (!mm) continue
+    for (let i = 0; i < mm.numTargets; i++) {
+      const t = mm.getTarget(i)
+      if (t && t.name) seen.add(t.name)
+    }
+  }
+  return [...seen].sort()
+}
+
+function buildBoneTree(bones) {
+  const root = $('boneTree')
+  root.innerHTML = ''
+  if (!bones.length) { root.innerHTML = '<div class="empty">Нет скелета</div>'; return }
+  const byName = new Map(bones.map((b) => [b.name, { ...b, children: [] }]))
+  const roots = []
+  for (const b of byName.values()) {
+    if (b.parent && byName.has(b.parent)) byName.get(b.parent).children.push(b)
+    else roots.push(b)
+  }
+  function render(nodes, host) {
+    const ul = document.createElement('ul')
+    for (const n of nodes) {
+      const li = document.createElement('li')
+      const row = document.createElement('div')
+      row.className = 'b'
+      const dot = document.createElement('span')
+      dot.textContent = n.children.length ? '▾' : '·'
+      dot.style.color = n.children.length ? 'var(--accent)' : '#41536f'
+      const label = document.createElement('span')
+      label.className = 'n'
+      label.textContent = n.name
+      row.appendChild(dot); row.appendChild(label)
+      row.title = n.name
+      row.onclick = () => {
+        const mesh = (currentContainer && currentContainer.meshes || []).find((m) => m.skeleton)
+        const bone = mesh && mesh.skeleton && mesh.skeleton.bones.find((b) => b.name === n.name)
+        if (!bone) return
+        const pos = bone.getAbsolutePosition()
+        camera.setTarget(pos)
+        setStatus('bone: ' + n.name)
+      }
+      li.appendChild(row)
+      if (n.children.length) render(n.children, li)
+      ul.appendChild(li)
+    }
+    host.appendChild(ul)
+  }
+  render(roots, root)
+}
+
+function renderMorphs(morphs) {
+  const host = $('morphList')
+  host.innerHTML = ''
+  if (!morphs.length) { host.innerHTML = '<div class="empty">Нет морфов</div>'; return }
+  for (const name of morphs) {
+    const row = document.createElement('div')
+    row.className = 'morph'
+    row.innerHTML = `<span>${name}</span><span>morph</span>`
+    host.appendChild(row)
+  }
+}
+
+function setupAnimations(container) {
+  state.groups = container.animationGroups || []
+  const frame = $('frame')
+  if (!state.groups.length) {
+    frame.disabled = true
+    $('animLabel').textContent = 'анимации: нет'
+    return
+  }
+  const maxFrames = Math.max(...state.groups.map((g) => Math.round(g.to || 0)), 1)
+  frame.min = 0
+  frame.max = maxFrames
+  frame.value = 0
+  frame.disabled = false
+  $('animLabel').textContent = 'анимации: ' + state.groups.map((g) => g.name).join(', ')
+  frame.oninput = () => {
+    const f = Number(frame.value)
+    for (const g of state.groups) {
+      try { g.goToFrame(f) } catch (e) {}
+    }
+  }
+}
+
+async function loadSource(source, filename) {
+  await initScene()
+  disposeModel()
+  setStatus('loading ' + filename + '…')
+  try {
+    let container
+    if (source instanceof File) {
+      container = await BABYLON.SceneLoader.LoadAssetContainerAsync('', source, scene)
+    } else {
+      const i = source.lastIndexOf('/')
+      const root = i >= 0 ? source.slice(0, i + 1) : ''
+      const file = i >= 0 ? source.slice(i + 1) : source
+      container = await BABYLON.SceneLoader.LoadAssetContainerAsync(root, file, scene)
+    }
+    currentContainer = container
+    container.addAllToScene()
+    state.file = source instanceof File ? source : null
+    state.url = source instanceof File ? null : source
+    state.filename = filename
+
+    frameCamera(container)
+    state.bones = collectBones(container)
+    state.morphs = collectMorphs(container)
+    buildBoneTree(state.bones)
+    renderMorphs(state.morphs)
+    setupAnimations(container)
+    $('boneCount').textContent = String(state.bones.length)
+    $('morphCount').textContent = String(state.morphs.length)
+    const skinned = container.meshes.some((m) => m.skeleton)
+    $('rigMeta').innerHTML = `<b>${filename}</b><br>${skinned ? 'skinned' : 'static'} · ${state.bones.length} bones · ${state.morphs.length} morphs`
+    setStatus('loaded ' + filename)
+    buildManifest()
+    validateCurrent()
+  } catch (err) {
+    console.error(err)
+    fail('Не удалось загрузить модель: ' + (err.message || err))
+  }
+}
+
+function familyFor(archetype) {
+  if (archetype === 'humanoid') return 'human'
+  if (archetype === 'quadruped') return 'animal'
+  return 'winged'
+}
+
+function buildManifest() {
+  const archetype = $('archetype').value || state.archetype || 'humanoid'
+  const family = familyFor(archetype)
+  const report = state.report
+  const canonToSource = (report && report.facts && report.facts.bone_map) || {}
+  const map = {}
+  for (const [canon, src] of Object.entries(canonToSource)) map[src] = canon
+  const mappedSources = new Set(Object.values(canonToSource))
+  const extra = state.bones.map((b) => b.name).filter((n) => !mappedSources.has(n))
+  const manifest = {
+    format: 'scenerig/1',
+    id: (state.filename || 'character').replace(/\.(glb|gltf)$/i, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'character',
+    title: state.filename || 'Character',
+    family,
+    archetype,
+    geometry: { file: state.filename || 'character.glb', units: 'm', up: 'Y', facing: '+Z' },
+    rest: { pose: 'A', origin: 'feet' },
+    bones: { canonical: Object.keys(map).length > 0, map, extra },
+    face: state.morphs.length
+      ? { morphs: state.morphs, visemes: 'oculus-15', engine_map: 'scene-10', jaw_bone: 'jaw' }
+      : { morphs: [], visemes: 'none' },
+    sockets: [],
+    clips: [],
+    license: { name: 'TBD' },
+  }
+  $('manifest').value = JSON.stringify(manifest, null, 2)
+  updateVerdict()
+}
+
+function updateVerdict() {
+  const report = state.report
+  if (!report) { $('verdict').textContent = '—'; return }
+  const ok = report.ok
+  $('verdict').innerHTML =
+    `<b style="color:${ok ? 'var(--ok)' : 'var(--err)'}">${ok ? 'OK' : 'FAIL'}</b>` +
+    ` · errors ${report.errors} · warnings ${report.warnings}` +
+    (report.archetype ? ` · ${report.archetype}` : '')
+}
+
+function renderIssues(report) {
+  const host = $('issues')
+  host.innerHTML = ''
+  const flat = []
+  const walk = (r) => {
+    for (const i of r.issues || []) flat.push(i)
+    for (const c of r.children || []) walk(c)
+  }
+  walk(report)
+  if (!flat.length) { host.innerHTML = '<div class="empty">Ошибок нет</div>'; return }
+  for (const i of flat) {
+    const div = document.createElement('div')
+    div.className = 'issue ' + i.level
+    div.innerHTML = `<div class="code">${i.code}</div><div>${escapeHtml(i.message)}</div>`
+    host.appendChild(div)
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+}
+
+async function validateCurrent() {
+  if (!state.file && !state.url) return
+  setStatus('validating…')
+  try {
+    const blob = state.file || await (await fetch(state.url)).blob()
+    const fd = new FormData()
+    fd.append('file', blob, state.filename || 'model.glb')
+    const archetype = $('archetype').value
+    if (archetype) fd.append('archetype', archetype)
+    const res = await fetch('/api/rig/validate', { method: 'POST', body: fd })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status))
+    state.report = data
+    renderIssues(data)
+    updateVerdict()
+    buildManifest()
+    const facts = data.facts || {}
+    $('rigMeta').innerHTML =
+      `<b>${state.filename}</b><br>${data.archetype || 'auto'} · ` +
+      `${facts.joints || 0} joints · ${facts.morphs || 0} morphs · ` +
+      `${facts.triangles || 0} tris` +
+      (facts.height ? `<br>height ${facts.height} m` : '')
+    setStatus(data.ok ? 'valid' : 'invalid')
+  } catch (err) {
+    console.error(err)
+    setStatus('validate failed')
+    $('issues').innerHTML = `<div class="issue error"><div class="code">api.error</div><div>${escapeHtml(err.message || err)}</div></div>`
+  }
+}
+
+$('loadUrl').onclick = () => {
+  const url = $('url').value.trim()
+  if (!url) return
+  const filename = url.slice(url.lastIndexOf('/') + 1) || 'model.glb'
+  loadSource(url, filename)
+}
+$('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loadUrl').click() })
+$('file').onchange = (e) => {
+  const f = e.target.files && e.target.files[0]
+  if (f) loadSource(f, f.name)
+}
+$('validate').onclick = validateCurrent
+$('boneSearch').oninput = () => {
+  const q = $('boneSearch').value.trim().toLowerCase()
+  for (const row of document.querySelectorAll('#boneTree .b')) {
+    const hit = !q || row.textContent.toLowerCase().includes(q)
+    row.parentElement.style.display = hit ? '' : 'none'
+  }
+}
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('manifest').value); setStatus('manifest copied') }
+  catch (e) { fail('Clipboard unavailable') }
+}
+$('download').onclick = () => {
+  const blob = new Blob([$('manifest').value], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = (state.filename || 'character').replace(/\.(glb|gltf)$/i, '') + '.scenerig.json'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+}
+$('archetype').onchange = () => {
+  if ($('archetype').value) {
+    state.archetype = $('archetype').value
+    state.family = familyFor(state.archetype)
+  }
+  if (state.bones.length) validateCurrent()
+}
+
+initScene().catch((err) => fail('Babylon: ' + (err.message || err)))
+</script>
+</body>
+</html>

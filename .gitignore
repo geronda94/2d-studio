@@ -10,6 +10,7 @@ __pycache__/
 # Node
 node_modules/
 dist/
+.pytest_cache/
 dist-ssr/
 *.local
 
@@ -17,8 +18,9 @@ dist-ssr/
 uploads/
 backend/media/
 
-# Сырой дамп БД >100 МБ (лимит GitHub) — коммитим только dump.sql.gz
+# Дампы БД храним вне репозитория
 dump.sql
+dump.sql.gz
 
 # OS
 .DS_Store

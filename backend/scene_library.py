@@ -703,39 +703,6 @@ PRESENTER = {
 """,
 }
 
-RIVE_CHARACTER = {
-    "slug": "character-rive",
-    "title": "Ведущий (Rive-риг)",
-    "category": "character",
-    "description": "Полноценный Rive-риг: скелет (плечи/локти/кисти, бёдра/колени/стопы), 10 визёмов рта, моргание, взгляд, брови, жесты и ходьба. Драйвер — SceneKit.riveCharacter.",
-    "tags": ["character", "rive", "rig", "skeleton", "lipsync", "visemes", "presenter"],
-    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture", "walk", "mood"],
-    "rig": {
-        "type": "rive",
-        "driver": "SceneKit.riveCharacter",
-        "bones": ["root", "spine", "chest", "neck", "head", "shoulder", "upperArm", "foreArm", "hand", "hip", "thigh", "shin", "foot"],
-        "clips": ["idle", "talk", "walk", "wave", "point", "open", "shrug"],
-        "visemes": 10,
-        "asset": "/rive/character.riv",
-        "presets": ["host", "cohost", "priest", "historian", "sociologist"],
-    },
-    "html": """
-<div class="obj-character-rive">
-  <canvas class="rive-canvas" width="600" height="1000"></canvas>
-</div>""",
-    "css": """
-.obj-character-rive { position:absolute; left:50%; bottom:3%; width:42vmin; height:70vmin;
-  margin-left:-21vmin; transform-origin:50% 100%; }
-.obj-character-rive .rive-canvas { width:100%; height:100%; display:block; }
-.obj-character-rive::after { content:''; position:absolute; left:18%; right:18%; bottom:-1.2vmin;
-  height:2.2vmin; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);
-  filter:blur(.4vmin); z-index:-1; }
-@media (orientation: portrait) {
-  .obj-character-rive { left:50%; bottom:15%; width:84vmin; height:140vmin; margin-left:-42vmin; }
-}
-""",
-}
-
 RIVE_BOB = {
     "slug": "character-bob",
     "title": "Bob (ready-made Rive, CC BY 4.0)",
@@ -804,11 +771,45 @@ RIVE_OLDMAN = {
 """,
 }
 
-OBJECTS = [CHARACTER, PORTRAIT, PRESENTER, RIVE_CHARACTER, RIVE_BOB, RIVE_OLDMAN, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
+OBJECTS = [CHARACTER, PORTRAIT, PRESENTER, RIVE_BOB, RIVE_OLDMAN, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
 
 # Ready actors: a compact catalogue for the editor and AI agents. The full
 # object entry (HTML/CSS) is in OBJECTS; this is the capability card.
 CHARACTERS = [
+    {
+        "slug": "character-mark",
+        "title": "Mark (SceneRig, CC0)",
+        "template": "character-poly-duo",
+        "kind": "glb-scenerig",
+        "driver": "SceneRig.create",
+        "mode": "morph-targets",
+        "visemes": 15,
+        "viseme_set": "oculus-15",
+        "body": ["idle", "talk", "blink", "breath", "head", "gesture"],
+        "lip_sync": True,
+        "full_body": True,
+        "license": "CC0",
+        "author": "SceneEngine",
+        "asset": "/models/characters/character-mark.glb",
+        "rig": "/models/characters/character-mark.scenerig.json",
+    },
+    {
+        "slug": "character-mira",
+        "title": "Mira (SceneRig, CC0)",
+        "template": "character-poly-duo",
+        "kind": "glb-scenerig",
+        "driver": "SceneRig.create",
+        "mode": "morph-targets",
+        "visemes": 15,
+        "viseme_set": "oculus-15",
+        "body": ["idle", "talk", "blink", "breath", "head", "gesture"],
+        "lip_sync": True,
+        "full_body": True,
+        "license": "CC0",
+        "author": "SceneEngine",
+        "asset": "/models/characters/character-mira.glb",
+        "rig": "/models/characters/character-mira.scenerig.json",
+    },
     {
         "slug": "character-oldman",
         "title": "Старец (Old Man)",
@@ -862,21 +863,6 @@ CHARACTERS = [
         "author": "Ready Player Me",
         "asset": "/models/brunette.glb",
     },
-    {
-        "slug": "character-rive",
-        "title": "Собственный Rive-риг",
-        "template": "character-rive",
-        "kind": "own-rive",
-        "driver": "SceneKit.riveCharacter",
-        "mode": "viewModel-numbers",
-        "visemes": 10,
-        "body": ["idle", "talk", "walk", "wave", "point", "open", "shrug"],
-        "lip_sync": True,
-        "full_body": True,
-        "license": "internal",
-        "author": "SceneEngine",
-        "asset": "/rive/character.riv",
-    },
 ]
 
 
@@ -919,7 +905,6 @@ OBJ_META = {
     "plant":         {"domain": ["indoor", "stage"], "environments": ["office", "studio"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "person":        {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "side"], "default_view": "front"},
     "character":     {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "three-quarter", "side"], "default_view": "front"},
-    "character-rive": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "character-3d": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "character-bob": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "character-oldman": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
@@ -1378,123 +1363,6 @@ tl.from('.talk-halo', { opacity: 0, scale: 0.82, duration: 1.1, ease: 'power3.ou
 window.scene = { seek(t) { tl.seek(t / 1000); rig.seek(t); dust.seek(t); } };
 """
 
-RIVE_CHARACTER_JS = """
-const p = window.__sceneProps || {};
-const root = document.querySelector('.scene');
-const canvas = root.querySelector('.obj-character-rive canvas');
-const raw = window.__riveCharacterBuffer || '';
-let buffer = null;
-try {
-  if (raw) {
-    const bin = atob(raw);
-    const u = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    buffer = u.buffer;
-  }
-} catch (e) { window.__sceneSend && window.__sceneSend('scene-error', { message: 'rive buffer: ' + e }); }
-
-const rig = SceneKit.riveCharacter(canvas, {
-  buffer,
-  character: p.character || 'host',
-  visemes: p.visemes || [],
-  gestures: p.gestures || [{ at: 4200, type: 'wave', hand: 'R', dur: 1600 }],
-  walk: !!p.walk,
-  mood: p.mood || 'neutral',
-  seed: Number(p.seed) || 0,
-  props: p,
-});
-
-const line = root.querySelector('.talk-line');
-if (line && p.headline) line.textContent = p.headline;
-SceneKit.views(root, p.views || {});
-
-const halo = root.querySelector('.talk-halo');
-const actors = root.querySelector('.layer-actors');
-const actorBox = root.querySelector('.obj-character-rive');
-if (halo && actors && actorBox) actors.insertBefore(halo, actorBox);
-
-const dustCanvas = root.querySelector('.talk-dust');
-const dust = SceneKit.particles(dustCanvas, {
-  count: Number(p.dust_count) || 46, seed: 17, color: '255,225,175',
-  speedY: 9, driftX: 22, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.06, alphaMax: 0.26,
-});
-SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
-
-const tl = gsap.timeline({ paused: true });
-tl.from('.talk-halo', { opacity: 0, scale: 0.82, duration: 1.1, ease: 'power3.out' }, 0)
-  .from('.obj-character-rive', { y: 24, duration: 0.85, ease: 'power4.out' }, 0.05)
-  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
-  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
-  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
-  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
-
-window.scene = {
-  ready: rig.ready,
-  seek(t) {
-    if (rig) rig.seek(t);
-    tl.seek(t / 1000);
-    dust.seek(t);
-  },
-};
-"""
-
-RIVE_PANEL_JS = """
-const p = window.__sceneProps || {};
-const root = document.querySelector('.scene');
-const raw = window.__riveCharacterBuffer || '';
-let buffer = null;
-try {
-  if (raw) {
-    const bin = atob(raw);
-    const u = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    buffer = u.buffer;
-  }
-} catch (e) {}
-
-const canvases = Array.from(root.querySelectorAll('.obj-character-rive canvas'));
-const cast = Array.isArray(p.cast) && p.cast.length ? p.cast : [
-  { character: 'host', mood: 'joy' },
-  { character: 'cohost', mood: 'joy' },
-];
-const rigs = canvases.map((canvas, i) => SceneKit.riveCharacter(canvas, {
-  buffer,
-  character: (cast[i] && cast[i].character) || 'host',
-  visemes: (cast[i] && cast[i].visemes) || p.visemes || [],
-  gestures: (cast[i] && cast[i].gestures) || [],
-  mood: (cast[i] && cast[i].mood) || p.mood || 'neutral',
-  walk: !!(cast[i] && cast[i].walk),
-  seed: Number((cast[i] && cast[i].seed) || i * 17),
-  props: cast[i] || {},
-}));
-
-const line = root.querySelector('.talk-line');
-if (line && p.headline) line.textContent = p.headline;
-SceneKit.views(root, p.views || {});
-const dustCanvas = root.querySelector('.talk-dust');
-const dust = SceneKit.particles(dustCanvas, {
-  count: Number(p.dust_count) || 52, seed: 19, color: '255,225,175',
-  speedY: 8, driftX: 20, sizeMin: 0.8, sizeMax: 2.4, alphaMin: 0.05, alphaMax: 0.22,
-});
-SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.45 });
-
-const tl = gsap.timeline({ paused: true });
-tl.from('.talk-halo', { opacity: 0, scale: 0.86, duration: 1, ease: 'power3.out' }, 0)
-  .from('.talk-line', { yPercent: 118, rotate: 3, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
-  .fromTo('.talk-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
-  .to('.talk-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
-  .to('.talk-caption', { opacity: 0, y: -18, duration: 0.6, ease: 'power2.in' }, 6.4);
-
-window.scene = {
-  ready: Promise.all(rigs.map((r) => r.ready)),
-  seek(t) {
-    rigs.forEach((r) => r.seek(t));
-    tl.seek(t / 1000);
-    dust.seek(t);
-  },
-};
-"""
-
 RIVE_BOB_JS = """
 const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
@@ -1862,8 +1730,175 @@ CHARACTER_3D_TEMPLATE = {
 }
 
 
+POLY_DUO_HTML = """
+<div class="scene poly-duo">
+  <div class="layer layer-world" data-layer="world">
+    <div class="duo-bg"></div>
+    <div class="duo-spot duo-spot-a"></div>
+    <div class="duo-spot duo-spot-b"></div>
+    <div class="duo-floor"></div>
+  </div>
+  <div class="layer layer-objects" data-layer="objects"></div>
+  <div class="layer layer-actors" data-layer="actors">
+    <div class="duo-actor obj-character-mark">
+      <canvas class="scene-rig-canvas" width="720" height="1080"></canvas>
+      <div class="duo-name">Mark</div>
+    </div>
+    <div class="duo-actor obj-character-mira">
+      <canvas class="scene-rig-canvas" width="720" height="1080"></canvas>
+      <div class="duo-name">Mira</div>
+    </div>
+  </div>
+  <div class="layer layer-fx" data-layer="fx"><canvas class="duo-dust" width="1920" height="1080"></canvas></div>
+  <div class="layer layer-overlay" data-layer="overlay">
+    <div class="duo-caption">
+      <div class="duo-kicker">SCENERIG / POLY</div>
+      <div class="duo-mask"><span class="duo-line">Два голоса</span></div>
+    </div>
+  </div>
+</div>
+<script src="/vendor/babylon.js"></script>
+<script src="/vendor/babylonjs.loaders.min.js"></script>
+"""
+
+POLY_DUO_CSS = """
+.poly-duo { background:#070b12; overflow:hidden; }
+.duo-bg { position:absolute; inset:0; background:
+  radial-gradient(90% 70% at 50% 8%, #26334b 0%, #141d2b 45%, #070b12 100%); }
+.duo-spot { position:absolute; top:-12%; width:44%; height:98%; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%, rgba(120,170,255,.20), transparent 68%);
+  filter:blur(18px); }
+.duo-spot-a { left:2%; } .duo-spot-b { right:2%;
+  background:radial-gradient(ellipse at 50% 0%, rgba(120,255,200,.14), transparent 68%); }
+.duo-floor { position:absolute; left:0; right:0; bottom:0; height:32%;
+  background:linear-gradient(180deg, rgba(8,12,20,0) 0%, rgba(8,12,20,.78) 55%, #070b12 100%); }
+.duo-actor { position:absolute; bottom:1%; width:40%; height:92%; }
+.obj-character-mark { left:4%; }
+.obj-character-mira { right:4%; }
+.duo-actor .scene-rig-canvas { width:100%; height:100%; display:block; }
+.duo-name { position:absolute; left:50%; bottom:1.5%; transform:translateX(-50%);
+  font-family:var(--font-mono); font-size:clamp(9px,1.3vmin,15px); letter-spacing:.18em;
+  text-transform:uppercase; color:rgba(220,235,255,.62); }
+.duo-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.55; }
+.duo-caption { position:absolute; left:50%; bottom:4.5%; transform:translateX(-50%);
+  text-align:center; font-family:var(--font-heading); color:var(--text-primary);
+  text-shadow:0 2px 20px rgba(0,0,0,.7); z-index:20; }
+.duo-kicker { font-family:var(--font-sans); font-size:clamp(9px,1.25vmin,15px);
+  letter-spacing:.24em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1vmin; }
+.duo-mask { overflow:hidden; padding:.08em 0 .14em; }
+.duo-line { display:inline-block; font-size:clamp(20px,4.6vmin,64px); line-height:1.02; }
+@media (orientation: portrait) {
+  .duo-actor { width:84%; height:48%; left:50% !important; right:auto !important; transform:translateX(-50%); }
+  .obj-character-mark { bottom:44%; }
+  .obj-character-mira { bottom:2%; }
+  .duo-caption { top:5%; bottom:auto; width:92%; }
+  .duo-line { font-size:clamp(18px,6vmin,42px); }
+}
+"""
+
+POLY_DUO_JS = """
+const p = window.__sceneProps || {};
+const root = document.querySelector('.scene');
+const specs = [
+  {
+    src: '/models/characters/character-mark.glb',
+    preset: 'bust', height: 1.80,
+    appearance: p.appearanceA || {},
+    visemes: p.visemesA || [],
+    mood: p.moodA || 'neutral',
+  },
+  {
+    src: '/models/characters/character-mira.glb',
+    preset: 'bust', height: 1.69,
+    appearance: p.appearanceB || {},
+    visemes: p.visemesB || [],
+    mood: p.moodB || 'neutral',
+  },
+];
+const rigs = Array.from(root.querySelectorAll('.scene-rig-canvas')).map((canvas, i) => {
+  const s = specs[i] || specs[0];
+  return SceneRig.create(canvas, {
+    src: s.src, preset: s.preset, height: s.height,
+    appearance: s.appearance, mood: s.mood, motion: 'talk', interactive: false,
+  });
+});
+const ready = Promise.all(rigs.map(async (rig, i) => {
+  await rig.ready;
+  rig.setAppearance(specs[i].appearance);
+  rig.setVisemes(specs[i].visemes);
+  rig.setMood(specs[i].mood);
+}));
+const dust = SceneKit.particles(root.querySelector('.duo-dust'), {
+  count: Number(p.dust_count) || 44, seed: 23, color: '205,225,255',
+  speedY: 7, driftX: 18, sizeMin: 0.8, sizeMax: 2.2, alphaMin: 0.04, alphaMax: 0.18,
+});
+SceneKit.grain(root, { grainOpacity: 0.09, vignetteStrength: 0.5 });
+
+const caption = root.querySelector('.duo-line');
+if (caption && p.headline) caption.textContent = p.headline;
+const kicker = root.querySelector('.duo-kicker');
+if (kicker && p.kicker) kicker.textContent = p.kicker;
+
+const tl = gsap.timeline({ paused: true });
+tl.from('.duo-kicker', { opacity: 0, letterSpacing: '0.4em', duration: 0.8, ease: 'power3.out' }, 0)
+  .from('.duo-line', { yPercent: 120, rotate: 2, duration: 0.9, ease: 'power4.out' }, 0.15)
+  .from('.duo-actor', { y: 26, opacity: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12 }, 0.1)
+  .to('.duo-caption', { opacity: 0, y: -16, duration: 0.5, ease: 'power2.in' }, 7.2);
+
+window.scene = {
+  ready,
+  seek(t) {
+    rigs.forEach((rig) => rig.seek(t));
+    tl.seek(t / 1000);
+    dust.seek(t);
+  },
+};
+"""
+
+POLY_DUO_TEMPLATE = {
+    "slug": "character-poly-duo",
+    "title": "Poly duo",
+    "description": "Два полигональных SceneRig-персонажа: скелет, настройки внешности, Oculus-15 липсинк, детерминированный seek(t).",
+    "tags": ["scene", "character", "scenerig", "lipsync", "3d", "poly", "studio"],
+    "duration": 8000,
+    "environment": "studio",
+    "view": "night",
+    "objects": [],
+    "props_schema": {
+        "headline": {"type": "text", "label": "Заголовок"},
+        "kicker": {"type": "text", "label": "Надпись сверху"},
+        "visemesA": {"type": "json", "label": "Виземы Mark [{t,viseme}]"},
+        "visemesB": {"type": "json", "label": "Виземы Mira [{t,viseme}]"},
+        "appearanceA": {"type": "json", "label": "Внешность Mark"},
+        "appearanceB": {"type": "json", "label": "Внешность Mira"},
+        "moodA": {"type": "select", "label": "Настроение Mark", "options": ["neutral", "joy", "sad"]},
+        "moodB": {"type": "select", "label": "Настроение Mira", "options": ["neutral", "joy", "sad"]},
+        "dust_count": {"type": "integer", "label": "Пылинки"},
+    },
+    "default_props": {
+        "headline": "Два голоса",
+        "kicker": "SCENERIG / POLY",
+        "visemesA": VIS_DEMO,
+        "visemesB": VIS_DEMO_B,
+        "appearanceA": {"skin": "#b8805e", "hair": "#1a130f", "top": "#294d8c",
+                        "bottom": "#292b33", "shoes": "#141417", "eyes": "#2e6147",
+                        "lips": "#8c3d38", "glasses": False, "hood": True, "scale": 1},
+        "appearanceB": {"skin": "#dba68a", "hair": "#752914", "top": "#33734f",
+                        "bottom": "#382b3d", "shoes": "#3d1c1a", "eyes": "#3373a0",
+                        "lips": "#ad4c4c", "glasses": True, "hood": False, "scale": 1},
+        "moodA": "neutral", "moodB": "joy", "dust_count": 44,
+    },
+    "code": {
+        "html": POLY_DUO_HTML.strip(),
+        "css": (BASE_CSS + "\n" + POLY_DUO_CSS).strip(),
+        "js": POLY_DUO_JS.strip(),
+    },
+}
+
 TEMPLATES = [
     CHARACTER_3D_TEMPLATE,
+    POLY_DUO_TEMPLATE,
     _compose(
         "forest", ["road", "car", "tree", "pine", "cloud"],
         FOREST_DRIVE_JS,
@@ -2077,129 +2112,6 @@ TEMPLATES = [
   .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
   .talk-caption::before { display:none; }
   .talk-line { font-size:clamp(18px, 6vmin, 40px); }
-}
-""",
-    ),
-    _compose(
-        "studio", ["character-rive"],
-        RIVE_CHARACTER_JS,
-        title="Rive character",
-        slug="character-rive",
-        description="Rive-риг ведущего: скелет, липсинк по виземам, моргание, взгляд, жесты, ходьба, пресеты персонажей.",
-        tags=["scene", "character", "lipsync", "rive", "skeleton", "studio"],
-        duration=7000,
-        props_schema={
-            "character": {"type": "select", "label": "Персонаж", "options": ["host", "cohost", "priest", "historian", "sociologist"]},
-            "headline": {"type": "text", "label": "Подпись"},
-            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
-            "walk": {"type": "boolean", "label": "Ходьба"},
-            "gestures": {"type": "json", "label": "Жесты [{at,type,hand,dur}]"},
-            "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
-            "seed": {"type": "number", "label": "Seed"},
-        },
-        default_props={
-            "character": "host",
-            "headline": "Живой персонаж",
-            "mood": "joy",
-            "walk": False,
-            "gestures": [{"at": 4200, "type": "wave", "hand": "R", "dur": 1600}],
-            "visemes": VIS_DEMO,
-            "seed": 7,
-        },
-        extra_html=(
-            '<div class="talk-halo"></div>'
-            '<div class="talk-sweep"></div>'
-            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
-            '<div class="talk-caption">'
-            '<div class="talk-kicker">RIVE / SKELETON</div>'
-            '<div class="talk-mask"><span class="talk-line">Живой персонаж</span></div>'
-            '</div>'
-        ),
-        extra_css="""
-.layer-actors { background:radial-gradient(ellipse at 58% 40%, rgba(120,165,255,.12), transparent 60%); }
-.talk-halo { position:absolute; left:50%; top:2%; width:62vmin; height:62vmin; margin-left:-31vmin;
-  border-radius:50%; pointer-events:none;
-  background:radial-gradient(circle, rgba(150,190,255,.22) 0%, rgba(150,190,255,.05) 45%, transparent 70%);
-  filter:blur(6px); }
-.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
-  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
-  transform:translateX(-30%); }
-.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
-  mix-blend-mode:screen; opacity:.6; z-index:30; }
-.talk-caption { position:absolute; left:7%; bottom:10%; text-align:left; max-width:44%; z-index:35;
-  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
-  text-shadow:0 2px 18px rgba(0,0,0,.6); }
-.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
-  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1.2vmin; }
-.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
-.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
-.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-light-blue); }
-@media (orientation: portrait) {
-  .talk-halo { left:50%; top:4%; width:86vmin; height:86vmin; margin-left:-43vmin; }
-  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
-  .talk-caption::before { display:none; }
-  .talk-line { font-size:clamp(18px, 6vmin, 40px); }
-}
-""",
-    ),
-    _compose(
-        "studio", ["character-rive", "character-rive"],
-        RIVE_PANEL_JS,
-        title="Rive panel",
-        slug="character-rive-panel",
-        description="Двое ведущих на Rive-риге: разные пресеты, синхронный seek, общий липсинк.",
-        tags=["scene", "character", "lipsync", "rive", "panel", "studio"],
-        duration=7000,
-        props_schema={
-            "headline": {"type": "text", "label": "Подпись"},
-            "cast": {"type": "json", "label": "Каст [{character,mood,visemes,gestures}]"},
-            "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "anger", "sad", "surprise"]},
-            "visemes": {"type": "json", "label": "Виземы по умолчанию"},
-        },
-        default_props={
-            "headline": "Двое в студии",
-            "mood": "joy",
-            "visemes": VIS_DEMO,
-            "cast": [
-                {"character": "host", "mood": "joy"},
-                {"character": "cohost", "mood": "joy"},
-            ],
-        },
-        extra_html=(
-            '<div class="talk-halo"></div>'
-            '<div class="talk-sweep"></div>'
-            '<canvas class="talk-dust" width="1920" height="1080"></canvas>'
-            '<div class="talk-caption">'
-            '<div class="talk-kicker">RIVE / CAST</div>'
-            '<div class="talk-mask"><span class="talk-line">Двое в студии</span></div>'
-            '</div>'
-        ),
-        extra_css="""
-.layer-actors { background:radial-gradient(ellipse at 50% 40%, rgba(120,165,255,.12), transparent 60%); }
-.layer-actors > .obj-character-rive:nth-of-type(1) { left:33% !important; bottom:2% !important; width:36vmin !important; height:60vmin !important; margin-left:-18vmin !important; }
-.layer-actors > .obj-character-rive:nth-of-type(2) { left:67% !important; bottom:2% !important; width:36vmin !important; height:60vmin !important; margin-left:-18vmin !important; }
-.talk-halo { position:absolute; left:50%; top:2%; width:70vmin; height:70vmin; margin-left:-35vmin;
-  border-radius:50%; pointer-events:none;
-  background:radial-gradient(circle, rgba(150,190,255,.20) 0%, rgba(150,190,255,.04) 45%, transparent 70%);
-  filter:blur(6px); }
-.talk-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
-  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
-  transform:translateX(-30%); }
-.talk-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
-  mix-blend-mode:screen; opacity:.6; z-index:30; }
-.talk-caption { position:absolute; left:7%; bottom:8%; text-align:left; max-width:50%; z-index:35;
-  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
-  text-shadow:0 2px 18px rgba(0,0,0,.6); }
-.talk-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
-  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1.2vmin; }
-.talk-mask { overflow:hidden; padding:.12em 0 .18em; }
-.talk-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06; transform-origin:left bottom; }
-.talk-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px; background:var(--brand-light-blue); }
-@media (orientation: portrait) {
-  .layer-actors > .obj-character-rive:nth-of-type(1) { left:50% !important; bottom:36% !important; width:62vmin !important; height:103vmin !important; margin-left:-31vmin !important; }
-  .layer-actors > .obj-character-rive:nth-of-type(2) { left:50% !important; bottom:4% !important; width:62vmin !important; height:103vmin !important; margin-left:-31vmin !important; }
-  .talk-caption { left:8%; right:8%; bottom:8%; max-width:none; text-align:center; }
-  .talk-caption::before { display:none; }
 }
 """,
     ),

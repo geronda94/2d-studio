@@ -6,7 +6,7 @@
 ## 1. Требования
 
 - Linux, Docker + Docker Compose v2.
-- Свободные порты: `5175` (frontend), `8002` (backend), `5436` (Postgres).
+- Свободные порты: `5175` (frontend), `8002` (backend), `5437` (Postgres).
 - Для рендера: `ffmpeg`, `xvfb`, `openbox`, `xdotool` (уже в backend-образе),
   Playwright Chromium (уже в образе), `$DISPLAY` для realtime-захвата.
 
@@ -38,7 +38,7 @@ docker compose ps
 Ожидаемые контейнеры:
 - `scene-saas-frontend-1` → `5175`
 - `scene-saas-backend-1` → `8002`
-- `scene-saas-db-1` → `5436`
+- `scene-saas-db-1` → `5437`
 
 ## 5. Первичный сид (чистая БД)
 
