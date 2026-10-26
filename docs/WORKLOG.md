@@ -614,6 +614,13 @@ skin-джойнты.
 - CORS для `/models`, `/vendor`, `/rive`, чтобы sandbox-iframe мог грузить GLB.
 - Проверено: Character Studio (внешность, speak, library), `/p/11` в 16:9 и
   9:16, морфы визёмов в сцене, render `/p/11` → mp4 1920×1080/30fps/9.9 с.
+- **2026-10-26, hero-персонажи.** Подключены текстурированные Mark HD
+  (Avatar SDK) и Mira HD (Ready Player Me) через `boneMap`; добавлены
+  `armRestZ` (T-pose → A-pose, world Z с parent-space) и `headPitch`.
+  Дефолт Studio и `/p/11` переведены на HD. Добавлены `setEmotion`,
+  `setGaze`, авто-саккады, eye-look/веки; в Studio — «Выражение», «Взгляд»,
+  слайдеры лица. У Mark убран чужой логотип с текстуры футболки.
+  Процедурные Mark/Mira остаются для гардероба/параметров/массовки.
 
 #### Ошибка 27. Рот исчезал в Babylon, хотя в Blender был
 **Симптом:** в Character Studio и сцене лицо без рта; при отключении скелета

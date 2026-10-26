@@ -361,16 +361,16 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
     g = cfg["gender"]
     # The old head was ~0.33 m tall on a 1.8 m body, which is what made the
     # character read as a doll.  0.26 m is stylised but much closer to life.
-    head = add_sphere("Head", (0, -0.002 * s, 1.635 * s),
-                      (0.128 * s, 0.116 * s, 0.130 * s), skin, segments=32, rings=24)
+    head = add_sphere("Head", (0, -0.002 * s, 1.632 * s),
+                      (0.128 * s, 0.118 * s, 0.136 * s), skin, segments=32, rings=24)
     for v in head.data.vertices:
         # vertex coordinates are local to the head object's origin
-        nz = v.co.z / (0.130 * s)  # -1 (chin) .. +1 (crown)
+        nz = v.co.z / (0.136 * s)  # -1 (chin) .. +1 (crown)
         nx = v.co.x / (0.128 * s)
         # jaw taper below the cheekbones
         if nz < -0.10:
             k = (-nz - 0.10) / 0.90
-            v.co.x *= 1.0 - k * (0.26 if g == "female" else 0.20)
+            v.co.x *= 1.0 - k * (0.32 if g == "female" else 0.26)
             if v.co.y < 0:
                 v.co.y *= 1.0 - k * 0.08
         # chin forward and a little lift
@@ -396,8 +396,8 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
     weight_all(head, arm, "head")
 
     # neck
-    neck = tube("Neck", [(0, 0.005, 1.38 * s), (0, 0.008, 1.515 * s)],
-                [0.058 * s, 0.047 * s], skin, sides=16, depth=0.92,
+    neck = tube("Neck", [(0, 0.005, 1.38 * s), (0, 0.008, 1.500 * s)],
+                [0.052 * s, 0.045 * s], skin, sides=16, depth=0.92,
                 weights=[{"neck": 0.55, "chest": 0.45}, {"neck": 1.0}])
     bind(neck, arm)
 
@@ -410,32 +410,32 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
     # Eyes: inset sclera with iris, pupil and catchlight.  The skin-coloured
     # blink patch sits inside the skull at rest and slides in front of the eye
     # when the runtime drives eyeBlinkLeft/Right.
-    ex = 0.043 * s
-    ey = -0.112 * s
-    ez = 1.652 * s
-    es = 1.0 if g == "male" else 1.06
+    ex = 0.037 * s
+    ey = -0.113 * s
+    ez = 1.647 * s
+    es = 0.95 if g == "male" else 1.00
     for side, sx in (("L", 1), ("R", -1)):
         eye = add_sphere(f"EyeWhite.{side}", (sx * ex, ey, ez),
-                         (0.020 * es * s, 0.008 * s, 0.018 * es * s), white,
+                         (0.0150 * es * s, 0.0072 * s, 0.0138 * es * s), white,
                          segments=20, rings=14)
         weight_all(eye, arm, f"eye.{side}")
         iris_obj = add_sphere(f"Iris.{side}", (sx * ex, ey - 0.006 * s, ez),
-                              (0.010 * s, 0.0028 * s, 0.0105 * s), iris,
+                              (0.0078 * s, 0.0025 * s, 0.0084 * s), iris,
                               segments=16, rings=10)
         weight_all(iris_obj, arm, f"eye.{side}")
         pupil = add_sphere(f"Pupil.{side}", (sx * ex, ey - 0.0085 * s, ez),
-                           (0.0048 * s, 0.0016 * s, 0.0052 * s), dark,
+                           (0.0036 * s, 0.0014 * s, 0.0040 * s), dark,
                            segments=12, rings=8)
         weight_all(pupil, arm, f"eye.{side}")
         catch = add_sphere(f"Catchlight.{side}",
                            (sx * ex - 0.003 * s, ey - 0.0095 * s, ez + 0.004 * s),
-                           (0.0017 * s, 0.0009 * s, 0.0017 * s), white,
+                           (0.0014 * s, 0.0008 * s, 0.0014 * s), white,
                            segments=8, rings=6)
         weight_all(catch, arm, f"eye.{side}")
 
         # the blink patch below is the only lid geometry, so the eye stays open
         blink = add_sphere(f"Blink.{side}", (sx * ex, 0.010 * s, ez),
-                           (0.021 * es * s, 0.0030 * s, 0.017 * es * s), skin,
+                           (0.0175 * es * s, 0.0028 * s, 0.0145 * es * s), skin,
                            segments=18, rings=12)
         lash = tube(f"BlinkLash.{side}",
                     [(sx * (ex - 0.016 * es) * s, 0.006 * s, ez + 0.012 * s),
@@ -447,6 +447,44 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
         add_morph_key(blink, "eyeBlinkLeft" if side == "L" else "eyeBlinkRight",
                       (0, -0.134 * s, 0))
         weight_all(blink, arm, "head")
+
+    # Eyelids and creases: skin arcs make the eye read as an eye, not a
+    # sphere stuck on the face.  The upper lid also carries the lash line.
+    for side, sx in (("L", 1), ("R", -1)):
+        cx = sx * ex
+        # upper lid: from inner corner to outer corner, arching over the eye
+        up = []
+        for i in range(7):
+            u = -1.0 + i / 3.0
+            up.append((cx + u * 0.020 * es * s,
+                       ey - 0.004 * s,
+                       ez + (0.013 + 0.004 * (1.0 - u * u)) * es * s))
+        lid = tube(f"EyelidUpper.{side}", up,
+                   [0.0028 * s, 0.0046 * s, 0.0050 * s, 0.0048 * s,
+                    0.0040 * s, 0.0031 * s, 0.0022 * s], skin, sides=6, depth=0.65)
+        weight_all(lid, arm, "head")
+        # lower lid: shallower, slightly darker crease
+        lo = []
+        for i in range(5):
+            u = -1.0 + i / 2.0
+            lo.append((cx + u * 0.017 * es * s,
+                       ey - 0.001 * s,
+                       ez - (0.012 + 0.0025 * (1.0 - u * u)) * es * s))
+        lid_low = tube(f"EyelidLower.{side}", lo,
+                       [0.0014 * s, 0.0022 * s, 0.0024 * s, 0.0020 * s, 0.0012 * s],
+                       skin, sides=5, depth=0.6)
+        weight_all(lid_low, arm, "head")
+        # crease above the lid (reads as an eye fold, not a painted line)
+        crease = tube(f"EyeCrease.{side}",
+                      [(cx - 0.018 * es * s, ey - 0.003 * s, ez + 0.024 * es * s),
+                       (cx, ey - 0.004 * s, ez + 0.027 * es * s),
+                       (cx + 0.018 * es * s, ey - 0.003 * s, ez + 0.021 * es * s)],
+                      [0.0010 * s, 0.0013 * s, 0.0009 * s], hair, sides=4, depth=0.55)
+        weight_all(crease, arm, "head")
+        # tear duct / inner corner
+        duct = add_sphere(f"TearDuct.{side}", (cx - sx * 0.020 * es * s, ey - 0.003 * s, ez - 0.003 * s),
+                          (0.0025 * s, 0.0018 * s, 0.0030 * s), lip, segments=8, rings=6)
+        weight_all(duct, arm, "head")
 
     # Brows: thicker and closer to the eyes than the old pair.
     for side, sx in (("L", 1), ("R", -1)):
@@ -463,31 +501,56 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
 
     # Nose: short bridge, rounded tip, small wings.
     nose = tube("Nose",
-                [(0, -0.108 * s, 1.660 * s),
-                 (0, -0.114 * s, 1.635 * s),
-                 (0, -0.118 * s, 1.622 * s)],
-                [0.008 * s, 0.011 * s, 0.013 * s], skin, sides=9, depth=0.78)
+                [(0, -0.109 * s, 1.664 * s),
+                 (0, -0.118 * s, 1.632 * s),
+                 (0, -0.124 * s, 1.614 * s)],
+                [0.009 * s, 0.014 * s, 0.017 * s], skin, sides=10, depth=0.80)
     weight_all(nose, arm, "head")
-    tip = add_sphere("NoseTip", (0, -0.120 * s, 1.618 * s),
-                     (0.013 * s, 0.010 * s, 0.009 * s), skin, segments=14, rings=10)
+    tip = add_sphere("NoseTip", (0, -0.122 * s, 1.611 * s),
+                     (0.014 * s, 0.009 * s, 0.010 * s), skin, segments=14, rings=10)
     weight_all(tip, arm, "head")
     for side, sx in (("L", 1), ("R", -1)):
-        wing = add_sphere(f"NoseWing.{side}", (sx * 0.014 * s, -0.115 * s, 1.615 * s),
-                          (0.007 * s, 0.007 * s, 0.005 * s), skin, segments=10, rings=8)
+        wing = add_sphere(f"NoseWing.{side}", (sx * 0.014 * s, -0.118 * s, 1.612 * s),
+                          (0.0065 * s, 0.0065 * s, 0.0048 * s), skin, segments=10, rings=8)
         weight_all(wing, arm, "head")
+        nostril = add_sphere(f"Nostril.{side}", (sx * 0.008 * s, -0.125 * s, 1.607 * s),
+                             (0.0020 * s, 0.0016 * s, 0.0015 * s), dark, segments=8, rings=6)
+        weight_all(nostril, arm, "head")
 
     # mouth assembled into one mesh for the viseme morphs
     czm = 1.578 * s
-    cavity = add_sphere("MouthCavity", (0, -0.104 * s, czm),
-                        (0.026 * s, 0.006 * s, 0.007 * s), dark, segments=18, rings=10)
-    upper = add_sphere("UpperLip", (0, -0.109 * s, czm + 0.0035 * s),
-                       (0.029 * s, 0.006 * s, 0.0050 * s), lip, segments=18, rings=10)
-    lower = add_sphere("LowerLip", (0, -0.109 * s, czm - 0.0040 * s),
-                       (0.030 * s, 0.006 * s, 0.0060 * s), lip, segments=18, rings=10)
+    cavity = add_sphere("MouthCavity", (0, -0.108 * s, czm),
+                        (0.026 * s, 0.0050 * s, 0.0055 * s), dark, segments=18, rings=10)
+    # One soft upper lip and one fuller lower lip; the seam between them is
+    # the mouth line, not a ring of separate pink balls.
+    upper = add_sphere("UpperLip", (0, -0.111 * s, czm + 0.0036 * s),
+                       (0.032 * s, 0.0052 * s, 0.0045 * s), lip, segments=22, rings=12)
+    lower = add_sphere("LowerLip", (0, -0.111 * s, czm - 0.0040 * s),
+                       (0.032 * s, 0.0052 * s, 0.0058 * s), lip, segments=22, rings=12)
     for side, sx in (("L", 1), ("R", -1)):
-        corner = add_sphere(f"LipCorner.{side}", (sx * 0.027 * s, -0.107 * s, czm),
-                            (0.004 * s, 0.004 * s, 0.0055 * s), lip, segments=8, rings=6)
+        corner = add_sphere(f"LipCorner.{side}", (sx * 0.029 * s, -0.108 * s, czm),
+                            (0.0032 * s, 0.0034 * s, 0.0042 * s), lip, segments=8, rings=6)
         upper = join_objects([upper, corner])
+    # philtrum and nasolabial folds (the natural folds around the mouth)
+    philtrum = tube("Philtrum",
+                    [(0, -0.116 * s, 1.615 * s), (0, -0.112 * s, 1.598 * s),
+                     (0, -0.109 * s, 1.586 * s)],
+                    [0.0022 * s, 0.0028 * s, 0.0022 * s], skin, sides=6, depth=0.6)
+    weight_all(philtrum, arm, "head")
+    for side, sx in (("L", 1), ("R", -1)):
+        fold = tube(f"Nasolabial.{side}",
+                    [(sx * 0.016 * s, -0.114 * s, 1.612 * s),
+                     (sx * 0.024 * s, -0.110 * s, 1.596 * s),
+                     (sx * 0.029 * s, -0.105 * s, 1.578 * s)],
+                    [0.0020 * s, 0.0026 * s, 0.0016 * s], skin, sides=5, depth=0.55)
+        weight_all(fold, arm, "head")
+    # a soft crease under the lower lip
+    chin_crease = tube("ChinCrease",
+                       [(-0.022 * s, -0.107 * s, czm - 0.014 * s),
+                        (0, -0.111 * s, czm - 0.016 * s),
+                        (0.022 * s, -0.107 * s, czm - 0.014 * s)],
+                       [0.0012 * s, 0.0017 * s, 0.0012 * s], skin, sides=5, depth=0.55)
+    weight_all(chin_crease, arm, "head")
     teeth_obj = add_box("Teeth", (0, -0.108 * s, czm + 0.0030 * s),
                         (0.018 * s, 0.0025 * s, 0.0028 * s), teeth, bevel=0.0012)
     tongue_obj = add_sphere("Tongue", (0, -0.106 * s, czm - 0.0020 * s),
@@ -506,13 +569,25 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
     if pg:
         mouth.vertex_groups.remove(pg)
     weight_all(mouth, arm, "head")
+    mouth_line = tube("MouthLine",
+                      [(-0.028 * s, -0.1155 * s, czm),
+                       (-0.012 * s, -0.1165 * s, czm + 0.0006 * s),
+                       (0, -0.1170 * s, czm + 0.0008 * s),
+                       (0.012 * s, -0.1165 * s, czm + 0.0006 * s),
+                       (0.028 * s, -0.1155 * s, czm)],
+                      [0.0010 * s, 0.0014 * s, 0.0015 * s, 0.0014 * s, 0.0010 * s],
+                      mats["dark"], sides=5, depth=0.45)
+    weight_all(mouth_line, arm, "head")
 
     # Hair: a skull-hugging cap plus a layered fringe.  The fringe covers the
     # cap/head intersection, which is what made the old bowl cut look jagged.
-    hair_cap = add_sphere("HairCap", (0, 0.020 * s, 1.700 * s),
-                          (0.134 * s, 0.120 * s, 0.102 * s), hair,
+    hair_cap = add_sphere("HairCap", (0, 0.010 * s, 1.702 * s),
+                          (0.136 * s, 0.124 * s, 0.108 * s), hair,
                           segments=28, rings=18)
     weight_all(hair_cap, arm, "head")
+    for v in hair_cap.data.vertices:
+        if v.co.z < -0.020 * s and v.co.y < 0:
+            v.co.y += 0.060 * s
     # Layered flat locks instead of a solid visor: each lock is an ellipsoid
     # flattened against the forehead.  Male hair sweeps to the left; female
     # hair parts in the middle.
@@ -521,9 +596,9 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
         for i in range(locks):
             u = (i / (locks - 1)) * 2.0 - 1.0
             top = Vector((0.035 * s + u * 0.018 * s, -0.070 * s, 1.746 * s))
-            tip = Vector((-0.078 * s + u * 0.050 * s,
-                          -0.103 * s,
-                          1.690 * s + abs(u) * 0.006 * s))
+            tip = Vector((-0.072 * s + u * 0.052 * s,
+                          -0.128 * s,
+                          1.682 * s + abs(u) * 0.005 * s))
             d = tip - top
             c = (top + tip) * 0.5
             lock = add_oriented_sphere(f"Fringe.{i}", c,
@@ -536,9 +611,9 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
         for i in range(locks):
             u = (i / (locks - 1)) * 2.0 - 1.0
             top = Vector((u * 0.018 * s, -0.070 * s, 1.746 * s))
-            tip = Vector((u * 0.100 * s,
-                          -0.101 * s - 0.004 * s * (1.0 - abs(u)),
-                          1.692 * s - 0.006 * s * (1.0 - abs(u))))
+            tip = Vector((u * 0.098 * s,
+                          -0.126 * s - 0.003 * s * (1.0 - abs(u)),
+                          1.680 * s - 0.005 * s * (1.0 - abs(u))))
             d = tip - top
             c = (top + tip) * 0.5
             lock = add_oriented_sphere(f"Fringe.{i}", c,
@@ -580,18 +655,18 @@ def build_head(cfg, arm, skin, hair, lip, white, iris, dark, teeth, tongue, mats
     # glasses / hood are optional accessories, kept as separate meshes
     if cfg.get("glasses"):
         for side, sx in (("L", 1), ("R", -1)):
-            frame = add_torus(f"Glass.{side}", (sx * 0.043 * s, -0.123 * s, 1.652 * s),
-                              0.021 * s, 0.0018 * s, dark)
+            frame = add_torus(f"Glass.{side}", (sx * 0.039 * s, -0.124 * s, 1.648 * s),
+                              0.018 * s, 0.0016 * s, dark)
             weight_all(frame, arm, "head")
             temple = tube(f"GlassTemple.{side}",
-                          [(sx * 0.068 * s, -0.121 * s, 1.655 * s),
-                           (sx * 0.105 * s, -0.060 * s, 1.652 * s),
-                           (sx * 0.120 * s, 0.002 * s, 1.646 * s)],
+                          [(sx * 0.056 * s, -0.122 * s, 1.650 * s),
+                           (sx * 0.100 * s, -0.060 * s, 1.650 * s),
+                           (sx * 0.116 * s, 0.002 * s, 1.646 * s)],
                           [0.0012 * s, 0.0012 * s, 0.0010 * s], dark,
                           sides=5, depth=0.7)
             weight_all(temple, arm, "head")
-        bridge = add_box("GlassBridge", (0, -0.123 * s, 1.654 * s),
-                         (0.020 * s, 0.0025 * s, 0.0025 * s), dark, bevel=0.001)
+        bridge = add_box("GlassBridge", (0, -0.124 * s, 1.650 * s),
+                         (0.016 * s, 0.0022 * s, 0.0022 * s), dark, bevel=0.001)
         weight_all(bridge, arm, "head")
 
     mats.update({"brow": hair})
@@ -663,7 +738,8 @@ def torso_rings(cfg):
         (1.06 * s, waist * 0.86, 0.100 * s, 0.092 * s, 0),
         (1.16 * s, waist * 0.98, 0.106 * s + bust * 0.30, 0.098 * s, 0),
         (1.26 * s, sh * 1.00, 0.112 * s + bust, 0.100 * s, 0),
-        (1.34 * s, sh * 1.08, 0.100 * s, 0.095 * s, 0),
+        (1.34 * s, sh * 1.18, 0.104 * s, 0.098 * s, 0),
+        (1.365 * s, sh * 1.10, 0.096 * s, 0.092 * s, 0),
         (1.385 * s, sh * 0.44, 0.070 * s, 0.065 * s, 0),
     ]
 
@@ -684,9 +760,9 @@ def build_body(cfg, arm, mats):
     weight_z(pelvis, arm, [(1.04, "hips"), (99, "spine")])
 
     # ── tops ───────────────────────────────────────────────────────────────
-    top_rings = [(z, rx + 0.012 * s, rf + 0.012 * s, rb + 0.012 * s, y)
-                 for z, rx, rf, rb, y in rings]
-    top_rings = [r for r in top_rings if r[0] >= 0.96 * s]
+    top_rings = [(0.94 * s, hip * 1.72, 0.140 * s, 0.130 * s, 0)]
+    top_rings += [(z, rx + 0.016 * s, rf + 0.014 * s, rb + 0.014 * s, y)
+                  for z, rx, rf, rb, y in rings if z >= 0.98 * s]
 
     tee = loft("top_tee", top_rings, top, segments=20)
     weight_z(tee, arm)
@@ -705,9 +781,24 @@ def build_body(cfg, arm, mats):
     hood_collar = add_torus("Collar.Hoodie", (0, 0.005 * s, 1.383 * s), 0.078 * s, 0.012 * s,
                             top, rotation=(0, 0, 0))
     weight_all(hood_collar, arm, "neck")
-    hood = add_sphere("Hood", (0, 0.078 * s, 1.345 * s),
-                      (0.150 * s, 0.100 * s, 0.100 * s), top, segments=20, rings=12)
+    # Hood down: a rolled U-fold behind the neck plus a soft drape.
+    # A sphere here reads as a ball, so the hood is made from an arc tube
+    # and a flattened back panel.
+    hpts = []
+    hrad = []
+    for i in range(9):
+        a = math.radians(15 + i * 18)
+        hpts.append((0.118 * s * math.cos(a), 0.050 * s + 0.108 * s * math.sin(a),
+                     1.365 * s + 0.010 * s * math.sin(a)))
+        hrad.append(0.035 * s)
+    hood = tube("Hood", hpts, hrad, top, sides=10, depth=0.82)
     weight_all(hood, arm, "chest")
+    drape = add_sphere("HoodDrape", (0, 0.135 * s, 1.265 * s),
+                       (0.135 * s, 0.040 * s, 0.115 * s), top, segments=22, rings=14)
+    weight_all(drape, arm, "chest")
+    lining = add_sphere("HoodLining", (0, 0.112 * s, 1.285 * s),
+                        (0.106 * s, 0.018 * s, 0.085 * s), mats["dark"], segments=18, rings=12)
+    weight_all(lining, arm, "chest")
     pocket = add_box("Pocket", (0, -0.118 * s, 1.080 * s),
                      (0.180 * s, 0.022 * s, 0.065 * s), top, bevel=0.015, smooth=True)
     weight_z(pocket, arm, [(1.04, "hips"), (1.14, "spine"), (99, "chest")])
@@ -738,25 +829,36 @@ def build_body(cfg, arm, mats):
     for side, sx in (("L", 1), ("R", -1)):
         wrist = Vector((sx * (sh + 0.30) * s, 0, 1.02 * s))
         elbow = Vector((sx * (sh + 0.17) * s, 0, 1.19 * s))
-        s0 = Vector((sx * (sh - 0.030) * s, 0, 1.372 * s))   # inside the torso
-        s1 = Vector((sx * (sh + 0.020) * s, 0, 1.352 * s))   # shoulder seam
-        s2 = Vector((sx * (sh + 0.090) * s, 0, 1.294 * s))   # upper arm
-        # tiny seam patch closes the skin gap at the shoulder without balling
+        s0 = Vector((sx * (sh - 0.085) * s, 0, 1.365 * s))   # inside the torso
+        s1 = Vector((sx * (sh - 0.015) * s, 0, 1.340 * s))   # shoulder seam
+        s2 = Vector((sx * (sh + 0.082) * s, 0, 1.292 * s))   # upper arm
+        # The sleeve starts inside the torso; no sphere patch on the deltoid.
+        # A sphere there is what made the old shoulders look like pads.
+        # Low shoulder seam ridge: fills the seam without a sphere pad.
         for prefix in ("top_tee", "top_shirt", "top_hoodie"):
-            patch = add_sphere(f"{prefix}.Shoulder.{side}",
-                               (sx * (sh + 0.005) * s, 0, 1.356 * s),
-                               (0.068 * s, 0.062 * s, 0.060 * s), top,
-                               segments=18, rings=14)
-            weight_mix(patch, arm, {"shoulder." + side: 0.55,
-                                    "upperArm." + side: 0.45})
+            seam = tube(f"{prefix}.Seam.{side}",
+                        [(sx * (sh - 0.045) * s, 0, 1.358 * s),
+                         (sx * (sh + 0.010) * s, 0, 1.348 * s),
+                         (sx * (sh + 0.065) * s, 0, 1.322 * s)],
+                        [0.014 * s, 0.018 * s, 0.013 * s], top, sides=7, depth=0.7,
+                        cap=True)
+            weight_mix(seam, arm, {"shoulder." + side: 0.55, "upperArm." + side: 0.45})
+        # Flattened cover over the sleeve/torso seam (a sphere here turns into
+        # the shoulder-pad look; a squashed ellipsoid reads as a fabric seam).
+        for prefix in ("top_tee", "top_shirt", "top_hoodie"):
+            pad = add_sphere(f"{prefix}.ShoulderPad.{side}",
+                             (sx * (sh - 0.018) * s, 0, 1.350 * s),
+                             (0.070 * s, 0.058 * s, 0.032 * s), top,
+                             segments=16, rings=10)
+            weight_mix(pad, arm, {"shoulder." + side: 0.55, "upperArm." + side: 0.45})
         # short sleeve: three rings near the shoulder keep the cloth attached
         tee_sleeve = tube(f"top_tee.Sleeve.{side}",
                           [s0, s1, s2],
-                          [0.090 * s, 0.084 * s, 0.072 * s], top, sides=16, depth=0.92,
+                          [0.086 * s, 0.078 * s, 0.068 * s], top, sides=16, depth=0.92,
                           weights=[{"shoulder." + side: 0.70, "chest": 0.30},
                                    {"shoulder." + side: 0.40, "upperArm." + side: 0.60},
                                    {"upperArm." + side: 1.0}],
-                          cap=False)
+                          cap=True)
         bind(tee_sleeve, arm)
         tee_cuff = add_torus(f"top_tee.Cuff.{side}",
                              (sx * (sh + 0.090) * s, 0, 1.290 * s),
@@ -767,7 +869,7 @@ def build_body(cfg, arm, mats):
             sl = tube(f"{prefix}.Sleeve.{side}",
                       [s0, s1, s2, elbow,
                        elbow + (wrist - elbow) * 0.72, wrist],
-                      [0.090 * s, 0.084 * s, 0.072 * s, 0.058 * s, 0.050 * s, 0.046 * s],
+                      [0.086 * s, 0.078 * s, 0.068 * s, 0.056 * s, 0.049 * s, 0.045 * s],
                       top, sides=16, depth=0.92, cap=False,
                       weights=[{"shoulder." + side: 0.70, "chest": 0.30},
                                {"shoulder." + side: 0.40, "upperArm." + side: 0.60},
@@ -788,24 +890,23 @@ def build_body(cfg, arm, mats):
         # A pelvis shell (not just two leg tubes) closes the crotch and covers
         # the skin between the legs.  The legs continue below it.
         pelvis = loft(f"{prefix}.Pelvis",
-                      [(0.78 * s, hip * 1.10, 0.100 * s, 0.095 * s, 0),
-                       (0.86 * s, hip * 1.30, 0.120 * s, 0.110 * s, 0),
-                       (0.94 * s, hip * 1.52, 0.132 * s, 0.122 * s, 0),
-                       (1.00 * s, hip * 1.45, 0.124 * s, 0.112 * s, 0)],
+                      [(0.78 * s, hip * 1.55, 0.112 * s, 0.104 * s, 0),
+                       (0.86 * s, hip * 1.78, 0.132 * s, 0.120 * s, 0),
+                       (0.94 * s, hip * 1.66, 0.132 * s, 0.124 * s, 0)],
                       bottom, segments=20)
         weight_all(pelvis, arm, "hips")
         band = loft(f"{prefix}.Waistband",
-                    [(0.955 * s, hip * 1.62, 0.132 * s, 0.122 * s, 0),
-                     (1.015 * s, hip * 1.60, 0.130 * s, 0.120 * s, 0)],
+                    [(0.925 * s, hip * 1.58, 0.128 * s, 0.120 * s, 0),
+                     (0.960 * s, hip * 1.56, 0.126 * s, 0.118 * s, 0)],
                     mats["belt"], segments=20)
         weight_all(band, arm, "hips")
         for side, sx in (("L", 1), ("R", -1)):
-            pts = [(sx * hip, 0, 0.95 * s),
+            pts = [(sx * hip, 0, 0.94 * s),
                    (sx * hip, 0, 0.78 * s),
                    (sx * hip, 0, 0.54 * s),
                    (sx * hip, 0, bottom_z)]
             leg = tube(f"{prefix}.Leg.{side}", pts,
-                       [0.088 * s, 0.083 * s, 0.073 * s, 0.066 * s],
+                       [0.094 * s, 0.086 * s, 0.075 * s, 0.067 * s],
                        bottom, sides=12, depth=0.95,
                        weights=[{"upperLeg." + side: 1.0},
                                 {"upperLeg." + side: 1.0},
@@ -821,10 +922,10 @@ def build_body(cfg, arm, mats):
     pants_object("bottom_shorts", 0.58 * s)
     # skirt with a few soft pleats
     skirt = loft("bottom_skirt",
-                 [(0.58 * s, 0.235 * s, 0.160 * s, 0.160 * s, 0),
-                  (0.74 * s, 0.205 * s, 0.140 * s, 0.140 * s, 0),
-                  (0.92 * s, 0.160 * s, 0.120 * s, 0.108 * s, 0),
-                  (1.00 * s, hip * 1.46, 0.112 * s, 0.103 * s, 0)],
+                 [(0.58 * s, 0.245 * s, 0.165 * s, 0.165 * s, 0),
+                  (0.74 * s, 0.215 * s, 0.146 * s, 0.146 * s, 0),
+                  (0.88 * s, 0.185 * s, 0.126 * s, 0.116 * s, 0),
+                  (0.94 * s, hip * 1.62, 0.128 * s, 0.120 * s, 0)],
                  bottom, segments=32)
     for v in skirt.data.vertices:
         if v.co.z < 0.96 * s:
@@ -833,19 +934,13 @@ def build_body(cfg, arm, mats):
             v.co.x *= f
             v.co.y *= f
     weight_all(skirt, arm, "hips")
-    skirt_band = loft("bottom_skirt.Waistband",
-                      [(0.955 * s, hip * 1.62, 0.120 * s, 0.110 * s, 0),
-                       (1.015 * s, hip * 1.60, 0.118 * s, 0.108 * s, 0)],
-                      mats["belt"], segments=24)
-    weight_all(skirt_band, arm, "hips")
     # dress: top + skirt in one material
     dress_top = loft("dress.Top", top_rings, mats["dress"], segments=20)
     weight_z(dress_top, arm)
     dress_skirt = loft("dress.Skirt",
                        [(0.56 * s, 0.240 * s, 0.165 * s, 0.165 * s, 0),
                         (0.78 * s, 0.190 * s, 0.135 * s, 0.135 * s, 0),
-                        (0.96 * s, 0.150 * s, 0.112 * s, 0.105 * s, 0),
-                        (1.02 * s, hip * 1.44, 0.110 * s, 0.102 * s, 0)],
+                        (0.94 * s, hip * 1.60, 0.120 * s, 0.110 * s, 0)],
                        mats["dress"], segments=32)
     for v in dress_skirt.data.vertices:
         if v.co.z < 0.96 * s:
@@ -854,21 +949,6 @@ def build_body(cfg, arm, mats):
             v.co.x *= f
             v.co.y *= f
     weight_all(dress_skirt, arm, "hips")
-    dress_band = loft("dress.Waistband",
-                      [(0.955 * s, hip * 1.62, 0.120 * s, 0.110 * s, 0),
-                       (1.015 * s, hip * 1.60, 0.118 * s, 0.108 * s, 0)],
-                      mats["belt"], segments=24)
-    weight_all(dress_band, arm, "hips")
-    # belt + buckle (shared by trousers and skirt; hidden for a dress)
-    belt = loft("Belt",
-                [(0.984 * s, hip * 1.68, 0.119 * s, 0.109 * s, 0),
-                 (1.012 * s, hip * 1.68, 0.119 * s, 0.109 * s, 0)],
-                mats["belt"], segments=24, smooth=False)
-    weight_all(belt, arm, "hips")
-    buckle = add_box("Buckle", (0, -0.114 * s, 1.000 * s),
-                     (0.030 * s, 0.008 * s, 0.020 * s), mats["metal"],
-                     bevel=0.003, smooth=True)
-    weight_all(buckle, arm, "hips")
     for side, sx in (("L", 1), ("R", -1)):
         sleeve = tube(f"dress.Sleeve.{side}",
                       [(sx * (sh - 0.035) * s, 0, 1.36 * s), (sx * (sh + 0.10) * s, 0, 1.24 * s)],
@@ -915,17 +995,14 @@ def build_body(cfg, arm, mats):
                        (0.090 * s, 0.170 * s, 0.140 * s), shoe,
                        bevel=0.030, smooth=True)
         weight_all(boot, arm, "foot." + side)
-        btoe = add_sphere(f"shoes_boot.Toe.{side}", (sx * hip, -0.125 * s, 0.070 * s),
-                          (0.082 * s, 0.052 * s, 0.050 * s), shoe,
-                          segments=14, rings=10)
+        btoe = add_box(f"shoes_boot.Toe.{side}", (sx * hip, -0.120 * s, 0.058 * s),
+                       (0.082 * s, 0.085 * s, 0.058 * s), shoe, bevel=0.025, smooth=True)
         weight_all(btoe, arm, "toe." + side)
         shaft = tube(f"shoes_boot.Shaft.{side}",
-                     [(sx * hip, 0, 0.14 * s), (sx * hip, 0, 0.29 * s)],
-                     [0.074 * s, 0.068 * s], shoe, sides=14, depth=0.92)
+                     [(sx * hip, 0, 0.13 * s), (sx * hip, 0, 0.27 * s)],
+                     [0.076 * s, 0.070 * s], shoe, sides=16, depth=0.92,
+                     cap=False)
         weight_all(shaft, arm, "lowerLeg." + side)
-        cuff = add_torus(f"shoes_boot.Cuff.{side}", (sx * hip, 0, 0.29 * s),
-                         0.070 * s, 0.008 * s, mats["sole"], rotation=(0, 0, 0))
-        weight_all(cuff, arm, "lowerLeg." + side)
 
     return body
 
@@ -937,7 +1014,7 @@ def build_arms(cfg, arm, mats):
     sh = cfg["shoulder"] * s
     skin, top = mats["skin"], mats["top"]
     for side, sx in (("L", 1), ("R", -1)):
-        should = Vector((sx * sh, 0, 1.36 * s))
+        should = Vector((sx * sh, 0, 1.335 * s))
         elbow = Vector((sx * (sh + 0.17) * s, 0, 1.19 * s))
         wrist = Vector((sx * (sh + 0.30) * s, 0, 1.02 * s))
         # deltoid, upper arm, elbow and forearm in one smooth tapered skin tube
@@ -966,7 +1043,7 @@ def build_hand(side, sx, wrist, skin, arm, s):
     palm_c = wrist + d * 0.048 * s
     parts = []
     palm = add_oriented_sphere(f"HandPalm.{side}", palm_c,
-                               (0.028 * s, 0.048 * s, 0.058 * s), skin,
+                               (0.033 * s, 0.052 * s, 0.060 * s), skin,
                                d, (0, sx, 0), segments=18, rings=12)
     assign_group(palm, f"hand.{side}")
     parts.append(palm)
@@ -974,10 +1051,10 @@ def build_hand(side, sx, wrist, skin, arm, s):
     # Four fingers across the palm width (front-to-back), with a slight curl
     # toward the palm so the hand reads as relaxed instead of flat.
     fingers = [
-        (-0.033, 0.055, 0.0106),  # index (thumb side, front)
-        (-0.011, 0.060, 0.0110),  # middle
-        (0.011, 0.055, 0.0106),   # ring
-        (0.033, 0.046, 0.0096),   # little
+        (-0.029, 0.046, 0.0122),  # index (thumb side, front)
+        (-0.010, 0.050, 0.0128),  # middle
+        (0.010, 0.046, 0.0122),   # ring
+        (0.029, 0.041, 0.0112),   # little
     ]
     for i, (off, length, radius) in enumerate(fingers):
         base = palm_c + Vector((0, off * s, 0)) + d * (0.040 * s)
@@ -1032,7 +1109,7 @@ def build_legs(cfg, arm, mats):
         knee = Vector((sx * hip, 0, 0.53 * s))
         ankle = Vector((sx * hip, 0, 0.11 * s))
         pts = [top, top.lerp(knee, 0.5), knee, knee.lerp(ankle, 0.55), ankle]
-        radii = [0.078 * s, 0.071 * s, 0.060 * s, 0.054 * s, 0.043 * s]
+        radii = [0.070 * s, 0.069 * s, 0.060 * s, 0.054 * s, 0.043 * s]
         weights = [
             {"upperLeg." + side: 1.0},
             {"upperLeg." + side: 1.0},
@@ -1153,7 +1230,7 @@ def build_character(cfg):
         "iris": material("Iris", cfg["eye"], 0.4),
         "dark": material("MouthDark", (0.10, 0.035, 0.03), 0.9),
         "lip": material("Lips", cfg["lip"], 0.65),
-        "teeth": material("Teeth", (0.95, 0.94, 0.88), 0.35),
+        "teeth": material("Teeth", (0.18, 0.09, 0.075), 0.55),
         "tongue": material("Tongue", (0.72, 0.28, 0.30), 0.7),
         "metal": material("Metal", (0.55, 0.57, 0.62), 0.35, 0.6),
     }
@@ -1211,7 +1288,7 @@ CHARACTERS = [
         "top": (0.18, 0.38, 0.32), "bottom": (0.30, 0.18, 0.26),
         "dress": (0.42, 0.16, 0.24), "shoe": (0.32, 0.16, 0.12),
         "belt": (0.12, 0.08, 0.06),
-        "hair_style": "ponytail", "glasses": True,
+        "hair_style": "ponytail", "glasses": False,
     },
 ]
 

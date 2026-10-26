@@ -4,10 +4,22 @@
 см. `docs/RIG_FORMAT.md`. Rive остаётся legacy-рантаймом; SVG-риг `character`
 используется для простых 2D-сцен.
 
-Готовые полигональные персонажи: **Mark** и **Mira** (генератор v3,
-`core/public/models/characters/`), 25 костей, 34 морфа (Oculus-15, blink,
-body/face), липсинк, idle/talk, жесты `wave / point / explain`.
-Character Studio: `core/public/character-studio.html`, демо `/p/11`.
+Персонажи делятся на два уровня.
+
+**Hero (по умолчанию).** `Mark HD` — Avatar SDK-меш, `Mira HD` — Ready Player
+Me; текстуры, 66–72 морфа, Oculus-15, eye-look, веки/морщины/складки уже в
+меше. `SceneRig` получает `boneMap` (исходные имена → канон), `armRestZ`
+(мир-пространственный разворот T-pose-рук в A-pose) и `headPitch` (калибровка
+наклона головы). Файлы: `core/public/models/hero/avatarsdk-man.glb`,
+`core/public/models/brunette.glb`. Это стандарт для диалоговых сцен и
+`/p/11`. Лицензии: RPM-аватар — free avatar Ready Player Me; Avatar SDK-меш
+взят из локальной библиотеки, перед публичной раздачей проверьте его условия.
+
+**Custom / crowd.** `Mark` и `Mira` (генератор v3,
+`core/public/models/characters/`), 25 костей, 34 морфа, гардероб
+tee/shirt/hoodie/dress, pants/shorts/skirt, sneakers/boots, причёски,
+слайдеры тела/лица. Используются для массовки и глубокой кастомизации.
+Character Studio: `core/public/character-studio.html`.
 Генератор: `scripts/blender/make_poly_characters_v3.py`, пресеты —
 `assets/characters/presets/*.json`.
 
@@ -18,7 +30,9 @@ rig.setVisemes([{ t: 0, viseme: 1 }, ...])
 rig.setMotion('idle' | 'talk')
 rig.setMood('neutral' | 'joy' | 'sad')
 rig.setGesture('none' | 'wave' | 'point' | 'explain')
-rig.setShape({ bodyShoulder: 0.2, bodyWaist: 0.15, ... })
+rig.setEmotion('neutral' | 'joy' | 'sad' | 'anger' | 'surprise' | 'fear' | 'think' | 'disgust')
+rig.setGaze(x, y, { auto: true, head: true })
+rig.setShape({ bodyShoulder: 0.2, faceWidth: 0.15, lipFull: 0.3, ... })
 rig.setOutfit({ top: 'hoodie', bottom: 'pants', shoes: 'sneaker', hair: 'short' })
 rig.setAppearance({ skin: '#bd8766', top: '#24477a', ... })
 ```

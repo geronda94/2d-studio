@@ -43,6 +43,27 @@
   }
   const IDENT = [0, 0, 0, 1]
 
+  const EMOTION_MORPHS = {
+    neutral: {},
+    joy: { mouthSmile: 0.72, lipFull: 0.20 },
+    sad: { mouthFrown: 0.62, lipFull: 0.10 },
+    anger: { mouthPress: 0.55, mouthFrown: 0.20 },
+    surprise: { jawOpen: 0.22, mouthStretch: 0.25, mouthPucker: 0.10 },
+    fear: { mouthStretch: 0.45, mouthFrown: 0.18 },
+    think: { mouthPress: 0.35, mouthPucker: 0.18 },
+    disgust: { mouthFrown: 0.35, mouthPress: 0.22 },
+  }
+  const EMOTION_POSE = {
+    neutral: {},
+    joy: { head: [-0.025, 0, 0], chest: [0.025, 0, 0], neck: [-0.010, 0, 0] },
+    sad: { head: [0.075, 0, 0], chest: [-0.020, 0, 0], neck: [0.030, 0, 0] },
+    anger: { head: [0.035, 0, 0], chest: [0.020, 0, 0], neck: [0.020, 0, 0] },
+    surprise: { head: [-0.055, 0, 0], chest: [0.020, 0, 0], neck: [-0.025, 0, 0] },
+    fear: { head: [0.045, 0, 0], chest: [-0.030, 0, 0], neck: [0.020, 0, 0] },
+    think: { head: [-0.020, 0.045, 0], chest: [0.010, 0.015, 0], neck: [0, 0.025, 0] },
+    disgust: { head: [0.040, -0.025, 0], chest: [-0.010, -0.010, 0], neck: [0.010, -0.015, 0] },
+  }
+
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)) }
 
   function create(canvas, opts) {
@@ -112,6 +133,9 @@
     let mood = opts.mood || 'neutral'
     let motion = opts.motion === 'talk' ? 'talk' : 'idle'
     let gestureName = 'none'
+    let emotion = opts.emotion || 'neutral'
+    let emotionAmount = clamp(Number(opts.emotionAmount) || 1, 0, 1)
+    let gaze = Object.assign({ x: 0, y: 0, head: true, auto: true }, opts.gaze || {})
     const GESTURES = {
       // additive local-Euler offsets on top of the idle/talk pose
       wave: {
@@ -188,22 +212,30 @@
       const talk = motion === 'talk' || opts.talk
       const walk = motion === 'walk'
       const s = t / 1000
+      const heroRig = !!opts.boneMap
+      const style = gender === 'female'
+        ? { sway: 1.16, nod: 0.92, gesture: 0.88, breath: 1.10 }
+        : { sway: 1.0, nod: 1.0, gesture: 1.0, breath: 1.0 }
+      const autoGaze = gaze.auto
+      const gx = autoGaze ? Math.sin(s * 0.37) * 0.55 + Math.sin(s * 1.13) * 0.18 : (Number(gaze.x) || 0)
+      const gy = autoGaze ? Math.sin(s * 0.29 + 0.7) * 0.40 : (Number(gaze.y) || 0)
       const breath = Math.sin(s * Math.PI * 2 / 4.2)
       const sway = Math.sin(s * (talk ? 1.1 : 0.62))
       const nod = Math.sin(s * (talk ? 2.3 : 1.05))
       const gesture = Math.sin(s * (talk ? 1.35 : 0.62))
       const weight = Math.sin(s * (talk ? 0.8 : 0.45))
 
+      const armBase = (opts.armRestY || opts.armRestZ) ? 0 : 0.35
       let pose = {
-        hips: [0, sway * 0.025, weight * 0.015],
-        spine: [breath * 0.015, sway * 0.03, -weight * 0.01],
-        chest: [breath * (talk ? 0.05 : 0.035), sway * (talk ? 0.07 : 0.045), 0],
-        neck: [nod * (talk ? 0.08 : 0.05), sway * 0.04, 0],
-        head: [nod * (talk ? 0.12 : 0.07), sway * (talk ? 0.10 : 0.06), 0],
+        hips: [0, sway * 0.025 * style.sway, weight * 0.015],
+        spine: [breath * 0.015 * style.breath, sway * 0.03 * style.sway, -weight * 0.01],
+        chest: [breath * (talk ? 0.05 : 0.035) * style.breath, sway * (talk ? 0.07 : 0.045) * style.sway, 0],
+        neck: heroRig ? [0, 0, 0] : [nod * (talk ? 0.08 : 0.05) * style.nod, sway * 0.04 * style.sway + gx * 0.08, 0],
+        head: heroRig ? [0, 0, 0] : [nod * (talk ? 0.12 : 0.07) * style.nod + gy * 0.08, sway * (talk ? 0.10 : 0.06) * style.sway + gx * 0.16, 0],
         'shoulder.L': [0, 0, breath * 0.015],
         'shoulder.R': [0, 0, -breath * 0.015],
-        'upperArm.L': [0, 0, 0.35 + gesture * (talk ? 0.12 : 0.04)],
-        'upperArm.R': [0, 0, -0.35 - gesture * (talk ? 0.08 : 0.04)],
+        'upperArm.L': [0, 0, armBase + gesture * (talk ? 0.12 : 0.04)],
+        'upperArm.R': [0, 0, -armBase - gesture * (talk ? 0.08 : 0.04)],
         // negative X bends the elbow FORWARD; positive folds it behind the back
         'lowerArm.L': [talk ? -0.26 - gesture * 0.12 : -0.05 - gesture * 0.03, 0, 0],
         'lowerArm.R': [talk ? -0.20 + gesture * 0.10 : -0.05 + gesture * 0.03, 0, 0],
@@ -242,11 +274,30 @@
         const h = pose['hand.R'] || [0, 0, 0]
         pose['hand.R'] = [h[0], h[1], h[2] + Math.sin(s * 7) * 0.35]
       }
+      const ep = EMOTION_POSE[emotion] || {}
+      for (const name in ep) {
+        const p = pose[name] || [0, 0, 0]
+        const o = ep[name]
+        const mul = heroRig && (name === 'head' || name === 'neck') ? 0 : 1
+        pose[name] = [p[0] + o[0] * emotionAmount * mul, p[1] + o[1] * emotionAmount * mul, p[2] + o[2] * emotionAmount * mul]
+      }
       for (const name in pose) {
         const node = nodes[name]
         if (!node) continue
         const rest = restQ[name] || IDENT
         const delta = SceneClip.qFromEuler(pose[name][0], pose[name][1], pose[name][2])
+        const q = new BABYLON.Quaternion(rest[0], rest[1], rest[2], rest[3])
+          .multiply(new BABYLON.Quaternion(delta[0], delta[1], delta[2], delta[3]))
+        node.rotationQuaternion.copyFromFloats(q.x, q.y, q.z, q.w)
+      }
+      // Deterministic eye look: eyes lead the head, head follows with a delay.
+      const eyeYaw = (autoGaze ? Math.sin(s * 0.37) * 0.55 : (Number(gaze.x) || 0)) * 0.42
+      const eyePitch = (autoGaze ? Math.sin(s * 0.29 + 0.7) * 0.40 : (Number(gaze.y) || 0)) * 0.34
+      for (const side of ['L', 'R']) {
+        const node = nodes['eye.' + side]
+        if (!node) continue
+        const rest = restQ['eye.' + side] || IDENT
+        const delta = SceneClip.qFromEuler(eyePitch, eyeYaw, 0)
         const q = new BABYLON.Quaternion(rest[0], rest[1], rest[2], rest[3])
           .multiply(new BABYLON.Quaternion(delta[0], delta[1], delta[2], delta[3]))
         node.rotationQuaternion.copyFromFloats(q.x, q.y, q.z, q.w)
@@ -291,6 +342,8 @@
       }
       const moodMap = MOOD_MORPHS[mood] || {}
       for (const name in moodMap) setMorph(name, Math.max(weights[name] || 0, moodMap[name]))
+      const emo = EMOTION_MORPHS[emotion] || {}
+      for (const name in emo) setMorph(name, Math.max(weights[name] || 0, emo[name] * emotionAmount))
     }
 
     function seek(ms) {
@@ -320,6 +373,17 @@
 
     function setGesture(value) {
       gestureName = GESTURES[value] ? value : 'none'
+      return seek(lastTime)
+    }
+
+    function setEmotion(value, amount) {
+      emotion = EMOTION_MORPHS[value] ? value : 'neutral'
+      if (amount !== undefined) emotionAmount = clamp(Number(amount) || 0, 0, 1)
+      return seek(lastTime)
+    }
+
+    function setGaze(x, y, options) {
+      gaze = Object.assign({}, gaze, { x: clamp(Number(x) || 0, -1, 1), y: clamp(Number(y) || 0, -1, 1) }, options || {})
       return seek(lastTime)
     }
 
@@ -393,15 +457,40 @@
         rootNode = res.meshes.find((m) => m.name === '__root__') || res.meshes[0]
         skeleton = (res.skeletons || [])[0] || null
         if (skeleton) {
+          const boneMap = opts.boneMap || {}
           skeleton.bones.forEach((b) => {
             const node = (b.getTransformNode && b.getTransformNode()) || b
             if (!node) return
-            nodes[b.name] = node
-            const r = node.rotationQuaternion || BABYLON.Quaternion.FromEulerVector(node.rotation)
-            restQ[b.name] = [r.x, r.y, r.z, r.w]
+            const canon = boneMap[b.name] || b.name
+            nodes[canon] = node
+            let r = node.rotationQuaternion || BABYLON.Quaternion.FromEulerVector(node.rotation)
+            if (opts.headPitch && (canon === 'head' || canon === 'neck')) {
+              r = r.multiply(BABYLON.Quaternion.FromEulerAngles(opts.headPitch, 0, 0))
+              node.rotationQuaternion = r.clone()
+            }
+            restQ[canon] = [r.x, r.y, r.z, r.w]
             if (!node.rotationQuaternion) node.rotationQuaternion = r.clone()
-            info.bones.push(b.name)
+            info.bones.push(canon)
           })
+          // T-pose hero rigs: lower the arms to a relaxed A-pose in world
+          // space.  A local-Euler offset just twists/turns the limb, so the
+          // world Z rotation is transformed into the bone's parent space.
+          if (opts.armRestZ) {
+            for (const canon of ['upperArm.L', 'upperArm.R']) {
+              const node = nodes[canon]
+              if (!node || !node.parent) continue
+              const sign = canon === 'upperArm.L' ? 1 : -1
+              node.parent.computeWorldMatrix(true)
+              const piv = new BABYLON.Vector3(), sc = new BABYLON.Vector3(), pq = new BABYLON.Quaternion()
+              node.parent.getWorldMatrix().decompose(sc, pq, piv)
+              const rz = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), opts.armRestZ * sign)
+              const rest = restQ[canon] || IDENT
+              const restQn = new BABYLON.Quaternion(rest[0], rest[1], rest[2], rest[3])
+              const loc = pq.invert().multiply(rz).multiply(pq).multiply(restQn)
+              restQ[canon] = [loc.x, loc.y, loc.z, loc.w]
+              node.rotationQuaternion.copyFromFloats(loc.x, loc.y, loc.z, loc.w)
+            }
+          }
         }
         res.meshes.forEach((mesh) => {
           if (mesh.getTotalVertices && mesh.getTotalVertices() > 0) mesh.alwaysSelectAsActiveMesh = true
@@ -473,6 +562,8 @@
       setMotion,
       setMood,
       setGesture,
+      setEmotion,
+      setGaze,
       setOutfit,
       setAppearance,
       setMorph: setMorphValue,

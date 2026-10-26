@@ -1800,20 +1800,34 @@ POLY_DUO_CSS = """
 POLY_DUO_JS = """
 const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
+const HERO_MAP = {
+  Hips: 'hips', Spine: 'spine', Spine1: 'spine1', Spine2: 'chest',
+  Neck: 'neck', Head: 'head', LeftEye: 'eye.L', RightEye: 'eye.R',
+  LeftShoulder: 'shoulder.L', RightShoulder: 'shoulder.R',
+  LeftArm: 'upperArm.L', RightArm: 'upperArm.R',
+  LeftForeArm: 'lowerArm.L', RightForeArm: 'lowerArm.R',
+  LeftHand: 'hand.L', RightHand: 'hand.R',
+  LeftUpLeg: 'upperLeg.L', RightUpLeg: 'upperLeg.R',
+  LeftLeg: 'lowerLeg.L', RightLeg: 'lowerLeg.R',
+  LeftFoot: 'foot.L', RightFoot: 'foot.R',
+  LeftToeBase: 'toe.L', RightToeBase: 'toe.R',
+};
 const specs = [
   {
-    src: '/models/characters/character-mark.glb',
+    src: '/models/hero/avatarsdk-man.glb',
     preset: 'bust', height: 1.80,
     appearance: p.appearanceA || {},
     visemes: p.visemesA || [],
     mood: p.moodA || 'neutral',
+    map: HERO_MAP, armRestZ: -1.4, headPitch: 0.10,
   },
   {
-    src: '/models/characters/character-mira.glb',
-    preset: 'bust', height: 1.69,
+    src: '/models/brunette.glb',
+    preset: 'bust', height: 1.70,
     appearance: p.appearanceB || {},
     visemes: p.visemesB || [],
     mood: p.moodB || 'neutral',
+    map: HERO_MAP, armRestZ: -0.45, headPitch: 0.0,
   },
 ];
 const rigs = Array.from(root.querySelectorAll('.scene-rig-canvas')).map((canvas, i) => {
@@ -1821,6 +1835,7 @@ const rigs = Array.from(root.querySelectorAll('.scene-rig-canvas')).map((canvas,
   return SceneRig.create(canvas, {
     src: s.src, preset: s.preset, height: s.height,
     appearance: s.appearance, mood: s.mood, motion: 'talk', interactive: false,
+    boneMap: s.map || null, armRestZ: s.armRestZ || 0, headPitch: s.headPitch || 0,
   });
 });
 const ready = Promise.all(rigs.map(async (rig, i) => {

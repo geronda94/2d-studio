@@ -1,7 +1,7 @@
 {
   "format": "scenerig/1",
   "id": "character-mark",
-  "title": "Armature",
+  "title": "Character",
   "family": "human",
   "archetype": "humanoid",
   "geometry": {
@@ -9,8 +9,8 @@
     "units": "m",
     "up": "Y",
     "facing": "+Z",
-    "tris": 31158,
-    "sha256": "ff96490111cf8dd3519a3d30dafc85cd786f47a0f3ab07b0d77dc69dc82a87ef"
+    "tris": 30956,
+    "sha256": "a6bc15db6ad315a2cad9ba28cc77033300997b9d904d5230cf9e7fbb7a3805ca"
   },
   "rest": {
     "pose": "A",

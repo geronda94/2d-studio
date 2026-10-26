@@ -1,7 +1,7 @@
 {
   "format": "scenerig/1",
   "id": "character-mira",
-  "title": "Armature",
+  "title": "Character",
   "family": "human",
   "archetype": "humanoid",
   "geometry": {
@@ -9,8 +9,8 @@
     "units": "m",
     "up": "Y",
     "facing": "+Z",
-    "tris": 33314,
-    "sha256": "8f0fce1b6ccff544c8c22650f07fc0b77442407992a4e8eb5a616634c8749c01"
+    "tris": 32240,
+    "sha256": "2c4b07ec61e87aa7b072301898795ae36a909e0a95b3d608b6261c95eb329d26"
   },
   "rest": {
     "pose": "A",

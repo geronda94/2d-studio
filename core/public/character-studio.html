@@ -77,6 +77,8 @@
       <select id="base">
         <option value="mark">Mark</option>
         <option value="mira">Mira</option>
+        <option value="hero_mark">Mark HD</option>
+        <option value="hero_mira">Mira HD</option>
       </select>
     </label>
     <label>Кадр
@@ -151,6 +153,15 @@
           <label>Талия<input id="shapeWaist" type="range" min="0" max="0.4" step="0.01" value="0"></label>
           <label>Бёдра<input id="shapeHips" type="range" min="0" max="0.4" step="0.01" value="0"></label>
           <label>Живот<input id="shapeBelly" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
+            <span>Лицо</span><span class="grow"></span>
+          </div>
+          <label>Ширина лица<input id="shapeFaceWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Длина лица<input id="shapeFaceLength" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Челюсть<input id="shapeJawWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Подбородок<input id="shapeChin" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Щёки<input id="shapeCheek" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Губы<input id="shapeLipFull" type="range" min="0" max="1" step="0.01" value="0"></label>
           <label>Настроение
             <select id="mood">
               <option value="neutral" selected>neutral</option>
@@ -208,6 +219,28 @@
             <option value="explain">explain — обе руки</option>
           </select>
         </label>
+        <label>Выражение
+          <select id="emotion">
+            <option value="neutral" selected>neutral</option>
+            <option value="joy">joy</option>
+            <option value="sad">sad</option>
+            <option value="anger">anger</option>
+            <option value="surprise">surprise</option>
+            <option value="fear">fear</option>
+            <option value="think">think</option>
+            <option value="disgust">disgust</option>
+          </select>
+        </label>
+        <label>Взгляд
+          <select id="gaze">
+            <option value="auto" selected>auto — живые саккады</option>
+            <option value="camera">в камеру</option>
+            <option value="left">влево</option>
+            <option value="right">вправо</option>
+            <option value="up">вверх</option>
+            <option value="down">вниз</option>
+          </select>
+        </label>
       </div>
       <div class="visemes">
         <button data-v="1">А/Э</button><button data-v="2">Б/М/П</button><button data-v="3">Ф/В</button>
@@ -230,10 +263,14 @@
 const $=(id)=>document.getElementById(id)
 const BASES={
   mark:{label:'Mark',glb:'/models/characters/character-mark.glb',rig:'/models/characters/character-mark.scenerig.json',skin:'#b8805e',hair:'#1a130f',top:'#294d8c',bottom:'#292b33',shoes:'#141417',eyes:'#2e6147',lips:'#8c3d38',glasses:false,hood:true},
-  mira:{label:'Mira',glb:'/models/characters/character-mira.glb',rig:'/models/characters/character-mira.scenerig.json',skin:'#dba68a',hair:'#752914',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:true,hood:false},
+  mira:{label:'Mira',glb:'/models/characters/character-mira.glb',rig:'/models/characters/character-mira.scenerig.json',skin:'#dba68a',hair:'#752914',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,hood:false},
+  hero_mark:{label:'Mark HD',glb:'/models/hero/avatarsdk-man.glb',rig:null,skin:'#c98b6b',hair:'#241812',top:'#294d8c',bottom:'#24242b',shoes:'#111114',eyes:'#3c6a8a',lips:'#8f4d45',glasses:false,height:1.80,armRestZ:-1.4,headPitch:0.10,
+    map:{Hips:'hips',Spine:'spine',Spine1:'spine1',Spine2:'chest',Neck:'neck',Head:'head',LeftEye:'eye.L',RightEye:'eye.R',LeftShoulder:'shoulder.L',RightShoulder:'shoulder.R',LeftArm:'upperArm.L',RightArm:'upperArm.R',LeftForeArm:'lowerArm.L',RightForeArm:'lowerArm.R',LeftHand:'hand.L',RightHand:'hand.R',LeftUpLeg:'upperLeg.L',RightUpLeg:'upperLeg.R',LeftLeg:'lowerLeg.L',RightLeg:'lowerLeg.R',LeftFoot:'foot.L',RightFoot:'foot.R',LeftToeBase:'toe.L',RightToeBase:'toe.R'}},
+  hero_mira:{label:'Mira HD',glb:'/models/brunette.glb',rig:'/models/brunette.scenerig.json',skin:'#dba68a',hair:'#3a2018',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,height:1.70,armRestZ:-0.45,headPitch:0.0,
+    map:{Hips:'hips',Spine:'spine',Spine1:'spine1',Spine2:'chest',Neck:'neck',Head:'head',LeftEye:'eye.L',RightEye:'eye.R',LeftShoulder:'shoulder.L',RightShoulder:'shoulder.R',LeftArm:'upperArm.L',RightArm:'upperArm.R',LeftForeArm:'lowerArm.L',RightForeArm:'lowerArm.R',LeftHand:'hand.L',RightHand:'hand.R',LeftUpLeg:'upperLeg.L',RightUpLeg:'upperLeg.R',LeftLeg:'lowerLeg.L',RightLeg:'lowerLeg.R',LeftFoot:'foot.L',RightFoot:'foot.R',LeftToeBase:'toe.L',RightToeBase:'toe.R'}},
 }
-const state={base:'mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gesture:'none',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'},shape:{}}
-const SHAPE_KEYS={bodyShoulder:'shapeShoulder',bodyChest:'shapeChest',bodyWaist:'shapeWaist',bodyHips:'shapeHips',bodyBelly:'shapeBelly'}
+const state={base:'hero_mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gesture:'none',emotion:'neutral',gaze:'auto',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'},shape:{}}
+const SHAPE_KEYS={bodyShoulder:'shapeShoulder',bodyChest:'shapeChest',bodyWaist:'shapeWaist',bodyHips:'shapeHips',bodyBelly:'shapeBelly',faceWidth:'shapeFaceWidth',faceLength:'shapeFaceLength',jawWidth:'shapeJawWidth',chin:'shapeChin',cheek:'shapeCheek',lipFull:'shapeLipFull'}
 const OUTFIT_KEYS={hair:'hairStyle',top:'topStyle',bottom:'bottomStyle',shoes:'shoesStyle'}
 const setStatus=(t)=>{$('status').textContent=t}
 const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
@@ -246,6 +283,18 @@ function setAppearanceFields(a){
   if(a) { $('glasses').checked=!!a.glasses; $('hood').checked=!!a.hood }
 }
 function applyAppearance(){ if(state.rig) state.rig.setAppearance(appearance()); buildManifest() }
+function gazeOptions(){
+  const v=$('gaze')?$('gaze').value:'auto'
+  if(v==='auto') return {x:0,y:0,auto:true,head:true}
+  if(v==='camera') return {x:0,y:0,auto:false,head:true}
+  if(v==='left') return {x:-0.55,y:0,auto:false,head:true}
+  if(v==='right') return {x:0.55,y:0,auto:false,head:true}
+  if(v==='up') return {x:0,y:0.45,auto:false,head:true}
+  if(v==='down') return {x:0,y:-0.45,auto:false,head:true}
+  return {x:0,y:0,auto:true,head:true}
+}
+function applyEmotion(){ state.emotion=$('emotion').value; if(state.rig&&state.rig.setEmotion) state.rig.setEmotion(state.emotion); buildManifest() }
+function applyGaze(){ state.gaze=$('gaze').value; const g=gazeOptions(); if(state.rig&&state.rig.setGaze) state.rig.setGaze(g.x,g.y,{auto:g.auto,head:g.head}); buildManifest() }
 function shape(){
   const out={}
   for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) out[k]=Number(el.value)||0 }
@@ -276,7 +325,7 @@ async function createRig(){
   const base=BASES[state.base]
   $('baseLabel').textContent=base.label
   $('preset').value=$('preset').value||'bust'
-  const rig=SceneRig.create($('c'),{src:base.glb,preset:$('preset').value,appearance:appearance(),mood:$('mood').value,motion:state.motion,gender:state.gender,outfit:state.outfit,interactive:true,height:base.label==='Mira'?1.69:1.8})
+  const rig=SceneRig.create($('c'),{src:base.glb,preset:$('preset').value,appearance:appearance(),mood:$('mood').value,motion:state.motion,gender:state.gender,outfit:state.outfit,emotion:state.emotion,gaze:gazeOptions(),boneMap:base.map||null,armRestZ:base.armRestZ||0,headPitch:base.headPitch||0,interactive:true,height:base.height||(base.label==='Mira'?1.69:1.8)})
   state.rig=rig
   window.__rig=rig
   window.__rigInfo = rig.info
@@ -287,6 +336,8 @@ async function createRig(){
   if(state.visemes.length) rig.setVisemes(state.visemes)
   rig.setMotion(state.motion)
   if(rig.setGesture) rig.setGesture(state.gesture)
+  if(rig.setEmotion) rig.setEmotion(state.emotion)
+  if(rig.setGaze) rig.setGaze(gazeOptions().x,gazeOptions().y,{auto:gazeOptions().auto})
   rig.setMood($('mood').value)
   seek(state.time)
   setStatus('loaded '+base.label)
@@ -329,7 +380,7 @@ function manifest(){
   return {format:'sceneasset/1',id:$('slug').value||('character-'+state.base),title:$('title').value||base.label,
     kind:'character',family:'human',archetype:'humanoid',category:'character',
     rig:base.rig,geometry:{type:'gltf',file:base.glb,units:'m',up:'Y',facing:'+Z'},
-    appearance:appearance(),gender:state.gender,outfit:state.outfit,shape:shape(),gesture:state.gesture,motion:state.motion,
+    appearance:appearance(),gender:state.gender,outfit:state.outfit,shape:shape(),gesture:state.gesture,emotion:state.emotion,gaze:state.gaze,motion:state.motion,
     license:{name:'CC0',author:'SceneEngine'}}
 }
 function buildManifest(){ $('manifest').value=JSON.stringify(manifest(),null,2) }
@@ -371,6 +422,8 @@ async function loadCharacter(id){
     setAppearanceFields(m.appearance||{})
     state.shape=m.shape||{}
     state.gesture=m.gesture||'none'; $('gesture').value=state.gesture
+    state.emotion=m.emotion||'neutral'; $('emotion').value=state.emotion
+    state.gaze=m.gaze||'auto'; $('gaze').value=state.gaze
     state.motion=m.motion||'idle'; $('motion').value=state.motion
     syncOutfitFields(); setShapeFields(state.shape)
     await createRig()
@@ -379,19 +432,19 @@ async function loadCharacter(id){
 }
 function newCharacter(){
   state.assetId=null; state.visemes=[]; state.time=0; state.motion='idle'; $('motion').value='idle'
-  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'
   $('slug').value='character-'+state.base+'-'+Math.floor(Date.now()/1000)%10000
   $('title').value=BASES[state.base].label
   applyPreset(state.base); createRig(); loadLibrary(); buildManifest()
 }
 function applyPreset(name){
   const b=BASES[name]||BASES.mark
-  state.gender=(name==='mira')?'female':'male'
+  state.gender=(name==='mira'||name==='hero_mira')?'female':'male'
   state.outfit=state.gender==='female'
     ? {top:'shirt',bottom:'skirt',shoes:'boot',hair:'ponytail'}
     : {top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'}
   setAppearanceFields(b); $('base').value=name; state.base=name; state.assetId=null
-  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; syncOutfitFields()
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'; syncOutfitFields()
   $('baseLabel').textContent=b.label
   $('slug').value='character-'+name+'-1'
   $('title').value=b.label
@@ -427,6 +480,8 @@ for(const id of Object.values(SHAPE_KEYS)){ const el=$(id); if(el) el.oninput=ap
 $('resetShape').onclick=()=>{ setShapeFields({}); applyShape() }
 $('motion').onchange=()=>{state.motion=$('motion').value;if(state.rig)state.rig.setMotion(state.motion);seek(state.time)}
 $('gesture').onchange=()=>{state.gesture=$('gesture').value;if(state.rig&&state.rig.setGesture)state.rig.setGesture(state.gesture);seek(state.time);buildManifest()}
+$('emotion').onchange=applyEmotion
+$('gaze').onchange=applyGaze
 for(const id of ['skin','hair','top','bottom','shoes','eyes','lips','scale','glasses','hood'])$(id).addEventListener('input',applyAppearance)
 $('mood').onchange=()=>{if(state.rig)state.rig.setMood($('mood').value);buildManifest()}
 for(const b of document.querySelectorAll('[data-v]'))b.onclick=()=>setManual(b.dataset.v)
@@ -444,7 +499,7 @@ function layoutMobile(){
 window.addEventListener('resize',layoutMobile);
 if(window.ResizeObserver) new ResizeObserver(layoutMobile).observe(document.querySelector('header'));
 layoutMobile();
-applyPreset('mark'); buildManifest(); createRig(); loadLibrary()
+applyPreset('hero_mark'); buildManifest(); createRig(); loadLibrary()
 </script>
 </body>
 </html>
