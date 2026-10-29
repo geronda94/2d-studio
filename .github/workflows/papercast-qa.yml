@@ -34,3 +34,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run Paper Cast QA
         run: node tests/qa/run.cjs http://127.0.0.1:4173
+      - name: Golden frames
+        run: node tests/qa/golden.cjs http://127.0.0.1:4173

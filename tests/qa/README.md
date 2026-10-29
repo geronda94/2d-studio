@@ -32,3 +32,15 @@ Checks:
 
 Exit code 1 on failure. CI: set `CHROMIUM_PATH` if Chromium is not at
 `/usr/bin/chromium-browser`.
+
+## Golden frames
+
+`node tests/qa/golden.cjs <url>` renders 11 reference frames (both skins, dress,
+jacket, beard, 3/4, profile, spine bend, knee/elbow bend) into 200×300 canvases
+and compares them with `golden/*.png`. Up to 1.5 % of the pixels may change;
+anything more is a visual regression. Rewrite the references with `--update`
+after an intentional art change:
+
+```bash
+node tests/qa/golden.cjs http://localhost:5590 --update
+```
