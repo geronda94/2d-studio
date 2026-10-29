@@ -187,7 +187,7 @@ export function loadCharSource() {
 let paperPromise = null
 export function loadPaperSource() {
   if (!paperPromise) {
-    paperPromise = fetch('/vendor/paper-cast.js?v=31')
+    paperPromise = fetch('/vendor/paper-cast.js?v=32')
       .then((r) => (r.ok ? r.text() : ''))
       .catch(() => '')
   }

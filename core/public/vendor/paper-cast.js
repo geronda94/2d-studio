@@ -884,34 +884,68 @@
     }
   }
 
+  // A paper-cut shoe: heel counter, vamp, rounded toe box and a raised sole.
+  // Local space has the ankle at the origin and the toe towards +x.
   function drawShoe(ctx, ankle, angle, c) {
     ctx.save()
     ctx.translate(ankle[0], ankle[1])
     ctx.rotate(angle - Math.PI / 2)
+    // outsole slab with a toe spring
     ctx.beginPath()
-    ctx.moveTo(-17, -27)
-    ctx.quadraticCurveTo(-27, -9, -29, 12)
-    ctx.quadraticCurveTo(-29, 24, -15, 27)
-    ctx.lineTo(31, 27)
-    ctx.quadraticCurveTo(42, 26, 43, 14)
-    ctx.quadraticCurveTo(44, 0, 28, -13)
-    ctx.quadraticCurveTo(13, -26, -17, -27)
+    ctx.moveTo(-30, 12)
+    ctx.quadraticCurveTo(-34, 28, -18, 29)
+    ctx.lineTo(28, 29)
+    ctx.quadraticCurveTo(44, 29, 47, 14)
+    ctx.lineTo(47, 8)
+    ctx.quadraticCurveTo(41, 19, 28, 19)
+    ctx.lineTo(-16, 18)
+    ctx.quadraticCurveTo(-26, 18, -30, 12)
+    ctx.closePath()
+    fillStroke(ctx, c.sole, INK, 2.4)
+    // upper: heel counter -> vamp -> toe box
+    ctx.beginPath()
+    ctx.moveTo(-14, -26)
+    ctx.quadraticCurveTo(-24, -20, -26, -6)
+    ctx.quadraticCurveTo(-28, 6, -24, 15)
+    ctx.quadraticCurveTo(-12, 19, 2, 19)
+    ctx.lineTo(27, 19)
+    ctx.quadraticCurveTo(39, 19, 43, 12)
+    ctx.quadraticCurveTo(45, 3, 35, -5)
+    ctx.quadraticCurveTo(25, -14, 13, -23)
+    ctx.quadraticCurveTo(4, -28, -14, -26)
     ctx.closePath()
     fillStroke(ctx, c.shoes, INK, 3)
+    // toe cap seam
     ctx.beginPath()
-    ctx.moveTo(-25, 16)
-    ctx.lineTo(41, 16)
-    ctx.lineTo(40, 27)
-    ctx.lineTo(-18, 27)
-    ctx.closePath()
-    fillStroke(ctx, c.sole, INK, 2.5)
+    ctx.moveTo(34, -6)
+    ctx.quadraticCurveTo(30, 8, 31, 18)
+    ctx.strokeStyle = 'rgba(0,0,0,.18)'
+    ctx.lineWidth = 2.2
+    ctx.stroke()
+    // heel counter
     ctx.beginPath()
-    ctx.moveTo(-12, -15)
-    ctx.lineTo(-15, 8)
-    ctx.moveTo(2, -9)
-    ctx.lineTo(1, 8)
-    ctx.strokeStyle = 'rgba(255,255,255,.22)'
-    ctx.lineWidth = 3
+    ctx.moveTo(-24, 14)
+    ctx.quadraticCurveTo(-27, 2, -25, -6)
+    ctx.strokeStyle = 'rgba(0,0,0,.20)'
+    ctx.lineWidth = 2.4
+    ctx.stroke()
+    // laces on the vamp
+    for (let i = 0; i < 3; i++) {
+      const x = 4 + i * 7
+      ctx.beginPath()
+      ctx.moveTo(x, -17 + i * 3)
+      ctx.lineTo(x + 6, -11 + i * 3)
+      ctx.strokeStyle = 'rgba(255,255,255,.34)'
+      ctx.lineWidth = 2.6
+      ctx.lineCap = 'round'
+      ctx.stroke()
+    }
+    // soft highlight along the instep
+    ctx.beginPath()
+    ctx.moveTo(-8, -18)
+    ctx.quadraticCurveTo(8, -20, 24, -8)
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'
+    ctx.lineWidth = 4
     ctx.stroke()
     ctx.restore()
   }
