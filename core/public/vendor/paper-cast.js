@@ -918,6 +918,30 @@
   }
 
   // ── drawing: limbs and body ──────────────────────────────────────────────
+  // The contact shadow is baked once: a soft radial ellipse, no ctx.filter.
+  let SHADOW_SPRITE = null
+  function shadowSprite() {
+    if (SHADOW_SPRITE) return SHADOW_SPRITE
+    const c = document.createElement('canvas')
+    c.width = 312
+    c.height = 60
+    const g = c.getContext('2d')
+    g.save()
+    g.translate(156, 30)
+    g.scale(1, 0.19)
+    const grd = g.createRadialGradient(0, 0, 0, 0, 0, 150)
+    grd.addColorStop(0, 'rgba(16,18,27,1)')
+    grd.addColorStop(0.62, 'rgba(16,18,27,0.92)')
+    grd.addColorStop(1, 'rgba(16,18,27,0)')
+    g.fillStyle = grd
+    g.beginPath()
+    g.arc(0, 0, 150, 0, TAU)
+    g.fill()
+    g.restore()
+    SHADOW_SPRITE = c
+    return c
+  }
+
   // A rounded capsule from a to b. The caps are cubic beziers (the same
   // 0.5523 magic number as the limb tube): canvas arcs plus a closing chord
   // used to cut the shape open, so the neck showed the page through the gap.
@@ -3214,11 +3238,48 @@
       return Object.assign({}, CHARACTERS[state.character], state.appearance, { id: state.character })
     }
 
+    // Backing-store budget: flat paper-cut art stays readable when the canvas
+    // is a bit smaller than the device, and every extra megapixel is paid on
+    // every frame (phones with dpr 3 and 4K canvases otherwise drop to ~20 fps).
+    // 1.4 Mpx is ~1.25× a 1280×720 slide: enough for flat vector art, and four
+    // times cheaper than rendering at dpr 2 on a 1080p stage. Offscreen canvases
+    // (the video renderer) keep their own size and are never scaled down.
+    const PIXEL_BUDGET = 1.4e6
+
+    // Explicit backing size for offscreen hosts (PaperCastStage renders each
+    // actor into its own canvas and blits it: sizing that canvas to the real
+    // on-screen size removes both the overdraw and the huge blit).
+    let fixedSize = null
+
+    function setSize(wpx, hpx) {
+      const cw = Math.max(1, Math.round(Number(wpx) || 1))
+      const ch = Math.max(1, Math.round(Number(hpx) || 1))
+      if (fixedSize && fixedSize[0] === cw && fixedSize[1] === ch) return
+      fixedSize = [cw, ch]
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw
+        canvas.height = ch
+      }
+      w = cw
+      h = ch
+      draw(state.time)
+    }
+
     function resize() {
+      if (fixedSize) { w = fixedSize[0]; h = fixedSize[1]; return }
       const rect = canvas.getBoundingClientRect()
+      const displayed = rect.width > 0 && rect.height > 0
       dpr = Math.min(window.innerWidth < 700 ? 1.25 : 1.75, window.devicePixelRatio || 1)
-      const cw = Math.max(1, Math.round((rect.width || canvas.width) * dpr))
-      const ch = Math.max(1, Math.round((rect.height || canvas.height) * dpr))
+      let cw = Math.max(1, Math.round((rect.width || canvas.width) * dpr))
+      let ch = Math.max(1, Math.round((rect.height || canvas.height) * dpr))
+      const px = cw * ch
+      // only supersampled (dpr > 1) canvases are capped: a 1080p dpr-1
+      // export canvas keeps its exact size
+      if (displayed && dpr > 1.001 && px > PIXEL_BUDGET) {
+        const k = Math.sqrt(PIXEL_BUDGET / px)
+        cw = Math.max(1, Math.round(cw * k))
+        ch = Math.max(1, Math.round(ch * k))
+      }
       if (canvas.width !== cw || canvas.height !== ch) {
         canvas.width = cw
         canvas.height = ch
@@ -3362,14 +3423,11 @@
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
 
-      // contact shadow
+      // contact shadow (a cached sprite: ctx.filter blurs cost tens of ms at
+      // 1080p, and the shadow is the same soft ellipse on every frame)
       ctx.save()
       ctx.globalAlpha = 0.16
-      ctx.beginPath()
-      ctx.ellipse(300 + (p.body.x || 0) * 0.4, 848, 150, 23, 0, 0, TAU)
-      ctx.fillStyle = '#10121b'
-      ctx.filter = 'blur(4px)'
-      ctx.fill()
+      ctx.drawImage(shadowSprite(), 300 + (p.body.x || 0) * 0.4 - 156, 848 - 30, 312, 60)
       ctx.restore()
 
       // back layer
@@ -3667,6 +3725,7 @@
       ready: Promise.resolve(true),
       seek,
       setPose,
+      setSize,
       setPoseObject,
       setClip,
       playClip,
@@ -3758,7 +3817,14 @@
     registerPose,
     registerClip,
     validatePose,
-    skeleton: (pose, yaw) => makeSkeleton(typeof pose === 'string' ? (POSES[pose] || POSES.neutral) : (pose || POSES.neutral), yaw || 0),
+    // A raw partial pose (a preset written by hand, an old save) must not
+    // crash a studio: normalise before solving.
+    skeleton: (pose, yaw) => {
+      const p = typeof pose === 'string'
+        ? (POSES[pose] || POSES.neutral)
+        : normalizePose(pose || POSES.neutral)
+      return makeSkeleton(p, yaw || 0)
+    },
     skeleton3D,
     counts: {
       get poses() { return Object.keys(POSES).length },

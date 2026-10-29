@@ -182,12 +182,19 @@
     border-radius: 6px; padding: 4px 6px;
   }
   .hud span.bad { color: #8a2b20; background: rgba(255,226,220,.85); border-color: rgba(180,60,40,.35); }
+  /* on a phone the HUD is two lines at most: reach chips hide, the joint
+     line stays (it is the one that explains what a drag is doing) */
+  @media (max-width: 560px) {
+    .hud { left: 6px; right: 6px; bottom: 6px; gap: 4px; }
+    .hud span { font-size: 9px; padding: 3px 5px; }
+    .hud span:nth-child(-n+3) { display: none; }
+  }
 
   .transport {
     display: flex; align-items: center; gap: 10px; padding: 10px 14px;
     border-top: 1px solid var(--line); background: var(--panel);
   }
-  .transport button {
+  .transport button { min-width: 34px;
     border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
     border-radius: 8px; padding: 7px 12px; font-size: 12px;
   }
@@ -282,8 +289,8 @@
     body.stage-focus #wrap { height: 74dvh; }
 
     .transport { flex-wrap: wrap; gap: 6px; padding: 6px 10px calc(8px + env(safe-area-inset-bottom)); }
-    .transport button { min-height: 36px; flex: 1 1 0; padding: 4px 8px; font-size: 12px; }
-    .transport input[type=range] { order: 10; flex: 1 1 60%; height: 26px; }
+    .transport button { min-width: 34px; min-height: 36px; flex: 1 1 0; padding: 4px 8px; font-size: 12px; }
+    .transport input[type=range] { order: 10; flex: 1 1 60%; height: 32px; }
     .transport .time { order: 11; min-width: 48px; font-size: 9.5px; }
     .transport #loopmode { order: 0; flex: 0 0 auto; max-width: 118px; margin-left: 0; width: auto; min-height: 34px; font-size: 11px; padding: 4px 4px; }
 
@@ -294,7 +301,7 @@
     .panel-body { padding: 0 12px 14px; gap: 12px; }
     .ctrl { gap: 2px 8px; }
     .ctrl label { font-size: 12px; }
-    .ctrl input[type=range] { height: 30px; }
+    .ctrl input[type=range] { height: 32px; }
     .ctrl .val { font-size: 11px; }
     select, input[type=text] { min-height: 42px; font-size: 16px; }
     .btn { min-height: 40px; padding: 8px 12px; font-size: 13px; }
@@ -330,6 +337,22 @@
     .stage { position: static; }
     #wrap { height: 58dvh; min-height: 210px; }
     body.stage-focus #wrap { height: 82dvh; }
+  }
+
+  /* UI audit: touch targets are at least 32×32 px (WCAG 2.5.8 "target size") */
+  .toplinks a, .links a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px; }
+  button, .btn, .mode, select, summary { min-height: 32px; }
+  button.icon, .icon-btn, #undo, #redo, #bonesBtn { min-width: 32px; }
+  input[type=range] { height: 28px; }
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+
+  /* UI audit: range inputs get a 32 px touch box, icon buttons stay square */
+  input[type=range] { height: 32px; }
+  button { min-width: 32px; }
+  .fingers button, .phoneme button, .lib button { min-width: 32px; }
+  @media (max-width: 430px) {
+    .toplinks, .links { flex-wrap: wrap; row-gap: 2px; }
+    .toplinks a, .links a { font-size: 10px; padding: 0 3px; }
   }
 </style>
 </head>
@@ -522,7 +545,7 @@
   </main>
 </div>
 
-<script src="/vendor/paper-cast.js?v=34"></script>
+<script src="/vendor/paper-cast.js?v=35"></script>
 <script src="/vendor/paper-cast-session.js?v=2"></script>
 <script>
 (function () {
@@ -815,6 +838,7 @@
   function drawAxisRing(sk) {
     const def = selectedJoint()
     if (!def || !def.b) { ringEl.style.display = 'none'; return }
+    if (!sk) { ringEl.style.display = 'none'; return }
     const j = sk[def.point]
     const p = sk[def.pivot]
     const dot = sk[def.dot || def.point]

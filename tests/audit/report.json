@@ -1,0 +1,1852 @@
+{
+  "base": "http://localhost:5590",
+  "started": "2026-10-29T23:27:40.406Z",
+  "pages": [
+    {
+      "name": "home",
+      "url": "/",
+      "kind": "spa",
+      "status": 200,
+      "loadMs": 1156,
+      "nav": {
+        "dom": 153,
+        "load": 154,
+        "ttfb": 9
+      },
+      "heapMb": 3,
+      "canvasCount": 0,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "demo-scene",
+      "url": "/p/1",
+      "kind": "spa",
+      "status": 200,
+      "loadMs": 1732,
+      "nav": {
+        "dom": 167,
+        "load": 167,
+        "ttfb": 10
+      },
+      "heapMb": 6,
+      "canvasCount": 0,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "paper-duo",
+      "url": "/p/12",
+      "kind": "spa",
+      "status": 200,
+      "loadMs": 1644,
+      "nav": {
+        "dom": 215,
+        "load": 215,
+        "ttfb": 8
+      },
+      "heapMb": 6,
+      "canvasCount": 0,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "director-scene",
+      "url": "/p/13",
+      "kind": "spa",
+      "status": 200,
+      "loadMs": 1751,
+      "nav": {
+        "dom": 214,
+        "load": 215,
+        "ttfb": 17
+      },
+      "heapMb": 6,
+      "canvasCount": 0,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "pose-studio",
+      "url": "/pose-studio.html",
+      "kind": "studio",
+      "status": 200,
+      "loadMs": 751,
+      "nav": {
+        "dom": 499,
+        "load": 572,
+        "ttfb": 16
+      },
+      "heapMb": 3,
+      "canvasCount": 1,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "builder",
+      "url": "/character-builder.html",
+      "kind": "studio",
+      "status": 200,
+      "loadMs": 702,
+      "nav": {
+        "dom": 535,
+        "load": 543,
+        "ttfb": 10
+      },
+      "heapMb": 3,
+      "canvasCount": 3,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "lab",
+      "url": "/character-studio.html",
+      "kind": "studio",
+      "status": 200,
+      "loadMs": 739,
+      "nav": {
+        "dom": 513,
+        "load": 521,
+        "ttfb": 8
+      },
+      "heapMb": 3,
+      "canvasCount": 2,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "rig3d",
+      "url": "/rig3d.html",
+      "kind": "studio",
+      "status": 200,
+      "loadMs": 622,
+      "nav": {
+        "dom": 226,
+        "load": 236,
+        "ttfb": 7
+      },
+      "heapMb": 2,
+      "canvasCount": 2,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    },
+    {
+      "name": "director-demo",
+      "url": "/director-demo.html",
+      "kind": "studio",
+      "status": 200,
+      "loadMs": 657,
+      "nav": {
+        "dom": 446,
+        "load": 455,
+        "ttfb": 6
+      },
+      "heapMb": 2,
+      "canvasCount": 3,
+      "errors": [],
+      "warnings": [],
+      "failed": []
+    }
+  ],
+  "perf": {
+    "papercast": {
+      "frames": 180,
+      "msPerFrame": 2.2,
+      "fps": 454
+    },
+    "animals": {
+      "frames": 120,
+      "msPerFrame": 0.45,
+      "fps": 2222.2
+    },
+    "idle": {
+      "idleMs": 600,
+      "rafActive": null
+    },
+    "scene": {
+      "frames": 24,
+      "p50": 21,
+      "p95": 201.4,
+      "max": 206.7
+    }
+  },
+  "ui": [
+    {
+      "page": "home",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "✕",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "demo-scene",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:16",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "paper-duo",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "director-scene",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:13",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "pose-studio",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "builder",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "короткие",
+          "size": 9
+        },
+        {
+          "text": "боб",
+          "size": 9
+        },
+        {
+          "text": "пучок",
+          "size": 9
+        },
+        {
+          "text": "хвост",
+          "size": 9
+        },
+        {
+          "text": "длинные",
+          "size": 9
+        },
+        {
+          "text": "кудри",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "lab",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "joints",
+          "size": 9
+        },
+        {
+          "text": "poses",
+          "size": 9
+        },
+        {
+          "text": "phonemes",
+          "size": 9
+        },
+        {
+          "text": "mouths",
+          "size": 9
+        },
+        {
+          "text": "short / beard",
+          "size": 9
+        },
+        {
+          "text": "bob / glasses",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "rig3d",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "director-demo",
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "viewportW": 1440,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "home",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "✕",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "demo-scene",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:16",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "paper-duo",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "director-scene",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:13",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "pose-studio",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "builder",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "короткие",
+          "size": 9
+        },
+        {
+          "text": "боб",
+          "size": 9
+        },
+        {
+          "text": "пучок",
+          "size": 9
+        },
+        {
+          "text": "хвост",
+          "size": 9
+        },
+        {
+          "text": "длинные",
+          "size": 9
+        },
+        {
+          "text": "кудри",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "lab",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "joints",
+          "size": 9
+        },
+        {
+          "text": "poses",
+          "size": 9
+        },
+        {
+          "text": "phonemes",
+          "size": 9
+        },
+        {
+          "text": "mouths",
+          "size": 9
+        },
+        {
+          "text": "short / beard",
+          "size": 9
+        },
+        {
+          "text": "bob / glasses",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "rig3d",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "director-demo",
+      "name": "laptop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "viewportW": 1280,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "home",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "✕",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "demo-scene",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 2",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:16",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "paper-duo",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 1",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "director-scene",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 1",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:13",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "pose-studio",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "EDIT",
+          "size": 9
+        },
+        {
+          "text": "reach L 208",
+          "size": 9
+        },
+        {
+          "text": "reach R 203",
+          "size": 9
+        },
+        {
+          "text": "yaw 0.00",
+          "size": 9
+        },
+        {
+          "text": "корпус · наклон корп",
+          "size": 9
+        },
+        {
+          "text": "0 ms",
+          "size": 9.5
+        }
+      ]
+    },
+    {
+      "page": "builder",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "короткие",
+          "size": 9
+        },
+        {
+          "text": "боб",
+          "size": 9
+        },
+        {
+          "text": "пучок",
+          "size": 9
+        },
+        {
+          "text": "хвост",
+          "size": 9
+        },
+        {
+          "text": "длинные",
+          "size": 9
+        },
+        {
+          "text": "кудри",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "lab",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "neutral / neutral",
+          "size": 9
+        },
+        {
+          "text": "LIVE",
+          "size": 9
+        },
+        {
+          "text": "neutral / neutral",
+          "size": 9
+        },
+        {
+          "text": "LIVE",
+          "size": 9
+        },
+        {
+          "text": "joints",
+          "size": 9
+        },
+        {
+          "text": "poses",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "rig3d",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "director-demo",
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "viewportW": 390,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "home",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "✕",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "demo-scene",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 2",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:16",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "paper-duo",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 1",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "director-scene",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "1 / 1",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:13",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "pose-studio",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "EDIT",
+          "size": 9
+        },
+        {
+          "text": "reach L 208",
+          "size": 9
+        },
+        {
+          "text": "reach R 203",
+          "size": 9
+        },
+        {
+          "text": "yaw 0.00",
+          "size": 9
+        },
+        {
+          "text": "корпус · наклон корп",
+          "size": 9
+        },
+        {
+          "text": "0 ms",
+          "size": 9.5
+        }
+      ]
+    },
+    {
+      "page": "builder",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "короткие",
+          "size": 9
+        },
+        {
+          "text": "боб",
+          "size": 9
+        },
+        {
+          "text": "пучок",
+          "size": 9
+        },
+        {
+          "text": "хвост",
+          "size": 9
+        },
+        {
+          "text": "длинные",
+          "size": 9
+        },
+        {
+          "text": "кудри",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "lab",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "neutral / neutral",
+          "size": 9
+        },
+        {
+          "text": "LIVE",
+          "size": 9
+        },
+        {
+          "text": "neutral / neutral",
+          "size": 9
+        },
+        {
+          "text": "LIVE",
+          "size": 9
+        },
+        {
+          "text": "joints",
+          "size": 9
+        },
+        {
+          "text": "poses",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "rig3d",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "director-demo",
+      "name": "small",
+      "width": 360,
+      "height": 740,
+      "overflow": false,
+      "viewportW": 360,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "home",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "✕",
+          "w": 24,
+          "h": 24
+        }
+      ],
+      "tiny": [
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        },
+        {
+          "text": "View",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "demo-scene",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:16",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "paper-duo",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:08",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "director-scene",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 30,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "text": "Новая сцена",
+          "w": 24,
+          "h": 48
+        }
+      ],
+      "tiny": [
+        {
+          "text": "00:00",
+          "size": 8
+        },
+        {
+          "text": "__scene__",
+          "size": 9
+        },
+        {
+          "text": "00:13",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        },
+        {
+          "text": "▾",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "pose-studio",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "EDIT",
+          "size": 9
+        },
+        {
+          "text": "reach L 208",
+          "size": 9
+        },
+        {
+          "text": "reach R 203",
+          "size": 9
+        },
+        {
+          "text": "yaw 0.00",
+          "size": 9
+        },
+        {
+          "text": "корпус · наклон корп",
+          "size": 9
+        },
+        {
+          "text": "0 ms",
+          "size": 9.5
+        }
+      ]
+    },
+    {
+      "page": "builder",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "короткие",
+          "size": 9
+        },
+        {
+          "text": "боб",
+          "size": 9
+        },
+        {
+          "text": "пучок",
+          "size": 9
+        },
+        {
+          "text": "хвост",
+          "size": 9
+        },
+        {
+          "text": "длинные",
+          "size": 9
+        },
+        {
+          "text": "кудри",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "lab",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": [
+        {
+          "text": "joints",
+          "size": 9
+        },
+        {
+          "text": "poses",
+          "size": 9
+        },
+        {
+          "text": "phonemes",
+          "size": 9
+        },
+        {
+          "text": "mouths",
+          "size": 9
+        },
+        {
+          "text": "short / beard",
+          "size": 9
+        },
+        {
+          "text": "bob / glasses",
+          "size": 9
+        }
+      ]
+    },
+    {
+      "page": "rig3d",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    },
+    {
+      "page": "director-demo",
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "viewportW": 844,
+      "offenders": [],
+      "small": [],
+      "tight": [],
+      "tiny": []
+    }
+  ],
+  "problems": [],
+  "finished": "2026-10-29T23:29:44.938Z",
+  "summary": {
+    "pages": 9,
+    "consoleErrors": 0,
+    "failedRequests": 0,
+    "problems": 0
+  }
+}

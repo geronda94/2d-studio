@@ -1,0 +1,51 @@
+name: audit
+
+# Debug + UI + performance audit of the built app:
+#   - every page loads without console errors or failed requests
+#   - WCAG 2.5.8 target size, no horizontal overflow, no sub-10px text
+#   - end-to-end walk through home → scene → studios
+#   - render benchmark against a stored baseline (2.5× tolerance)
+on:
+  push:
+    paths:
+      - 'core/public/**'
+      - 'core/src/**'
+      - 'tests/audit/**'
+      - '.github/workflows/audit.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install core deps
+        working-directory: core
+        run: npm ci --no-audit --no-fund
+      - name: Build
+        working-directory: core
+        run: npm run build
+      - name: Install Playwright
+        run: |
+          npm i --no-save playwright@latest
+          npx playwright install --with-deps chromium
+      - name: Serve dist with SPA fallback
+        run: |
+          node tests/audit/serve.cjs 4173 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/pose-studio.html >/dev/null && break; sleep 1; done
+      - name: Audit (console, layout, targets)
+        run: node tests/audit/run.cjs http://127.0.0.1:4173
+      - name: End-to-end walk
+        run: node tests/audit/e2e.cjs http://127.0.0.1:4173
+      - name: Benchmark (report only on CI hardware)
+        run: node tests/audit/bench.cjs http://127.0.0.1:4173 || true
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: tests/audit/report.json

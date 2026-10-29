@@ -681,11 +681,17 @@
         const px = c.x * W, py = c.y * H
         const sc = c.scale || 1
         const flip = c.flip !== undefined ? !!c.flip : (c.facing || 1) < 0
+        // Render the actor at the size it actually occupies on screen: a
+        // 600×900 canvas blitted down to 300 px was the single biggest cost
+        // of a two-actor frame (77 % of the seek time was drawImage).
+        const needW = Math.max(220, Math.min(900, Math.round(600 * sc * s)))
+        const needH = Math.round(needW * 1.5)
+        if (a.rig.setSize) a.rig.setSize(needW, needH)
         ctx.save()
         ctx.translate(px, py)
         if (flip) ctx.scale(-1, 1)
-        ctx.scale(sc, sc)
-        ctx.drawImage(a.canvas, -300, -900)
+        ctx.scale((sc * 600) / needW, (sc * 900) / needH)
+        ctx.drawImage(a.canvas, -needW / 2, -needH)
         ctx.restore()
       }
       ctx.restore()

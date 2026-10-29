@@ -216,3 +216,20 @@ body.is-seeking .brand-blur-enter-active {
 /* Mobile: убираем задержку 300мс и двойной тап-зум на элементах управления.
    Zoom страницы пользователем не запрещаем (доступность). */
 button, a, [role="button"] { touch-action: manipulation; }
+
+/* ── Touch targets (WCAG 2.5.8 AA: 24×24 px) ────────────────────────────────
+   Icon-only buttons in dense toolbars used to be 12–20 px. The visual size is
+   unchanged: only the hit box grows, so nothing moves on screen. */
+@layer base {
+  button,
+  [role='button'] {
+    min-width: 24px;
+    min-height: 24px;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  [role='button']:focus-visible {
+    outline: 2px solid var(--brand-blue);
+    outline-offset: 2px;
+  }
+}
