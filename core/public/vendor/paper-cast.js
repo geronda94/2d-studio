@@ -133,16 +133,40 @@
     return { ok: issues.length === 0, issues, fixed: normalizeAppearance(a) }
   }
 
+  // Per-joint motion envelopes for direct manipulation. One entry per FK
+  // channel; `axis` names the motion a person performs (not the bone name),
+  // so the studio can label a handle "подъём", "сгиб", "наклон".
+  // Values are degrees in the canvas plane for the LEFT side; `mirror` means
+  // the right side uses the negated range (a right arm raises with a negative
+  // rotation), which is what jointRangeFor() returns.
+  const JOINT_RANGES = {
+    spine: { min: -40, max: 40, axis: 'наклон корпуса' },
+    neck: { min: -40, max: 40, axis: 'наклон шеи' },
+    head: { min: -28, max: 28, axis: 'наклон головы' },
+    sh: { min: -55, max: 170, mirror: true, axis: 'подъём руки' },
+    elbow: { min: 0, max: 150, mirror: true, axis: 'сгиб локтя' },
+    wrist: { min: -70, max: 70, axis: 'сгиб кисти' },
+    hip: { min: -25, max: 90, mirror: true, axis: 'отведение бедра' },
+    // the shin swings back and inward, so the left knee bends counter-clockwise
+    knee: { min: -135, max: 0, mirror: true, axis: 'сгиб колена' },
+    ankle: { min: -45, max: 25, axis: 'сгиб стопы' },
+  }
+  function jointRangeFor(rangeKey, side) {
+    const r = JOINT_RANGES[rangeKey]
+    if (!r) return null
+    if (r.mirror && side === 'R') return { min: -r.max, max: -r.min, axis: r.axis }
+    return r
+  }
   const LIMITS = {
     body: { x: [-46, 46], y: [-26, 26], rot: [-16, 16] },
     head: { tilt: [-30, 30], turn: [-0.8, 0.8], nod: [-20, 20] },
     arm: { reachMin: 34, reachMax: 0.995, elbow: [10, 150] },
     leg: { swing: [-30, 45], knee: [0, 135] },
-    fk: {
-      spine: [-40, 40], neck: [-45, 45], head: [-30, 30],
-      sh: [-170, 170], elbow: [0, 150], wrist: [-80, 70],
-      hip: [-30, 45], knee: [0, 135], ankle: [-50, 20],
-    },
+    // engine-side safety clamp: the union of both sides
+    fk: Object.fromEntries(Object.entries(JOINT_RANGES).map(([k, v]) => {
+      const m = Math.max(Math.abs(v.min), Math.abs(v.max))
+      return [k, [-m, m]]
+    })),
   }
 
   const INK = '#20232d'
@@ -542,6 +566,40 @@
       { at: 700, pose: POSES.neutral, ease: 'inOut' },
       { at: 1100, pose: POSES.neutral, ease: 'inOut' },
     ]),
+    // A front-view walk in place: the lifted knee reads as a step, the body
+    // bobs and the arms counter-swing. Loop it and move the actor in a scene.
+    walk: makeClip('walk', 1000, [
+      { at: 0, pose: derivePose(POSES.neutral, {
+        legL: { swing: -14, knee: 36 }, legR: { swing: 4, knee: 7 },
+        body: { x: 0, y: 2, rot: -1 }, head: { tilt: 1, turn: 0.05 },
+        armL: { hand: [168, 500], bend: 1, handPose: 'relaxed', handRot: -8 },
+        armR: { hand: [446, 526], bend: -1, handPose: 'relaxed', handRot: 8 },
+      }), ease: 'inOut' },
+      { at: 250, pose: derivePose(POSES.neutral, {
+        legL: { swing: -2, knee: 10 }, legR: { swing: 2, knee: 14 },
+        body: { x: 0, y: -3, rot: 0.5 }, head: { tilt: 0, turn: 0.02 },
+        armL: { hand: [138, 524], bend: 1, handPose: 'relaxed', handRot: 0 },
+        armR: { hand: [462, 524], bend: -1, handPose: 'relaxed', handRot: 0 },
+      }), ease: 'inOut' },
+      { at: 500, pose: derivePose(POSES.neutral, {
+        legL: { swing: 4, knee: 7 }, legR: { swing: -14, knee: 36 },
+        body: { x: 0, y: 2, rot: 1 }, head: { tilt: 1, turn: -0.05 },
+        armL: { hand: [154, 526], bend: 1, handPose: 'relaxed', handRot: 8 },
+        armR: { hand: [432, 500], bend: -1, handPose: 'relaxed', handRot: -8 },
+      }), ease: 'inOut' },
+      { at: 750, pose: derivePose(POSES.neutral, {
+        legL: { swing: -2, knee: 14 }, legR: { swing: 2, knee: 10 },
+        body: { x: 0, y: -3, rot: -0.5 }, head: { tilt: 0, turn: -0.02 },
+        armL: { hand: [138, 524], bend: 1, handPose: 'relaxed', handRot: 0 },
+        armR: { hand: [462, 524], bend: -1, handPose: 'relaxed', handRot: 0 },
+      }), ease: 'inOut' },
+      { at: 1000, pose: derivePose(POSES.neutral, {
+        legL: { swing: -14, knee: 36 }, legR: { swing: 4, knee: 7 },
+        body: { x: 0, y: 2, rot: -1 }, head: { tilt: 1, turn: 0.05 },
+        armL: { hand: [168, 500], bend: 1, handPose: 'relaxed', handRot: -8 },
+        armR: { hand: [446, 526], bend: -1, handPose: 'relaxed', handRot: 8 },
+      }), ease: 'inOut' },
+    ], true),
   }
 
   const EMOTIONS = {
@@ -860,15 +918,30 @@
   }
 
   // ── drawing: limbs and body ──────────────────────────────────────────────
+  // A rounded capsule from a to b. The caps are cubic beziers (the same
+  // 0.5523 magic number as the limb tube): canvas arcs plus a closing chord
+  // used to cut the shape open, so the neck showed the page through the gap.
   function tapered(ctx, a, b, r1, r2, fill, outline, hi) {
     const ang = Math.atan2(b[1] - a[1], b[0] - a[0])
-    const nx = -Math.sin(ang), ny = Math.cos(ang)
+    const ca = Math.cos(ang), sa = Math.sin(ang)
+    const nx = -sa, ny = ca
+    const k = 0.5523
+    const a1 = [a[0] + nx * r1, a[1] + ny * r1]
+    const a2 = [a[0] - nx * r1, a[1] - ny * r1]
+    const b1 = [b[0] + nx * r2, b[1] + ny * r2]
+    const b2 = [b[0] - nx * r2, b[1] - ny * r2]
     ctx.beginPath()
-    ctx.moveTo(a[0] + nx * r1, a[1] + ny * r1)
-    ctx.lineTo(b[0] + nx * r2, b[1] + ny * r2)
-    ctx.arc(b[0], b[1], r2, ang - Math.PI / 2, ang + Math.PI / 2)
-    ctx.lineTo(a[0] - nx * r1, a[1] - ny * r1)
-    ctx.arc(a[0], a[1], r1, ang + Math.PI / 2, ang + Math.PI * 1.5)
+    ctx.moveTo(a1[0], a1[1])
+    ctx.lineTo(b1[0], b1[1])
+    ctx.bezierCurveTo(
+      b1[0] + ca * r2 * k, b1[1] + sa * r2 * k,
+      b2[0] + ca * r2 * k, b2[1] + sa * r2 * k,
+      b2[0], b2[1])
+    ctx.lineTo(a2[0], a2[1])
+    ctx.bezierCurveTo(
+      a2[0] - ca * r1 * k, a2[1] - sa * r1 * k,
+      a1[0] - ca * r1 * k, a1[1] - sa * r1 * k,
+      a1[0], a1[1])
     ctx.closePath()
     fillStroke(ctx, fill, outline, 3)
     if (hi) {
@@ -1923,7 +1996,7 @@
     const hs = c.headScale || 1
     const topX = sk.head[0] - Math.sin(ha) * 72 * hs
     const top = sk.head[1] + Math.cos(ha) * 72 * hs
-    tapered(ctx, [topX, top], [bp[0], bp[1]], 26, 32, c.skin, INK, 'rgba(255,255,255,.10)')
+    tapered(ctx, [topX, top], [bp[0], bp[1]], 22, 28, c.skin, INK, 'rgba(255,255,255,.10)')
     // shadow under the jaw and on the far side
     ctx.save()
     ctx.beginPath()
@@ -1950,11 +2023,13 @@
       ctx.rotate(sk.bodyRot)
       ctx.translate(-RIG.hip[0], -RIG.hip[1])
       if (spN) { ctx.translate(300, 527); ctx.rotate(spN); ctx.translate(-300, -527) }
+      // A shallow scoop: a deep V would open a gap between the neck and the
+      // collar, showing the background through the neckline.
       ctx.beginPath()
-      ctx.moveTo(tee ? 262 : 252, 306)
-      ctx.quadraticCurveTo(300, tee ? 332 : 334, tee ? 338 : 348, 306)
-      ctx.lineTo(tee ? 344 : 354, tee ? 330 : 338)
-      ctx.quadraticCurveTo(300, tee ? 366 : 380, tee ? 256 : 246, tee ? 330 : 338)
+      ctx.moveTo(tee ? 258 : 248, 304)
+      ctx.quadraticCurveTo(300, tee ? 318 : 319, tee ? 342 : 352, 304)
+      ctx.lineTo(tee ? 346 : 356, tee ? 330 : 338)
+      ctx.quadraticCurveTo(300, tee ? 366 : 380, tee ? 254 : 244, tee ? 330 : 338)
       ctx.closePath()
       fillStroke(ctx, (c.outfit === 'coat' || c.outfit === 'jacket') ? (c.coatColor || c.shirtDark) : c.shirtDark, INK, 2.8)
       if (c.outfit === 'sweater') {
@@ -3365,7 +3440,9 @@
         if (!profileArmSk.inFront) drawArm(ctx, profileArmSk, near, p, c)
       }
       drawTorso(ctx, sk, p, c)
-      if (p.fk && Math.abs(p.fk.spine || 0) > 0.5) drawWaistCover(ctx, sk, c)
+      // A belt-like cover hides the shirt/pelvis seam on a bent spine. A dress
+      // or skirt is continuous at the waist, so the band would cut it in half.
+      if (p.fk && Math.abs(p.fk.spine || 0) > 0.5 && !skirtWear) drawWaistCover(ctx, sk, c)
       if (!sk.profile) drawNeck(ctx, sk, c)
 
       if (profileArmSk) {
@@ -3650,6 +3727,8 @@
     INK,
     PAPER,
     LIMITS,
+    JOINT_RANGES,
+    jointRangeFor,
     ANATOMY,
     FINGER_CURL,
     PALETTES,

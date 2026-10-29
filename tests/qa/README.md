@@ -13,7 +13,7 @@ Checks:
 - `/pose-studio.html`, `/character-builder.html`, `/character-studio.html`
   load with `PaperCast` and no console errors.
 - 31 poses are deterministic (same frame on repeated `seek`).
-- 8 gesture clips are deterministic.
+- 9 gesture clips are deterministic (walk is a looping cycle).
 - 10 animal kinds are deterministic across their poses.
 - `POSE_SCHEMA === 2` and `normalizePose` fills defaults.
 - `PaperCastAnimals.skeleton` exposes joints; insect FK moves legs.

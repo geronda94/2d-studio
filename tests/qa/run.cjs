@@ -136,7 +136,7 @@ const rig = await page.evaluate(async () => {
   }
 })
 check('31 poses deterministic', rig.poses === 31 && rig.poseFail.length === 0, { count: rig.poses, failed: rig.poseFail })
-check('8 clips deterministic', rig.clips === 8 && rig.clipFail.length === 0, { count: rig.clips, failed: rig.clipFail })
+check('9 clips deterministic', rig.clips === 9 && rig.clipFail.length === 0, { count: rig.clips, failed: rig.clipFail })
 check('10 animals deterministic', rig.kinds === 10 && rig.animalFail.length === 0, { count: rig.kinds, failed: rig.animalFail })
 check('pose schema + normalize', rig.schema === 2 && rig.normalized, { schema: rig.schema })
 check('animal skeleton joints', rig.animalSkeleton, { animalSkeleton: rig.animalSkeleton })
@@ -211,6 +211,39 @@ check('pose studio: all joints + foot/fingers',
   joints.bones >= 12 && joints.hands === 2 && joints.rings === 2 && joints.fingers === 8 &&
   afterFoot !== foot.swing && afterFinger === 'peace',
   { joints, footSwing: [foot.swing, afterFoot], afterFinger })
+
+// ── two axes per joint: swing the bone, then bend the joint ───────────────
+const axis = await page.evaluate(() => {
+  const st = window.__poseStudio.state
+  const el = [...document.querySelectorAll('#bones .bone')].find((e) => e.dataset.label === 'колено L')
+  const r = el.getBoundingClientRect()
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2, hip: st.pose.fk.hipL, knee: st.pose.fk.kneeL, sel: st.selJoint }
+})
+await page.mouse.move(axis.x, axis.y)
+await page.mouse.down()
+await page.mouse.move(axis.x + 60, axis.y - 10, { steps: 6 })
+await page.mouse.up()
+await page.waitForTimeout(120)
+const afterSwing = await page.evaluate(() => ({ hip: window.__poseStudio.state.pose.fk.hipL, sel: window.__poseStudio.state.selJoint }))
+const ring = await page.locator('#bones .axis-ring').boundingBox()
+let afterBend = null
+if (ring) {
+  const rx = ring.x + ring.width / 2, ry = ring.y + ring.height / 2
+  // the ring is a rotation handle: try both directions and keep the one that
+  // moves the joint (a clamped direction is a no-op by design)
+  for (const [dx, dy] of [[60, -20], [-60, 20], [-20, -70], [20, 70]]) {
+    await page.mouse.move(rx, ry)
+    await page.mouse.down()
+    for (let i = 1; i <= 8; i++) await page.mouse.move(rx + (dx * i) / 8, ry + (dy * i) / 8)
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+    afterBend = await page.evaluate(() => window.__poseStudio.state.pose.fk.kneeL)
+    if (afterBend !== axis.knee) break
+  }
+}
+check('pose studio: two axes per joint',
+  afterSwing.sel === 'kneeL' && afterSwing.hip !== axis.hip && !!ring && afterBend !== axis.knee,
+  { swing: [axis.hip, afterSwing.hip], selected: afterSwing.sel, bend: [axis.knee, afterBend] })
 
 // ── director (config timeline) ────────────────────────────────────────────
 await page.goto(BASE + '/director-demo.html', { waitUntil: 'networkidle' })

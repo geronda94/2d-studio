@@ -120,6 +120,20 @@
   #undo, #redo { padding: 4px 8px; font-size: 14px; line-height: 1; }
   .bone.static { background: rgba(140,150,160,.7); cursor: default; }
   .bone.static::after { color: #4a4f57; }
+  .bone.sel { background: var(--teal); border-color: #fff; }
+  #arcs { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+  .arc-range { fill: none; stroke: rgba(103,216,200,.32); stroke-width: 4; stroke-linecap: round; }
+  .arc-axis { fill: none; stroke: rgba(32,35,45,.28); stroke-width: 1.4; stroke-dasharray: 4 6; }
+  .axis-ring {
+    position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+    border: 2px dashed var(--gold); background: rgba(216,180,111,.18); pointer-events: auto;
+    cursor: grab; touch-action: none;
+  }
+  .axis-ring::after {
+    content: attr(data-label); position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%);
+    font: 9px/1 ui-monospace, Menlo, monospace; color: #5a3a28; white-space: nowrap;
+    background: rgba(255,255,255,.72); border-radius: 4px; padding: 3px 4px;
+  }
   #bonesBtn.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.10); }
   .handle {
     position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px;
@@ -367,6 +381,7 @@
           <div class="rot" id="rotL" data-side="L" title="поворот ладони L"></div>
           <div class="rot" id="rotR" data-side="R" title="поворот ладони R"></div>
         </div>
+        <svg id="arcs" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
         <div id="bones"></div>
         <div class="hud" id="hud"></div>
       </div>
@@ -507,7 +522,7 @@
   </main>
 </div>
 
-<script src="/vendor/paper-cast.js?v=32"></script>
+<script src="/vendor/paper-cast.js?v=34"></script>
 <script src="/vendor/paper-cast-session.js?v=2"></script>
 <script>
 (function () {
@@ -539,6 +554,7 @@
     clipId: 'wave',
     showSkeleton: false,
     hand: 'R',
+    selJoint: 'spine',
   }
 
   // one character across Lab / Builder / Pose / 3D
@@ -637,35 +653,71 @@
   const modeChip = $('#mode-chip')
   const handlesEl = $('#handles')
   const bonesEl = $('#bones')
+  const arcsEl = $('#arcs')
   state.bones = false
-  const BONES = [
-    { id: 'neck', label: 'шея', parent: 'hip', joint: 'neck', key: 'spine' },
-    { id: 'head', label: 'голова', parent: 'neck', joint: 'head', key: 'neck' },
-    { id: 'elbowL', label: 'локоть L', parent: 'shL', joint: 'elbowL', key: 'shL' },
-    { id: 'elbowR', label: 'локоть R', parent: 'shR', joint: 'elbowR', key: 'shR' },
-    { id: 'kneeL', label: 'колено L', parent: 'hipL', joint: 'kneeL', key: 'hipL' },
-    { id: 'ankleL', label: 'стопа L', parent: 'kneeL', joint: 'ankleL', key: 'kneeL', foot: 'L' },
-    { id: 'kneeR', label: 'колено R', parent: 'hipR', joint: 'kneeR', key: 'hipR' },
-    { id: 'ankleR', label: 'стопа R', parent: 'kneeR', joint: 'ankleR', key: 'kneeR', foot: 'R' },
-    { id: 'shL', label: 'плечо L', parent: 'shL', joint: 'elbowL', key: 'shL', at: 'shL' },
-    { id: 'shR', label: 'плечо R', parent: 'shR', joint: 'elbowR', key: 'shR', at: 'shR' },
-    { id: 'hipL', label: 'бедро L', parent: 'hipL', joint: 'kneeL', key: 'hipL', at: 'hipL' },
-    { id: 'hipR', label: 'бедро R', parent: 'hipR', joint: 'kneeR', key: 'hipR', at: 'hipR' },
+  // Every joint exposes two axes, like a real rig: the first is the swing of
+  // the bone above it, the second is the joint's own bend. Both are clamped by
+  // PaperCast.JOINT_RANGES, so the art can never leave the anatomically sane
+  // envelope and the studio can draw that envelope next to the joint.
+  const JR = window.PaperCast.JOINT_RANGES
+  const rangeOf = (ax) => window.PaperCast.jointRangeFor(ax.range, ax.key.endsWith('R') ? 'R' : 'L') || JR[ax.range]
+  const AX = (key, range) => ({ key, range })
+  const JOINT_DEFS = [
+    { id: 'spine', label: 'корпус', pivot: 'hip', point: 'neck', a: AX('spine', 'spine'), b: AX('neck', 'neck') },
+    { id: 'neck', label: 'шея', pivot: 'neck', point: 'head', a: AX('neck', 'neck'), b: AX('head', 'head') },
+    { id: 'head', label: 'голова', pivot: 'neck', point: 'head', head: true },
+    { id: 'shL', label: 'плечо L', pivot: 'shL', point: 'elbowL', dot: 'shL', a: AX('shL', 'sh'), b: AX('elbowL', 'elbow') },
+    { id: 'elbowL', label: 'локоть L', pivot: 'shL', point: 'elbowL', a: AX('shL', 'sh'), b: AX('elbowL', 'elbow') },
+    { id: 'shR', label: 'плечо R', pivot: 'shR', point: 'elbowR', dot: 'shR', a: AX('shR', 'sh'), b: AX('elbowR', 'elbow') },
+    { id: 'elbowR', label: 'локоть R', pivot: 'shR', point: 'elbowR', a: AX('shR', 'sh'), b: AX('elbowR', 'elbow') },
+    { id: 'hipL', label: 'бедро L', pivot: 'hipL', point: 'kneeL', dot: 'hipL', a: AX('hipL', 'hip'), b: AX('kneeL', 'knee') },
+    { id: 'kneeL', label: 'колено L', pivot: 'hipL', point: 'kneeL', a: AX('hipL', 'hip'), b: AX('kneeL', 'knee') },
+    { id: 'hipR', label: 'бедро R', pivot: 'hipR', point: 'kneeR', dot: 'hipR', a: AX('hipR', 'hip'), b: AX('kneeR', 'knee') },
+    { id: 'kneeR', label: 'колено R', pivot: 'hipR', point: 'kneeR', a: AX('hipR', 'hip'), b: AX('kneeR', 'knee') },
+    { id: 'ankleL', label: 'стопа L', pivot: 'kneeL', point: 'ankleL', foot: 'L', a: null, b: AX('ankleL', 'ankle') },
+    { id: 'ankleR', label: 'стопа R', pivot: 'kneeR', point: 'ankleR', foot: 'R', a: null, b: AX('ankleR', 'ankle') },
   ]
+  // one dot per joint point; aliases share a dot with their primary joint
   const boneEls = {}
-  for (const b of BONES) {
+  const jointByKey = {}
+  for (const b of JOINT_DEFS) {
+    if (b.alias) { jointByKey[b.alias] = b; continue }
     const el = document.createElement('div')
     el.className = 'bone'
     el.dataset.label = b.label
     el.style.display = 'none'
     bonesEl.appendChild(el)
     boneEls[b.id] = el
-    el.addEventListener('pointerdown', (e) => startBoneDrag(b, e))
-    if (b.key) el.addEventListener('dblclick', () => {
+    jointByKey[b.id] = b
+    el.addEventListener('pointerdown', (e) => { selectJoint(b.id); startBoneDrag(b, e) })
+    el.addEventListener('dblclick', () => {
       ensureFk(state.pose)
-      state.pose.fk[b.key] = 0
+      for (const ax of [b.a, b.b]) if (ax) state.pose.fk[ax.key] = 0
+      if (b.head) { state.pose.head.tilt = 0; state.pose.head.turn = 0 }
       refreshControls(); edit()
     })
+  }
+  // the second-axis ring follows the selected joint
+  const ringEl = document.createElement('div')
+  ringEl.className = 'axis-ring'
+  ringEl.style.display = 'none'
+  ringEl.dataset.label = ''
+  bonesEl.appendChild(ringEl)
+  ringEl.addEventListener('pointerdown', (e) => startRingDrag(e))
+  const ARC_NS = 'http://www.w3.org/2000/svg'
+  const arcRange = document.createElementNS(ARC_NS, 'path')
+  arcRange.setAttribute('class', 'arc-range')
+  const arcAxis = document.createElementNS(ARC_NS, 'path')
+  arcAxis.setAttribute('class', 'arc-axis')
+  if (arcsEl) { arcsEl.appendChild(arcRange); arcsEl.appendChild(arcAxis) }
+
+  function selectedJoint() {
+    return jointByKey[state.selJoint] || jointByKey.spine
+  }
+  function selectJoint(id) {
+    state.selJoint = id
+    for (const k of Object.keys(boneEls)) boneEls[k].classList.toggle('sel', k === id)
+    drawHandles()
   }
 
   const rig = window.PaperCast.create(canvas, {
@@ -759,21 +811,89 @@
   // ── handles ──────────────────────────────────────────────────────────────
   const handleEls = { L: $('#hL'), R: $('#hR') }
   const rotEls = { L: $('#rotL'), R: $('#rotR') }
+  // Second-axis ring: sits outside the limb, follows the selected joint.
+  function drawAxisRing(sk) {
+    const def = selectedJoint()
+    if (!def || !def.b) { ringEl.style.display = 'none'; return }
+    const j = sk[def.point]
+    const p = sk[def.pivot]
+    const dot = sk[def.dot || def.point]
+    if (!j || !p) { ringEl.style.display = 'none'; return }
+    let nx = -(j[1] - p[1]), ny = j[0] - p[0]
+    const len = Math.hypot(nx, ny) || 1
+    nx /= len; ny /= len
+    if (((dot || j)[0] >= 300 && nx < 0) || ((dot || j)[0] < 300 && nx > 0)) { nx = -nx; ny = -ny }
+    if (ny > 0 && (dot || j)[1] < 340) { ny = -Math.abs(ny) }
+    const [x, y] = toWrap([(dot || j)[0] + nx * 40, (dot || j)[1] + ny * 40])
+    ringEl.style.display = 'block'
+    ringEl.style.left = x + 'px'
+    ringEl.style.top = y + 'px'
+    const lim = rangeOf(def.b)
+    ringEl.dataset.label = lim.axis + ' ' + Math.round(state.pose.fk[def.b.key] || 0) + '°'
+  }
+
+  // The joint's motion envelope: an arc from the rest direction to both ends of
+  // the anatomical range, plus the current bone direction.
+  function arcPath(cx, cy, r, a0, a1) {
+    const p0 = [cx + Math.cos(a0) * r, cy + Math.sin(a0) * r]
+    const p1 = [cx + Math.cos(a1) * r, cy + Math.sin(a1) * r]
+    const large = Math.abs(a1 - a0) > Math.PI ? 1 : 0
+    const sweep = a1 > a0 ? 1 : 0
+    return `M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 ${large} ${sweep} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`
+  }
+  function drawArcs(sk) {
+    if (!arcsEl) return
+    const def = selectedJoint()
+    if (!def || !def.a) { arcsEl.style.display = 'none'; return }
+    const key = def.a.key
+    const basePose = clone(state.pose)
+    ensureFk(basePose)
+    basePose.fk[key] = 0
+    const sk0 = window.PaperCast.skeleton(basePose, state.yaw)
+    // the spine pivots at the waist, every other joint at its parent
+    let pivot = sk0[def.pivot]
+    if (key === 'spine') {
+      const b = basePose.body || {}
+      const hip = [300 + (b.x || 0), 545 + (b.y || 0)]
+      const a = (b.rot || 0) * RAD
+      const dx = 300 - hip[0], dy = 527 - hip[1]
+      pivot = [hip[0] + dx * Math.cos(a) - dy * Math.sin(a), hip[1] + dx * Math.sin(a) + dy * Math.cos(a)]
+    }
+    const j0 = sk0[def.point]
+    const j = sk[def.point]
+    if (!pivot || !j0 || !j) { arcsEl.style.display = 'none'; return }
+    const r = Math.hypot(j0[0] - pivot[0], j0[1] - pivot[1])
+    const baseA = Math.atan2(j0[1] - pivot[1], j0[0] - pivot[0])
+    const lim = rangeOf(def.a)
+    arcsEl.style.display = 'block'
+    arcRange.setAttribute('d', arcPath(pivot[0], pivot[1], r, baseA + lim.min * RAD, baseA + lim.max * RAD))
+    arcAxis.setAttribute('d', `M ${pivot[0].toFixed(1)} ${pivot[1].toFixed(1)} L ${j[0].toFixed(1)} ${j[1].toFixed(1)}`)
+  }
+
   function drawHandles() {
     const show = state.mode === 'edit'
     handlesEl.style.display = show ? 'block' : 'none'
     const sk = window.PaperCast.skeleton(state.pose, state.yaw)
-    for (const b of BONES) {
+    for (const b of JOINT_DEFS) {
       const el = boneEls[b.id]
+      if (!el) continue
       if (!show) { el.style.display = 'none'; continue }
-      const p = sk[b.at || b.joint]
+      const p = sk[b.dot || b.point]
       if (!p) { el.style.display = 'none'; continue }
       const [x, y] = toWrap(p)
       el.style.display = 'block'
       el.style.left = x + 'px'
       el.style.top = y + 'px'
+      el.classList.toggle('sel', b.id === state.selJoint)
     }
-    if (!show) { rotEls.L.style.display = 'none'; rotEls.R.style.display = 'none'; return }
+    if (!show) {
+      rotEls.L.style.display = 'none'; rotEls.R.style.display = 'none'
+      ringEl.style.display = 'none'
+      if (arcsEl) arcsEl.style.display = 'none'
+      return
+    }
+    drawAxisRing(sk)
+    drawArcs(sk)
     for (const side of ['L', 'R']) {
       const wr = side === 'L' ? sk.wristL : sk.wristR
       const el = side === 'L' ? sk.elbowL : sk.elbowR
@@ -796,14 +916,22 @@
   function startBoneDrag(def, ev) {
     ev.preventDefault()
     const el = boneEls[def.id]
-    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    if (el && el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const startPose = clone(state.pose)
+    ensureFk(startPose)
+    const sk0 = window.PaperCast.skeleton(startPose, state.yaw)
+    const p0 = sk0[def.pivot]
+    const j0 = sk0[def.point]
+    const a0 = Math.atan2(j0[1] - p0[1], j0[0] - p0[0])
+    const startClient = fromClient(ev.clientX, ev.clientY)
+    const startTurn = startPose.head.turn || 0
+    const startTilt = startPose.head.tilt || 0
     const move = (e) => {
       const pt = fromClient(e.clientX, e.clientY)
-      const sk = window.PaperCast.skeleton(state.pose, state.yaw)
       if (def.foot) {
         // drag the foot: solve the two-bone leg and convert to hip swing + knee
         const side = def.foot
-        const hip = side === 'L' ? sk.hipL : sk.hipR
+        const hip = side === 'L' ? sk0.hipL : sk0.hipR
         const R = window.PaperCast.RIG
         const u = R.upperLeg, l = R.lowerLeg
         let dx = pt[0] - hip[0], dy = pt[1] - hip[1]
@@ -825,19 +953,66 @@
         edit()
         return
       }
-      const parent = sk[def.parent]
-      const joint = sk[def.joint]
-      if (!parent || !joint) return
-      const cur = Math.atan2(joint[1] - parent[1], joint[0] - parent[0])
-      const tgt = Math.atan2(pt[1] - parent[1], pt[0] - parent[0])
-      let delta = (tgt - cur) * 180 / Math.PI
+      if (def.head) {
+        // two axes straight on the pointer: left/right turns the face,
+        // up/down tilts it, each inside its own envelope
+        state.pose.head.turn = Math.max(-0.8, Math.min(0.8, startTurn + (pt[0] - startClient[0]) / 210))
+        state.pose.head.tilt = Math.max(-28, Math.min(28, startTilt + (pt[1] - startClient[1]) * 0.32))
+        syncPoseControls()
+        edit()
+        return
+      }
+      if (!def.a) return
+      const tgt = Math.atan2(pt[1] - p0[1], pt[0] - p0[0])
+      let delta = (tgt - a0) / RAD
       while (delta > 180) delta -= 360
       while (delta < -180) delta += 360
-      const limMap = { spine: 'spine', neck: 'neck', shL: 'sh', shR: 'sh', elbowL: 'elbow', elbowR: 'elbow', hipL: 'hip', hipR: 'hip', kneeL: 'knee', kneeR: 'knee' }
-      const lim = window.PaperCast.LIMITS.fk[limMap[def.key]]
+      const lim = rangeOf(def.a)
+      state.pose.fk[def.a.key] = Math.max(lim.min, Math.min(lim.max, startPose.fk[def.a.key] + delta))
+      syncPoseControls()
+      edit()
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+
+  // second axis of the selected joint: drag the dashed ring around it
+  // the ring follows the pointer: a clockwise drag turns the joint clockwise
+  const FLEX_SIGN = {}
+  function startRingDrag(ev) {
+    const def = selectedJoint()
+    if (!def || !def.b) return
+    ev.preventDefault()
+    const el = ringEl
+    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const sk0 = window.PaperCast.skeleton(state.pose, state.yaw)
+    const j = sk0[def.point]
+    const p = sk0[def.pivot]
+    if (!j || !p) return
+    const base = Math.atan2(j[1] - p[1], j[0] - p[0])
+    const startVal = state.pose.fk[def.b.key] || 0
+    const s0 = fromClient(ev.clientX, ev.clientY)
+    let prev = Math.atan2(s0[1] - j[1], s0[0] - j[0]) - base
+    let acc = 0
+    const sign = FLEX_SIGN[def.id] || 1
+    const lim = rangeOf(def.b)
+    const move = (e) => {
+      const pt = fromClient(e.clientX, e.clientY)
+      const a = Math.atan2(pt[1] - j[1], pt[0] - j[0]) - base
+      let d = (a - prev) / RAD
+      while (d > 180) d -= 360
+      while (d < -180) d += 360
+      // a jump this large means the pointer crossed the joint: ignore it
+      if (Math.abs(d) < 60) acc += d
+      prev = a
       ensureFk(state.pose)
-      const next = state.pose.fk[def.key] + delta
-      state.pose.fk[def.key] = Math.max(lim[0], Math.min(lim[1], next))
+      state.pose.fk[def.b.key] = Math.max(lim.min, Math.min(lim.max, startVal + acc * sign))
       syncPoseControls()
       edit()
     }
@@ -1043,8 +1218,9 @@
     ['ankleR', 'стопа R', 'ankle'],
   ]
   for (const [key, label, lim] of BONES_UI) {
-    const r = window.PaperCast.LIMITS.fk[lim]
-    slider(boneBox, label + '° (' + r[0] + '…' + r[1] + ')', r[0], r[1], 1, 'fk.' + key, (v) => Math.round(v) + '°')
+    const r = window.PaperCast.jointRangeFor(lim, key.endsWith('R') ? 'R' : 'L')
+    const rr = r ? [r.min, r.max] : window.PaperCast.LIMITS.fk[lim]
+    slider(boneBox, label + '° (' + rr[0] + '…' + rr[1] + ')', rr[0], rr[1], 1, 'fk.' + key, (v) => Math.round(v) + '°')
   }
   $('#bones-reset').addEventListener('click', () => {
     ensureFk(state.pose)
@@ -1165,11 +1341,25 @@
       issuesEl.appendChild(d)
     }
     anglesEl.textContent = 'локоть L ' + elbow(sk, 'L').toFixed(0) + '° · R ' + elbow(sk, 'R').toFixed(0) + '° · анатомия ' + (bad.length ? bad.length + '!' : 'ok')
-    // live HUD on the stage
+    // live HUD on the stage: reach, the selected joint and both of its axes
     const h = []
     h.push('reach L ' + Math.round(Math.hypot(sk.wristL[0] - sk.shL[0], sk.wristL[1] - sk.shL[1])))
     h.push('reach R ' + Math.round(Math.hypot(sk.wristR[0] - sk.shR[0], sk.wristR[1] - sk.shR[1])))
     h.push('yaw ' + state.yaw.toFixed(2))
+    const sel = selectedJoint()
+    if (sel) {
+      if (sel.head) {
+        h.push('голова: поворот ' + Math.round((state.pose.head.turn || 0) * 45) + '° · наклон ' + Math.round(state.pose.head.tilt || 0) + '°')
+      } else {
+        const parts = [sel.label]
+        for (const ax of [sel.a, sel.b]) {
+          if (!ax) continue
+          const lim = rangeOf(ax)
+          parts.push(lim.axis + ' ' + Math.round(state.pose.fk[ax.key] || 0) + '° (' + lim.min + '…' + lim.max + ')')
+        }
+        h.push(parts.join(' · '))
+      }
+    }
     hud.innerHTML = ''
     for (const text of h) {
       const s = document.createElement('span')
