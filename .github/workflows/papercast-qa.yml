@@ -1,0 +1,36 @@
+name: papercast-qa
+
+on:
+  push:
+    paths:
+      - 'core/public/vendor/paper-cast*.js'
+      - 'core/public/*.html'
+      - 'core/src/scenes/**'
+      - 'tests/qa/**'
+      - '.github/workflows/papercast-qa.yml'
+  pull_request:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install core deps
+        working-directory: core
+        run: npm ci --no-audit --no-fund
+      - name: Build
+        working-directory: core
+        run: npm run build
+      - name: Serve dist
+        run: |
+          npx --yes serve@14 -s core/dist -l 4173 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/pose-studio.html >/dev/null && break; sleep 1; done
+      - name: Install Playwright
+        run: |
+          npm i --no-save playwright@latest
+          npx playwright install --with-deps chromium
+      - name: Run Paper Cast QA
+        run: node tests/qa/run.cjs http://127.0.0.1:4173

@@ -771,44 +771,71 @@ RIVE_OLDMAN = {
 """,
 }
 
-OBJECTS = [CHARACTER, PORTRAIT, PRESENTER, RIVE_BOB, RIVE_OLDMAN, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
+
+PAPER_ACTOR = {
+    "slug": "character-paper",
+    "title": "Paper actor (Canvas 2D)",
+    "category": "character",
+    "description": "Бумажный 2D-персонаж на Canvas: общий скелет, 31 статичная поза, 82 фонемы и 18 форм рта. Внешность задаётся палитрой, риг не меняется.",
+    "tags": ["character", "paper", "canvas", "2d", "rig", "lipsync", "phonemes"],
+    "mechanics": ["lipsync", "blink", "breathe", "gaze", "gesture", "pose", "emotion"],
+    "rig": {
+        "type": "canvas-2d",
+        "driver": "PaperCast.create",
+        "joints": 15,
+        "poses": 31,
+        "phonemes": 82,
+        "visemes": 18,
+        "clips": ["idle", "talk", "blink", "gesture"],
+    },
+    "html": """
+<div class="obj-paper" style="left:50%; bottom:8%; width:26vmin; height:60vmin; margin-left:-13vmin">
+  <canvas class="paper-canvas" width="600" height="900"></canvas>
+</div>""",
+    "css": """
+.obj-paper { position:absolute; transform-origin:50% 100%; }
+.obj-paper .paper-canvas { width:100%; height:100%; display:block; }
+""",
+}
+
+OBJECTS = [CHARACTER, PORTRAIT, PRESENTER, PAPER_ACTOR, RIVE_BOB, RIVE_OLDMAN, CAR, ROAD, TREE, PINE, CLOUD, BIRD, LAMP, BUILDING, DESK, MONITOR, COFFEE, PLANT, PERSON, TRAFFIC_LIGHT, SUN, MOON]
 
 # Ready actors: a compact catalogue for the editor and AI agents. The full
 # object entry (HTML/CSS) is in OBJECTS; this is the capability card.
 CHARACTERS = [
     {
-        "slug": "character-mark",
-        "title": "Mark (SceneRig, CC0)",
-        "template": "character-poly-duo",
-        "kind": "glb-scenerig",
-        "driver": "SceneRig.create",
-        "mode": "morph-targets",
-        "visemes": 15,
-        "viseme_set": "oculus-15",
-        "body": ["idle", "talk", "blink", "breath", "head", "gesture"],
+        "slug": "character-paper-mark",
+        "title": "Mark (Paper Cast)",
+        "template": "character-paper-duo",
+        "kind": "canvas-2d",
+        "driver": "PaperCast.create",
+        "mode": "shared-skeleton",
+        "poses": 31,
+        "phonemes": 82,
+        "viseme_set": "paper-18",
+        "body": ["idle", "talk", "blink", "gaze", "gesture", "emotion"],
         "lip_sync": True,
         "full_body": True,
-        "license": "CC0",
+        "license": "SceneEngine",
         "author": "SceneEngine",
-        "asset": "/models/characters/character-mark.glb",
-        "rig": "/models/characters/character-mark.scenerig.json",
+        "asset": None,
     },
     {
-        "slug": "character-mira",
-        "title": "Mira (SceneRig, CC0)",
-        "template": "character-poly-duo",
-        "kind": "glb-scenerig",
-        "driver": "SceneRig.create",
-        "mode": "morph-targets",
-        "visemes": 15,
-        "viseme_set": "oculus-15",
-        "body": ["idle", "talk", "blink", "breath", "head", "gesture"],
+        "slug": "character-paper-mira",
+        "title": "Mira (Paper Cast)",
+        "template": "character-paper-duo",
+        "kind": "canvas-2d",
+        "driver": "PaperCast.create",
+        "mode": "shared-skeleton",
+        "poses": 31,
+        "phonemes": 82,
+        "viseme_set": "paper-18",
+        "body": ["idle", "talk", "blink", "gaze", "gesture", "emotion"],
         "lip_sync": True,
         "full_body": True,
-        "license": "CC0",
+        "license": "SceneEngine",
         "author": "SceneEngine",
-        "asset": "/models/characters/character-mira.glb",
-        "rig": "/models/characters/character-mira.scenerig.json",
+        "asset": None,
     },
     {
         "slug": "character-oldman",
@@ -847,24 +874,7 @@ CHARACTERS = [
         "source": "https://rive.app/marketplace/28111-53105-bob-lip-sync-character-system-in-rive/",
         "asset": "/rive/ready/bob.riv",
     },
-    {
-        "slug": "character-3d",
-        "title": "3D-аватар (Ready Player Me)",
-        "template": "character-3d",
-        "kind": "glb-3d",
-        "driver": "SceneKit.babylonCharacter",
-        "mode": "morph-targets",
-        "visemes": 10,
-        "viseme_set": "oculus-15",
-        "body": ["idle", "breath", "blink", "gaze", "head", "wave", "point", "nod"],
-        "lip_sync": True,
-        "full_body": True,
-        "license": "Ready Player Me (free avatar)",
-        "author": "Ready Player Me",
-        "asset": "/models/brunette.glb",
-    },
 ]
-
 
 def list_characters():
     return CHARACTERS
@@ -905,7 +915,7 @@ OBJ_META = {
     "plant":         {"domain": ["indoor", "stage"], "environments": ["office", "studio"], "surface": "ground", "views": ["front"], "default_view": "front"},
     "person":        {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "side"], "default_view": "front"},
     "character":     {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front", "three-quarter", "side"], "default_view": "front"},
-    "character-3d": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
+    "character-paper": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "character-bob": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "character-oldman": {"domain": ["outdoor", "indoor", "stage"], "environments": [], "surface": "ground", "views": ["front"], "default_view": "front"},
     "traffic-light": {"domain": ["outdoor"], "environments": ["city"], "surface": "ground", "views": ["front"], "default_view": "front"},
@@ -1524,396 +1534,264 @@ window.scene = {
 """
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3D AVATAR (Ready Player Me GLB + Babylon.js)
-# ─────────────────────────────────────────────────────────────────────────────
-# The model ships 67 bones and 72 ARKit/Oculus morph targets (15 visemes).
-# Babylon is loaded via <script src> because the sandbox has an opaque origin;
-# the GLB is wrapped into /models/brunette.glb.js for the same reason (fetch is
-# blocked there). BabylonCharacter draws exactly one frame per seek(t).
-
-CHARACTER_3D_HTML = """
-<div class="scene">
+PAPER_DUO_HTML = """
+<div class="scene paper-duo">
   <div class="layer layer-world" data-layer="world">
-    <div class="av-bg"></div>
-    <div class="av-glow"></div>
+    <div class="pd-bg"></div>
+    <div class="pd-halo pd-halo-a"></div>
+    <div class="pd-halo pd-halo-b"></div>
+    <div class="pd-rule"></div>
   </div>
   <div class="layer layer-actors" data-layer="actors">
-    <div class="obj-character-3d" data-layer-id="hero">
-      <canvas class="av-canvas" width="1600" height="900"></canvas>
+    <div class="pd-actor pd-mark" data-layer-id="mark">
+      <div class="pd-card">
+        <div class="pd-top"><span>01</span><b>MARK</b><em>SHARED RIG</em></div>
+        <div class="pd-canvas-wrap"><canvas class="pd-canvas" width="600" height="900"></canvas></div>
+        <div class="pd-foot"><span class="pd-live"></span>CANVAS 2D</div>
+      </div>
+    </div>
+    <div class="pd-actor pd-mira" data-layer-id="mira">
+      <div class="pd-card">
+        <div class="pd-top"><span>02</span><b>MIRA</b><em>SHARED RIG</em></div>
+        <div class="pd-canvas-wrap"><canvas class="pd-canvas" width="600" height="900"></canvas></div>
+        <div class="pd-foot"><span class="pd-live"></span>CANVAS 2D</div>
+      </div>
     </div>
   </div>
+  <div class="layer layer-fx" data-layer="fx"><canvas class="pd-dust" width="1920" height="1080"></canvas></div>
   <div class="layer layer-overlay" data-layer="overlay">
-    <div class="av-sweep"></div>
-    <canvas class="av-dust" width="1920" height="1080"></canvas>
-    <div class="av-caption">
-      <div class="av-kicker">3D STUDIO</div>
-      <div class="av-mask"><span class="av-line">Живой 3D-аватар</span></div>
+    <div class="pd-caption">
+      <div class="pd-kicker">PAPER CAST / SHARED SKELETON</div>
+      <div class="pd-mask"><span class="pd-line">Два голоса</span></div>
     </div>
   </div>
 </div>
-<script src="/vendor/babylon.js"></script>
-<script src="/vendor/babylonjs.loaders.min.js"></script>
-<script src="/vendor/babylon-character.js"></script>
-<script src="/models/brunette.glb.js"></script>
 """
 
-CHARACTER_3D_CSS = """
-.av-bg { position:absolute; inset:0;
-  background:radial-gradient(120% 90% at 50% 12%, #2b3a52 0%, #161d29 46%, #090c12 100%); }
-.av-glow { position:absolute; left:50%; top:4%; width:78vmin; height:78vmin; margin-left:-39vmin;
-  border-radius:50%; pointer-events:none;
-  background:radial-gradient(circle, rgba(130,175,255,.20) 0%, rgba(130,175,255,.05) 46%, transparent 70%);
-  filter:blur(8px); }
-.obj-character-3d { position:absolute; inset:0; }
-.obj-character-3d .av-canvas { width:100%; height:100%; display:block; }
-.av-sweep { position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
-  background:linear-gradient(105deg, transparent 42%, rgba(190,215,255,.10) 50%, transparent 58%);
-  transform:translateX(-30%); }
-.av-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
-  mix-blend-mode:screen; opacity:.55; }
-.av-caption { position:absolute; left:7%; bottom:9%; max-width:46%; z-index:35;
-  font-family:var(--font-heading); font-weight:700; color:var(--text-primary);
-  text-shadow:0 2px 18px rgba(0,0,0,.6); }
-.av-kicker { font-family:var(--font-sans); font-size:clamp(10px, 1.5vmin, 16px);
-  letter-spacing:.12em; text-transform:uppercase; color:var(--brand-light-blue);
-  margin-bottom:1.2vmin; }
-.av-mask { overflow:hidden; padding:.12em 0 .18em; }
-.av-line { display:inline-block; font-size:clamp(20px, 4.2vmin, 56px); line-height:1.06;
-  transform-origin:left bottom; }
-.av-caption::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:3px;
-  background:var(--brand-light-blue); }
+PAPER_DUO_CSS = """
+.paper-duo { background:#0d1117; color:#efe4d1; overflow:hidden; }
+.pd-bg { position:absolute; inset:0; background:
+  radial-gradient(90% 72% at 50% 4%, #213a3d 0%, #111b20 46%, #0d1117 100%); }
+.pd-bg::after { content:''; position:absolute; inset:0; opacity:.22;
+  background-image:radial-gradient(rgba(239,228,209,.18) .7px, transparent .7px);
+  background-size:7px 7px; }
+.pd-halo { position:absolute; top:-18%; width:44%; height:108%; pointer-events:none;
+  filter:blur(34px); opacity:.5; }
+.pd-halo-a { left:2%; background:radial-gradient(ellipse at 50% 0%, rgba(103,216,200,.35), transparent 66%); }
+.pd-halo-b { right:2%; background:radial-gradient(ellipse at 50% 0%, rgba(226,138,90,.27), transparent 66%); }
+.pd-rule { position:absolute; left:4%; right:4%; bottom:10%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(239,228,209,.28), transparent); }
+.pd-actor { position:absolute; bottom:15%; width:36%; height:74%; }
+.pd-mark { left:7%; }
+.pd-mira { right:7%; }
+.pd-card { position:absolute; inset:0; border-radius:1.2vmin; overflow:hidden;
+  background:#efe4d1; border:1px solid rgba(239,228,209,.55);
+  box-shadow:0 2.8vmin 6vmin rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.35); }
+.pd-top { position:absolute; left:0; right:0; top:0; z-index:2;
+  display:flex; align-items:center; gap:1.2vmin; padding:1.3vmin 1.6vmin;
+  font-family:var(--font-mono); font-size:clamp(7px,1.05vmin,13px); letter-spacing:.12em;
+  color:rgba(32,35,45,.55); }
+.pd-top span { color:rgba(32,35,45,.32); }
+.pd-top b { color:#20232d; font-weight:700; }
+.pd-top em { margin-left:auto; font-style:normal; color:rgba(32,35,45,.40); }
+.pd-canvas-wrap { position:absolute; left:0; right:0; top:5%; bottom:0;
+  background:
+    linear-gradient(rgba(32,35,45,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32,35,45,.055) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 40%, #f8f0e2 0%, #efe4d1 60%, #e5d6bd 100%);
+  background-size:3.2vmin 3.2vmin, 3.2vmin 3.2vmin, 100% 100%; }
+.pd-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.pd-foot { position:absolute; left:1.6vmin; bottom:1.2vmin; z-index:2;
+  display:flex; align-items:center; gap:.7vmin; font-family:var(--font-mono);
+  font-size:clamp(6px,.9vmin,11px); letter-spacing:.12em; color:rgba(32,35,45,.50); }
+.pd-live { width:.8vmin; height:.8vmin; border-radius:50%; background:#2f7e76;
+  box-shadow:0 0 1.2vmin rgba(47,126,118,.7); }
+.pd-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:.48; }
+.pd-caption { position:absolute; left:4%; bottom:2%; z-index:8; max-width:44%;
+  color:#efe4d1; text-shadow:0 2px 20px rgba(0,0,0,.55); }
+.pd-kicker { font-family:var(--font-mono); font-size:clamp(8px,1.1vmin,14px);
+  letter-spacing:.22em; color:#67d8c8; margin-bottom:1vmin; }
+.pd-mask { overflow:hidden; padding:.1em 0 .16em; }
+.pd-line { display:inline-block; font-family:var(--font-heading); font-size:clamp(22px,4.6vmin,64px);
+  line-height:1; letter-spacing:-.045em; font-weight:700; }
 @media (orientation: portrait) {
-  .av-caption { left:8%; right:8%; bottom:7%; max-width:none; text-align:center; }
-  .av-caption::before { display:none; }
-  .av-line { font-size:clamp(18px, 6vmin, 40px); }
+  .pd-actor { width:82%; height:42%; left:50% !important; right:auto !important; transform:translateX(-50%); }
+  .pd-mark { bottom:50%; }
+  .pd-mira { bottom:4%; }
+  .pd-caption { left:50%; right:auto; bottom:auto; top:2.5%; transform:translateX(-50%);
+    max-width:none; width:92%; text-align:center; }
+  .pd-kicker { font-size:8px; }
+  .pd-line { font-size:clamp(20px,5.8vmin,42px); }
+  .pd-rule { display:none; }
 }
 """
 
-CHARACTER_3D_JS = """
+PAPER_DUO_JS = """
 const p = window.__sceneProps || {};
 const root = document.querySelector('.scene');
-const canvas = root.querySelector('.av-canvas');
-
-let buffer = null;
-try {
-  const raw = window.__avatarGlb || '';
-  if (raw) {
-    const bin = atob(raw);
-    const u = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    buffer = u.buffer;
-  }
-} catch (e) {
-  window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar buffer: ' + e });
-}
-
-const rig = SceneKit.babylonCharacter(canvas, {
-  buffer,
-  preset: p.preset || 'bust',
-  visemes: p.visemes || [],
-  mood: p.mood || 'neutral',
-  gestures: p.gestures || [{ at: 4200, type: 'wave', duration: 1800 }],
-  gaze: p.gaze || { x: 0, y: 0 },
-  idleClip: p.idleClip || 'Neutral_Idle',
-  talkClip: p.talkClip || 'Talking',
-  talkWeight: p.talk_weight !== undefined ? Number(p.talk_weight) : 0.4,
-  pose: p.pose || {},
-  poseKeys: p.pose_keys || [],
-  seed: Number(p.seed) || 0,
-  intensity: p.intensity !== undefined ? Number(p.intensity) : 1,
-  onError(e) {
-    window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar: ' + (e && e.message ? e.message : e) });
-  },
+const rigs = Array.from(root.querySelectorAll('.pd-canvas')).map((canvas, i) => {
+  const isMira = i === 1;
+  const rig = PaperCast.create(canvas, {
+    character: isMira ? 'mira' : 'mark',
+    pose: isMira ? (p.poseB || 'listen') : (p.poseA || 'explain'),
+    emotion: isMira ? (p.emotionB || 'neutral') : (p.emotionA || 'joy'),
+    seed: isMira ? 1.7 : 0,
+  });
+  rig.speak(isMira ? (p.speechB || 'И можем говорить любыми фонемами.') : (p.speechA || 'Привет. Мы собраны из одного скелета.'), Number(p.speechDur) || 3200, 0);
+  return rig;
 });
-
-const line = root.querySelector('.av-line');
-if (line && p.headline) line.textContent = p.headline;
-const kicker = root.querySelector('.av-kicker');
+const caption = root.querySelector('.pd-line');
+if (caption && p.headline) caption.textContent = p.headline;
+const kicker = root.querySelector('.pd-kicker');
 if (kicker && p.kicker) kicker.textContent = p.kicker;
-
-const dustCanvas = root.querySelector('.av-dust');
-const dust = SceneKit.particles(dustCanvas, {
-  count: Number(p.dust_count) || 44, seed: 23, color: '210,225,255',
-  speedY: 8, driftX: 18, sizeMin: 0.8, sizeMax: 2.2, alphaMin: 0.05, alphaMax: 0.22,
+const dust = SceneKit.particles(root.querySelector('.pd-dust'), {
+  count: Number(p.dust_count) || 46, seed: 31, color: '239,228,209',
+  speedY: 6, driftX: 14, sizeMin: 0.8, sizeMax: 2.2, alphaMin: 0.04, alphaMax: 0.16,
 });
-SceneKit.grain(root, { grainOpacity: 0.1, vignetteStrength: 0.46 });
+SceneKit.grain(root, { grainOpacity: 0.10, vignetteStrength: 0.48 });
 
 const tl = gsap.timeline({ paused: true });
-tl.from('.av-glow', { opacity: 0, scale: 0.86, duration: 1.1, ease: 'power3.out' }, 0)
-  .from('.obj-character-3d', { opacity: 0, y: 22, duration: 0.9, ease: 'power4.out' }, 0.05)
-  .from('.av-line', { yPercent: 118, rotate: 2, duration: 0.9, ease: 'power4.out', stagger: 0.12 }, 0.35)
-  .fromTo('.av-kicker', { letterSpacing: '0.34em', opacity: 0 }, { letterSpacing: '0.12em', opacity: 1, duration: 1.1, ease: 'power3.out' }, 0.5)
-  .to('.av-sweep', { xPercent: 130, duration: 2.4, ease: 'power2.inOut' }, 0.6)
-  .to('.av-caption', { opacity: 0, y: -16, duration: 0.6, ease: 'power2.in' }, 6.2);
-
-// live controls from the editor (no iframe rebuild)
-window.addEventListener('message', (e) => {
-  const m = e.data || {};
-  if (!m || !m.type || m.type.indexOf('avatar-') !== 0) return;
-  try {
-    if (m.type === 'avatar-pose') rig.setPose(m.pose || {});
-    else if (m.type === 'avatar-pose-keys') rig.setPoseKeys(m.keys || []);
-    else if (m.type === 'avatar-visemes') rig.setVisemes(m.visemes || []);
-    else if (m.type === 'avatar-mood') rig.setMood(m.mood || 'neutral');
-    else if (m.type === 'avatar-gaze') rig.setGaze(m.gaze || { x: 0, y: 0 });
-    else if (m.type === 'avatar-gestures') rig.setGestures(m.gestures || []);
-    else if (m.type === 'avatar-clips') rig.setClips(m.clips || {});
-    else if (m.type === 'avatar-preset') rig.applyPreset(m.preset || 'bust');
-    else if (m.type === 'avatar-text') {
-      const line = root.querySelector('.av-line');
-      if (line && m.headline) line.textContent = m.headline;
-      const kicker = root.querySelector('.av-kicker');
-      if (kicker && m.kicker) kicker.textContent = m.kicker;
-    }
-  } catch (err) {
-    window.__sceneSend && window.__sceneSend('scene-error', { message: 'avatar control: ' + err });
-  }
-});
+tl.from('.pd-kicker', { opacity: 0, letterSpacing: '0.34em', duration: 0.8, ease: 'power3.out' }, 0)
+  .from('.pd-line', { yPercent: 120, rotate: 2, duration: 0.9, ease: 'power4.out' }, 0.12)
+  .from('.pd-actor', { y: 30, duration: 0.85, ease: 'power3.out', stagger: 0.12 }, 0.1)
+  .to('.pd-caption', { opacity: 0, y: -14, duration: 0.55, ease: 'power2.in' }, 6.6);
 
 window.scene = {
-  ready: rig.ready,
+  ready: Promise.all(rigs.map((r) => r.ready)),
   seek(t) {
-    rig.seek(t);
+    rigs.forEach((r) => r.seek(t));
     tl.seek(t / 1000);
     dust.seek(t);
   },
-  destroy() { try { rig.destroy(); } catch (e) {} },
+  destroy() { rigs.forEach((r) => { try { r.destroy(); } catch (e) {} }); },
 };
 """
 
-CHARACTER_3D_TEMPLATE = {
-    "slug": "character-3d",
-    "title": "3D avatar",
-    "description": "Ready Player Me: скелет 67 костей и 72 ARKit-морфа. Липсинк по 15 Oculus-виземам, моргание, дыхание, взгляд, жесты, кинетическая типографика.",
-    "tags": ["scene", "character", "lipsync", "3d", "avatar", "babylon", "studio"],
-    "duration": 7000,
+
+PAPER_DIRECTOR_HTML = """
+<div class="scene paper-director">
+  <canvas class="pdir-canvas"></canvas>
+  <div class="pdir-title"><span>PAPER STAGE</span><b>config timeline</b></div>
+</div>
+"""
+
+PAPER_DIRECTOR_CSS = """
+.paper-director { background:#0d1117; overflow:hidden; }
+.pdir-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.pdir-title {
+  position:absolute; left:clamp(16px,4vw,54px); top:clamp(14px,3vh,40px);
+  display:flex; flex-direction:column; gap:4px; pointer-events:none;
+  color:#efe4d1; font:10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing:.18em; text-transform:uppercase; opacity:.8;
+}
+.pdir-title b { font-size:clamp(18px,2.6vw,30px); letter-spacing:-.01em; font-weight:700; text-transform:none; opacity:.95; }
+"""
+
+PAPER_DIRECTOR_JS = """
+const canvas = document.querySelector('.pdir-canvas')
+const cfg = (window.__sceneProps && window.__sceneProps.director) || {}
+const stage = PaperCastStage.create(canvas, cfg)
+window.scene = {
+  ready: stage.ready,
+  seek(t) { stage.seek(t) },
+  destroy() { stage.destroy() },
+}
+"""
+
+PAPER_DIRECTOR_TEMPLATE = {
+    "slug": "paper-director",
+    "title": "Paper director",
+    "description": "Одна сцена из конфига: бумажное окружение, два персонажа, тайминги поз, клипов, речи, эмоций, взглядов и субтитров. Сцена только вызывает seek(t).",
+    "tags": ["scene", "character", "paper", "director", "timeline", "config", "lipsync", "environment"],
+    "duration": 12000,
     "environment": "studio",
-    "view": "",
+    "view": "dark",
     "cues": [],
     "objects": [],
     "props_schema": {
-        "headline": {"type": "text", "label": "Подпись"},
-        "kicker": {"type": "text", "label": "Надпись сверху"},
-        "preset": {"type": "select", "label": "Кадр", "options": ["face", "bust", "full", "wide"]},
-        "idleClip": {"type": "select", "label": "Базовый клип", "options": ["Neutral_Idle", "Idle", "Talking", "Thinking", "Look_Around"]},
-        "talkClip": {"type": "select", "label": "Клип речи", "options": ["Talking", "Neutral_Idle", "Thinking"]},
-        "talk_weight": {"type": "number", "label": "Вес речи 0..1"},
-        "pose": {"type": "json", "label": "Поза {кость: [x,y,z]}°"},
-        "pose_keys": {"type": "json", "label": "Ключи позы [{at,bone,x,y,z}]"},
-        "mood": {"type": "select", "label": "Настроение", "options": ["neutral", "joy", "sad", "surprise", "anger"]},
-        "visemes": {"type": "json", "label": "Виземы [{t,viseme}]"},
-        "gestures": {"type": "json", "label": "Жесты [{at,type,duration}]"},
-        "gaze": {"type": "json", "label": "Взгляд {x,y}"},
-        "seed": {"type": "integer", "label": "Seed"},
+        "director": {"type": "json", "label": "Конфиг сцены (PaperCastStage)"},
     },
     "default_props": {
-        "headline": "Живой 3D-аватар",
-        "kicker": "3D STUDIO",
-        "preset": "bust",
-        "idleClip": "Neutral_Idle",
-        "talkClip": "Talking",
-        "talk_weight": 0.4,
-        "pose": {},
-        "pose_keys": [],
-        "mood": "neutral",
-        "visemes": [],
-        "gestures": [{"at": 4200, "type": "wave", "duration": 1800}],
-        "gaze": {"x": 0, "y": 0},
-        "seed": 3,
+        "director": {
+            "duration": 12000,
+            "camera": {"zoom": 1.02, "follow": "speaker"},
+            "environment": {"preset": "room"},
+            "cast": [
+                {"id": "mark", "character": "mark", "x": 0.34, "y": 0.95, "facing": 1, "pose": "explain"},
+                {"id": "mira", "character": "mira", "x": 0.66, "y": 0.95, "facing": -1, "pose": "neutral"},
+            ],
+            "timeline": [
+                {"at": 0, "type": "pose", "who": "mark", "pose": "explain"},
+                {"at": 300, "type": "speak", "who": "mark", "text": "Привет. Это сцена, собранная из конфига.", "dur": 2600},
+                {"at": 900, "type": "clip", "who": "mira", "clip": "wave"},
+                {"at": 2400, "type": "emotion", "who": "mira", "emotion": "joy"},
+                {"at": 3200, "type": "speak", "who": "mira", "text": "Все ключи идут по таймингам.", "dur": 2600},
+                {"at": 3600, "type": "gesture", "who": "mira", "pose": "point", "dur": 900},
+                {"at": 4200, "type": "turn", "who": "mark", "yaw": 0.6},
+                {"at": 6200, "type": "clip", "who": "mark", "clip": "thumbsUp"},
+                {"at": 7000, "type": "speak", "who": "mark", "text": "Окружение, свет и реплики — из одного конфига.", "dur": 3000},
+                {"at": 8600, "type": "emotion", "who": "mark", "emotion": "joy"},
+                {"at": 9000, "type": "turn", "who": "mira", "yaw": -0.4},
+                {"at": 6200, "type": "camera", "zoom": 1.12, "x": -0.02, "dur": 900},
+                {"at": 10200, "type": "pose", "who": "mark", "pose": "shrug", "fade": 500},
+            ],
+            "captions": [
+                {"at": 300, "text": "Привет. Это сцена, собранная из конфига.", "dur": 2600},
+                {"at": 3200, "text": "Все ключи идут по таймингам.", "dur": 2600},
+                {"at": 7000, "text": "Окружение, свет и реплики — из одного конфига.", "dur": 3000},
+            ],
+        },
     },
     "code": {
-        "html": CHARACTER_3D_HTML.strip(),
-        "css": (BASE_CSS + "\n" + CHARACTER_3D_CSS).strip(),
-        "js": CHARACTER_3D_JS.strip(),
+        "html": PAPER_DIRECTOR_HTML.strip(),
+        "css": (BASE_CSS + "\n" + PAPER_DIRECTOR_CSS).strip(),
+        "js": PAPER_DIRECTOR_JS.strip(),
     },
 }
 
-
-POLY_DUO_HTML = """
-<div class="scene poly-duo">
-  <div class="layer layer-world" data-layer="world">
-    <div class="duo-bg"></div>
-    <div class="duo-spot duo-spot-a"></div>
-    <div class="duo-spot duo-spot-b"></div>
-    <div class="duo-floor"></div>
-  </div>
-  <div class="layer layer-objects" data-layer="objects"></div>
-  <div class="layer layer-actors" data-layer="actors">
-    <div class="duo-actor obj-character-mark">
-      <canvas class="scene-rig-canvas" width="720" height="1080"></canvas>
-      <div class="duo-name">Mark</div>
-    </div>
-    <div class="duo-actor obj-character-mira">
-      <canvas class="scene-rig-canvas" width="720" height="1080"></canvas>
-      <div class="duo-name">Mira</div>
-    </div>
-  </div>
-  <div class="layer layer-fx" data-layer="fx"><canvas class="duo-dust" width="1920" height="1080"></canvas></div>
-  <div class="layer layer-overlay" data-layer="overlay">
-    <div class="duo-caption">
-      <div class="duo-kicker">SCENERIG / POLY</div>
-      <div class="duo-mask"><span class="duo-line">Два голоса</span></div>
-    </div>
-  </div>
-</div>
-<script src="/vendor/babylon.js"></script>
-<script src="/vendor/babylonjs.loaders.min.js"></script>
-"""
-
-POLY_DUO_CSS = """
-.poly-duo { background:#070b12; overflow:hidden; }
-.duo-bg { position:absolute; inset:0; background:
-  radial-gradient(90% 70% at 50% 8%, #26334b 0%, #141d2b 45%, #070b12 100%); }
-.duo-spot { position:absolute; top:-12%; width:44%; height:98%; pointer-events:none;
-  background:radial-gradient(ellipse at 50% 0%, rgba(120,170,255,.20), transparent 68%);
-  filter:blur(18px); }
-.duo-spot-a { left:2%; } .duo-spot-b { right:2%;
-  background:radial-gradient(ellipse at 50% 0%, rgba(120,255,200,.14), transparent 68%); }
-.duo-floor { position:absolute; left:0; right:0; bottom:0; height:32%;
-  background:linear-gradient(180deg, rgba(8,12,20,0) 0%, rgba(8,12,20,.78) 55%, #070b12 100%); }
-.duo-actor { position:absolute; bottom:1%; width:40%; height:92%; }
-.obj-character-mark { left:4%; }
-.obj-character-mira { right:4%; }
-.duo-actor .scene-rig-canvas { width:100%; height:100%; display:block; }
-.duo-name { position:absolute; left:50%; bottom:1.5%; transform:translateX(-50%);
-  font-family:var(--font-mono); font-size:clamp(9px,1.3vmin,15px); letter-spacing:.18em;
-  text-transform:uppercase; color:rgba(220,235,255,.62); }
-.duo-dust { position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
-  mix-blend-mode:screen; opacity:.55; }
-.duo-caption { position:absolute; left:50%; bottom:4.5%; transform:translateX(-50%);
-  text-align:center; font-family:var(--font-heading); color:var(--text-primary);
-  text-shadow:0 2px 20px rgba(0,0,0,.7); z-index:20; }
-.duo-kicker { font-family:var(--font-sans); font-size:clamp(9px,1.25vmin,15px);
-  letter-spacing:.24em; text-transform:uppercase; color:var(--brand-light-blue); margin-bottom:1vmin; }
-.duo-mask { overflow:hidden; padding:.08em 0 .14em; }
-.duo-line { display:inline-block; font-size:clamp(20px,4.6vmin,64px); line-height:1.02; }
-@media (orientation: portrait) {
-  .duo-actor { width:84%; height:48%; left:50% !important; right:auto !important; transform:translateX(-50%); }
-  .obj-character-mark { bottom:44%; }
-  .obj-character-mira { bottom:2%; }
-  .duo-caption { top:5%; bottom:auto; width:92%; }
-  .duo-line { font-size:clamp(18px,6vmin,42px); }
-}
-"""
-
-POLY_DUO_JS = """
-const p = window.__sceneProps || {};
-const root = document.querySelector('.scene');
-const HERO_MAP = {
-  Hips: 'hips', Spine: 'spine', Spine1: 'spine1', Spine2: 'chest',
-  Neck: 'neck', Head: 'head', LeftEye: 'eye.L', RightEye: 'eye.R',
-  LeftShoulder: 'shoulder.L', RightShoulder: 'shoulder.R',
-  LeftArm: 'upperArm.L', RightArm: 'upperArm.R',
-  LeftForeArm: 'lowerArm.L', RightForeArm: 'lowerArm.R',
-  LeftHand: 'hand.L', RightHand: 'hand.R',
-  LeftUpLeg: 'upperLeg.L', RightUpLeg: 'upperLeg.R',
-  LeftLeg: 'lowerLeg.L', RightLeg: 'lowerLeg.R',
-  LeftFoot: 'foot.L', RightFoot: 'foot.R',
-  LeftToeBase: 'toe.L', RightToeBase: 'toe.R',
-};
-const specs = [
-  {
-    src: '/models/hero/avatarsdk-man.glb',
-    preset: 'bust', height: 1.80,
-    appearance: p.appearanceA || {},
-    visemes: p.visemesA || [],
-    mood: p.moodA || 'neutral',
-    map: HERO_MAP, armRestZ: -1.4, headPitch: 0.10,
-  },
-  {
-    src: '/models/brunette.glb',
-    preset: 'bust', height: 1.70,
-    appearance: p.appearanceB || {},
-    visemes: p.visemesB || [],
-    mood: p.moodB || 'neutral',
-    map: HERO_MAP, armRestZ: -0.45, headPitch: 0.0,
-  },
-];
-const rigs = Array.from(root.querySelectorAll('.scene-rig-canvas')).map((canvas, i) => {
-  const s = specs[i] || specs[0];
-  return SceneRig.create(canvas, {
-    src: s.src, preset: s.preset, height: s.height,
-    appearance: s.appearance, mood: s.mood, motion: 'talk', interactive: false,
-    boneMap: s.map || null, armRestZ: s.armRestZ || 0, headPitch: s.headPitch || 0,
-  });
-});
-const ready = Promise.all(rigs.map(async (rig, i) => {
-  await rig.ready;
-  rig.setAppearance(specs[i].appearance);
-  rig.setVisemes(specs[i].visemes);
-  rig.setMood(specs[i].mood);
-}));
-const dust = SceneKit.particles(root.querySelector('.duo-dust'), {
-  count: Number(p.dust_count) || 44, seed: 23, color: '205,225,255',
-  speedY: 7, driftX: 18, sizeMin: 0.8, sizeMax: 2.2, alphaMin: 0.04, alphaMax: 0.18,
-});
-SceneKit.grain(root, { grainOpacity: 0.09, vignetteStrength: 0.5 });
-
-const caption = root.querySelector('.duo-line');
-if (caption && p.headline) caption.textContent = p.headline;
-const kicker = root.querySelector('.duo-kicker');
-if (kicker && p.kicker) kicker.textContent = p.kicker;
-
-const tl = gsap.timeline({ paused: true });
-tl.from('.duo-kicker', { opacity: 0, letterSpacing: '0.4em', duration: 0.8, ease: 'power3.out' }, 0)
-  .from('.duo-line', { yPercent: 120, rotate: 2, duration: 0.9, ease: 'power4.out' }, 0.15)
-  .from('.duo-actor', { y: 26, opacity: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12 }, 0.1)
-  .to('.duo-caption', { opacity: 0, y: -16, duration: 0.5, ease: 'power2.in' }, 7.2);
-
-window.scene = {
-  ready,
-  seek(t) {
-    rigs.forEach((rig) => rig.seek(t));
-    tl.seek(t / 1000);
-    dust.seek(t);
-  },
-};
-"""
-
-POLY_DUO_TEMPLATE = {
-    "slug": "character-poly-duo",
-    "title": "Poly duo",
-    "description": "Два полигональных SceneRig-персонажа: скелет, настройки внешности, Oculus-15 липсинк, детерминированный seek(t).",
-    "tags": ["scene", "character", "scenerig", "lipsync", "3d", "poly", "studio"],
-    "duration": 8000,
+PAPER_DUO_TEMPLATE = {
+    "slug": "character-paper-duo",
+    "title": "Paper duo",
+    "description": "Два бумажных 2D-персонажа на Canvas: общий скелет, 31 статичная поза, 82 фонемы, 18 форм рта, эмоции и детерминированный seek(t). Без Babylon.",
+    "tags": ["scene", "character", "paper", "canvas", "2d", "lipsync", "phonemes", "studio"],
+    "duration": 7200,
     "environment": "studio",
-    "view": "night",
+    "view": "dark",
+    "cues": [],
     "objects": [],
     "props_schema": {
         "headline": {"type": "text", "label": "Заголовок"},
         "kicker": {"type": "text", "label": "Надпись сверху"},
-        "visemesA": {"type": "json", "label": "Виземы Mark [{t,viseme}]"},
-        "visemesB": {"type": "json", "label": "Виземы Mira [{t,viseme}]"},
-        "appearanceA": {"type": "json", "label": "Внешность Mark"},
-        "appearanceB": {"type": "json", "label": "Внешность Mira"},
-        "moodA": {"type": "select", "label": "Настроение Mark", "options": ["neutral", "joy", "sad"]},
-        "moodB": {"type": "select", "label": "Настроение Mira", "options": ["neutral", "joy", "sad"]},
+        "speechA": {"type": "text", "label": "Реплика Mark"},
+        "speechB": {"type": "text", "label": "Реплика Mira"},
+        "speechDur": {"type": "number", "label": "Длительность речи, мс"},
+        "poseA": {"type": "select", "label": "Поза Mark", "options": ["neutral", "wave", "point", "explain", "shrug", "think", "thumbsUp", "ok", "stop", "cheer", "crossArms", "handsOnHips", "present", "openPalms", "listen", "armsWide"]},
+        "poseB": {"type": "select", "label": "Поза Mira", "options": ["neutral", "wave", "point", "explain", "shrug", "think", "thumbsUp", "ok", "stop", "cheer", "crossArms", "handsOnHips", "present", "openPalms", "listen", "armsWide"]},
+        "emotionA": {"type": "select", "label": "Эмоция Mark", "options": ["neutral", "joy", "sad", "anger", "surprise", "think", "fear", "disgust"]},
+        "emotionB": {"type": "select", "label": "Эмоция Mira", "options": ["neutral", "joy", "sad", "anger", "surprise", "think", "fear", "disgust"]},
         "dust_count": {"type": "integer", "label": "Пылинки"},
     },
     "default_props": {
         "headline": "Два голоса",
-        "kicker": "SCENERIG / POLY",
-        "visemesA": VIS_DEMO,
-        "visemesB": VIS_DEMO_B,
-        "appearanceA": {"skin": "#b8805e", "hair": "#1a130f", "top": "#294d8c",
-                        "bottom": "#292b33", "shoes": "#141417", "eyes": "#2e6147",
-                        "lips": "#8c3d38", "glasses": False, "hood": True, "scale": 1},
-        "appearanceB": {"skin": "#dba68a", "hair": "#752914", "top": "#33734f",
-                        "bottom": "#382b3d", "shoes": "#3d1c1a", "eyes": "#3373a0",
-                        "lips": "#ad4c4c", "glasses": True, "hood": False, "scale": 1},
-        "moodA": "neutral", "moodB": "joy", "dust_count": 44,
+        "kicker": "PAPER CAST / SHARED SKELETON",
+        "speechA": "Привет. Мы собраны из одного скелета.",
+        "speechB": "И можем говорить любыми фонемами.",
+        "speechDur": 3200,
+        "poseA": "explain", "poseB": "present",
+        "emotionA": "joy", "emotionB": "neutral",
+        "dust_count": 46,
     },
     "code": {
-        "html": POLY_DUO_HTML.strip(),
-        "css": (BASE_CSS + "\n" + POLY_DUO_CSS).strip(),
-        "js": POLY_DUO_JS.strip(),
+        "html": PAPER_DUO_HTML.strip(),
+        "css": (BASE_CSS + "\n" + PAPER_DUO_CSS).strip(),
+        "js": PAPER_DUO_JS.strip(),
     },
 }
 
 TEMPLATES = [
-    CHARACTER_3D_TEMPLATE,
-    POLY_DUO_TEMPLATE,
+    PAPER_DIRECTOR_TEMPLATE,
+    PAPER_DUO_TEMPLATE,
     _compose(
         "forest", ["road", "car", "tree", "pine", "cloud"],
         FOREST_DRIVE_JS,

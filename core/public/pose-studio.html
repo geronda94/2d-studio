@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paper Cast — Pose Studio</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121820;
+    --panel-2: #18212b;
+    --line: #26313d;
+    --line-soft: rgba(150, 175, 195, .16);
+    --text: #e8e4da;
+    --muted: #92a0ab;
+    --cream: #efe4d1;
+    --ink: #20232d;
+    --teal: #67d8c8;
+    --teal-dim: #2f7e76;
+    --orange: #e28a5a;
+    --gold: #d8b46f;
+    --red: #e06a5a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  button, select, input { touch-action: manipulation; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px; line-height: 1.4; overflow-x: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .app { min-height: 100dvh; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: calc(13px + env(safe-area-inset-top)) 18px 13px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18,24,32,.97), rgba(11,15,20,.97));
+    position: sticky; top: 0; z-index: 30; backdrop-filter: blur(12px);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-mark {
+    width: 32px; height: 32px; border: 1px solid var(--teal-dim); border-radius: 9px;
+    display: grid; place-items: center; position: relative; background: rgba(103,216,200,.06);
+  }
+  .brand-mark::before, .brand-mark::after { content: ''; position: absolute; background: var(--teal); }
+  .brand-mark::before { width: 13px; height: 1px; top: 15px; }
+  .brand-mark::after { width: 1px; height: 13px; left: 15px; }
+  .brand-title { font-weight: 750; letter-spacing: .16em; font-size: 12px; text-transform: uppercase; }
+  .brand-sub { color: var(--muted); font: 10px/1.3 ui-monospace, Menlo, monospace; letter-spacing: .04em; }
+  .toplinks { display: flex; gap: 14px; margin-left: auto; align-items: center; }
+  .toplinks a { color: var(--muted); text-decoration: none; font-size: 11px; border-bottom: 1px dotted transparent; }
+  .toplinks a:hover { color: var(--text); border-color: var(--teal); }
+  .toplinks a.on { color: var(--text); border-color: var(--teal); }
+  .chip {
+    border: 1px solid var(--line); background: rgba(255,255,255,.02); color: var(--muted);
+    border-radius: 999px; padding: 4px 9px; font: 10px/1.1 ui-monospace, Menlo, monospace;
+    letter-spacing: .05em; white-space: nowrap;
+  }
+  .chip b { color: var(--teal); font-weight: 600; }
+
+  .workspace {
+    display: grid; grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 14px; padding: 14px; flex: 1; align-items: start;
+    width: min(1700px, 100%); margin: 0 auto;
+  }
+  .stage {
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    background: #0e141b; min-width: 0; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    position: sticky; top: 76px;
+  }
+  .stage-head {
+    display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font: 10px/1.2 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: var(--teal); text-transform: uppercase; }
+  .stage-title { margin: 3px 0 0; font-size: 20px; line-height: 1.05; letter-spacing: -.02em; font-weight: 720; }
+  .stage-note { margin-top: 4px; color: var(--muted); max-width: 60ch; font-size: 11.5px; }
+  .mode-chip {
+    flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px;
+    font: 10px/1.2 ui-monospace, Menlo, monospace; color: var(--teal); letter-spacing: .08em;
+    background: rgba(103,216,200,.06); white-space: nowrap;
+  }
+  .mode-chip.anim { color: var(--gold); border-color: rgba(216,180,111,.4); background: rgba(216,180,111,.08); }
+
+  #wrap {
+    position: relative; width: 100%; height: min(72vh, 760px);
+    background:
+      linear-gradient(rgba(32,35,45,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(32,35,45,.055) 1px, transparent 1px),
+      radial-gradient(ellipse at 50% 38%, #f7eedf 0%, #efe4d1 55%, #e2d3b9 100%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    overflow: hidden; touch-action: none;
+  }
+  .stage-tools { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .btn.ghost { display: none; background: transparent; border-color: var(--line); padding: 4px 8px; font-size: 14px; line-height: 1; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #wrap { touch-action: pan-y; }
+  .handle { touch-action: none; }
+  #handles { position: absolute; inset: 0; pointer-events: none; }
+  #bones { position: absolute; inset: 0; pointer-events: none; }
+  .bone {
+    position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px;
+    border-radius: 50%; background: rgba(226,138,90,.85); border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(32,35,45,.35); pointer-events: auto; cursor: grab;
+    touch-action: none;
+  }
+  .bone::after {
+    content: attr(data-label); position: absolute; left: 16px; top: -2px;
+    font: 8px/1 ui-monospace, monospace; color: #5a3a28; white-space: nowrap;
+    background: rgba(255,255,255,.7); padding: 2px 3px; border-radius: 3px;
+    display: none;
+  }
+  .bone:hover::after, body.show-labels .bone::after { display: block; }
+  .bone.foot { background: rgba(226,138,90,.9); width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+  .handle.active { border-color: var(--gold); background: rgba(216,180,111,.28); }
+  #bonesBtn { padding: 5px 9px; font-size: 11px; }
+  #undo, #redo { padding: 4px 8px; font-size: 14px; line-height: 1; }
+  .bone.static { background: rgba(140,150,160,.7); cursor: default; }
+  .bone.static::after { color: #4a4f57; }
+  #bonesBtn.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.10); }
+  .handle {
+    position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+    border-radius: 50%; border: 2px solid var(--teal);
+    background: rgba(103,216,200,.18); box-shadow: 0 0 0 4px rgba(103,216,200,.10), 0 6px 14px rgba(0,0,0,.25);
+    pointer-events: auto; cursor: grab; transition: transform .08s;
+  }
+  .handle::after {
+    content: attr(data-label); position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%);
+    font: 9px/1 ui-monospace, Menlo, monospace; letter-spacing: .1em; color: #1d4d47;
+    background: rgba(255,255,255,.55); border-radius: 4px; padding: 3px 4px; white-space: nowrap;
+  }
+  .bone { transition: transform .08s; }
+  .bone:hover { transform: scale(1.25); }
+  .bone.primary { background: rgba(226,138,90,.95); width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+  .bone.paired { background: rgba(103,216,200,.85); }
+  .rot {
+    position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+    border: 2px dashed var(--gold); background: rgba(216,180,111,.16); pointer-events: auto;
+    cursor: ew-resize; touch-action: none;
+  }
+  .rot::after {
+    content: '⟳'; position: absolute; inset: 0; display: grid; place-items: center;
+    font: 11px/1 ui-monospace, monospace; color: #8a6a2f;
+  }
+  .fingers {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 8px 10px; border-top: 1px solid var(--line); background: rgba(0,0,0,.12);
+  }
+  .fingers .flabel { font: 10px/1 ui-monospace, monospace; color: var(--muted); letter-spacing: .1em; }
+  .fingers button {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--muted);
+    border-radius: 999px; padding: 5px 9px; font-size: 11px; cursor: pointer;
+  }
+  .fingers button.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.10); }
+  .fingers .side { padding: 4px 8px; font: 10px/1 ui-monospace, monospace; }
+  #rotL, #rotR { display: none; }
+  .handle:active { cursor: grabbing; transform: scale(1.08); }
+  .hud {
+    position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap;
+    pointer-events: none; max-width: calc(100% - 20px);
+  }
+  .hud span {
+    font: 10px/1 ui-monospace, Menlo, monospace; color: #2b3a3a;
+    background: rgba(255,255,255,.62); border: 1px solid rgba(32,35,45,.16);
+    border-radius: 6px; padding: 4px 6px;
+  }
+  .hud span.bad { color: #8a2b20; background: rgba(255,226,220,.85); border-color: rgba(180,60,40,.35); }
+
+  .transport {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-top: 1px solid var(--line); background: var(--panel);
+  }
+  .transport button {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+    border-radius: 8px; padding: 7px 12px; font-size: 12px;
+  }
+  .transport button:hover { border-color: var(--teal-dim); }
+  .transport button.primary { background: rgba(103,216,200,.12); border-color: var(--teal-dim); color: var(--teal); }
+  .transport input[type=range] { flex: 1; min-width: 80px; accent-color: var(--teal); }
+  .transport .time { font: 10px/1 ui-monospace, Menlo, monospace; color: var(--muted); min-width: 62px; text-align: right; }
+
+  .inspector {
+    display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 96px);
+    overflow: auto; padding-right: 2px;
+  }
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .panel summary {
+    list-style: none; cursor: pointer; padding: 11px 13px; display: flex; align-items: center; gap: 8px;
+    font: 10px/1.2 ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .panel summary::-webkit-details-marker { display: none; }
+  .panel summary::before { content: '+'; color: var(--teal); width: 10px; }
+  .panel[open] summary::before { content: '–'; }
+  .panel-body { padding: 0 13px 13px; display: flex; flex-direction: column; gap: 9px; }
+  .ctrl { display: grid; grid-template-columns: 1fr 52px; gap: 4px 8px; align-items: center; }
+  .ctrl label { grid-column: 1 / -1; color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; gap: 8px; }
+  .ctrl label b { color: var(--text); font-weight: 600; font: 10px/1 ui-monospace, Menlo, monospace; }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--teal); }
+  .ctrl .val { font: 10px/1 ui-monospace, Menlo, monospace; color: var(--muted); text-align: right; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { min-width: 0; }
+  .row select { flex: 1; width: auto; }
+  .row .switch { flex: 0 0 auto; white-space: nowrap; }
+  select, input[type=text] {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 7px 8px; font-size: 12px;
+  }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; font-size: 12px; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--teal-dim); }
+  .btn.primary { background: rgba(103,216,200,.12); border-color: var(--teal-dim); color: var(--teal); }
+  .btn.danger:hover { border-color: rgba(224,106,90,.6); color: var(--red); }
+  .switch { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11.5px; }
+  .switch input { accent-color: var(--teal); }
+  .issues { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; }
+  .issue { border: 1px solid rgba(224,106,90,.35); background: rgba(224,106,90,.08); color: #f0b6ac; border-radius: 7px; padding: 6px 8px; }
+  .okline { color: #8fd9c8; border: 1px solid rgba(103,216,200,.28); background: rgba(103,216,200,.06); border-radius: 7px; padding: 6px 8px; }
+  .plist { display: flex; flex-direction: column; gap: 4px; max-height: 150px; overflow: auto; }
+  .pitem { display: flex; align-items: center; gap: 6px; }
+  .pitem .nm { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pitem .mini { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px; padding: 3px 6px; font-size: 10px; }
+  .pitem .mini:hover { color: var(--text); border-color: var(--teal-dim); }
+  textarea {
+    width: 100%; min-height: 110px; resize: vertical; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; color: var(--muted);
+    font: 10.5px/1.5 ui-monospace, Menlo, monospace; padding: 8px;
+  }
+  .hintline { color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .tl-track { position: relative; height: 28px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); margin: 4px 0 8px; cursor: crosshair; }
+  .tl-key { position: absolute; top: 4px; width: 8px; height: 18px; margin-left: -4px; border-radius: 2px; background: var(--gold); border: 1px solid rgba(0,0,0,.35); cursor: pointer; }
+  .tl-key.sel { background: var(--teal); }
+  .tl-head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--teal); pointer-events: none; }
+  .tl-row { display: grid; grid-template-columns: 64px 80px auto auto auto; gap: 5px; align-items: center; font-size: 11px; }
+  .tl-row input[type=number] { width: 64px; padding: 4px 5px; }
+  .tl-row select { padding: 4px 5px; font-size: 11px; }
+  .tl-row .mini { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px; padding: 3px 6px; font-size: 10px; }
+  .tl-row .mini:hover { color: var(--text); border-color: var(--teal-dim); }
+  @media (max-width: 1080px) {
+    .workspace { grid-template-columns: 1fr; }
+    .stage { position: static; }
+    .inspector { max-height: none; }
+  }
+
+  /* ── phones: sticky stage + touch-friendly controls ─────────────────── */
+  @media (max-width: 900px) {
+    .topbar { padding: 8px 10px; gap: 8px; position: static; }
+    .brand-sub { display: none; }
+    .topbar .chip { display: none; }
+    .toplinks { gap: 10px; }
+    .toplinks a:nth-child(2) { display: none; }
+    .workspace { padding: 8px; gap: 8px; }
+    .stage {
+      position: sticky; top: 0; z-index: 20;
+      border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,.4);
+    }
+    .stage-head { padding: 8px 10px; align-items: center; }
+    .eyebrow, .stage-note { display: none; }
+    .stage-title { font-size: 15px; margin: 0; letter-spacing: 0; }
+    .mode-chip { padding: 4px 8px; font-size: 9px; }
+    .btn.ghost { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; font-size: 16px; }
+    #wrap { height: 36dvh; min-height: 240px; transition: height .18s ease; }
+    body.stage-focus .inspector { display: none; }
+    body.stage-focus #wrap { height: 74dvh; }
+
+    .transport { flex-wrap: wrap; gap: 6px; padding: 6px 10px calc(8px + env(safe-area-inset-bottom)); }
+    .transport button { min-height: 36px; flex: 1 1 0; padding: 4px 8px; font-size: 12px; }
+    .transport input[type=range] { order: 10; flex: 1 1 60%; height: 26px; }
+    .transport .time { order: 11; min-width: 48px; font-size: 9.5px; }
+    .transport #loopmode { order: 0; flex: 0 0 auto; max-width: 118px; margin-left: 0; width: auto; min-height: 34px; font-size: 11px; padding: 4px 4px; }
+
+    .hud { top: 8px; bottom: auto; }
+
+    .inspector { gap: 8px; }
+    .panel summary { padding: 14px 12px; font-size: 11px; }
+    .panel-body { padding: 0 12px 14px; gap: 12px; }
+    .ctrl { gap: 2px 8px; }
+    .ctrl label { font-size: 12px; }
+    .ctrl input[type=range] { height: 30px; }
+    .ctrl .val { font-size: 11px; }
+    select, input[type=text] { min-height: 42px; font-size: 16px; }
+    .btn { min-height: 40px; padding: 8px 12px; font-size: 13px; }
+    .switch { font-size: 12.5px; min-height: 38px; }
+    .switch input { width: 18px; height: 18px; }
+    .hintline { font-size: 11.5px; }
+    .plist { max-height: none; }
+    .pitem .mini { min-height: 34px; padding: 5px 9px; font-size: 11px; }
+    .handle { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+    .handle::after { display: none; }
+    .hud { left: 8px; top: 8px; bottom: auto; gap: 4px; }
+
+    /* while scrolling the inspector, shrink the pinned stage to a preview */
+    body.compact-stage .stage-head { display: none; }
+    body.compact-stage #wrap { height: 24dvh; min-height: 170px; }
+    body.compact-stage .stage { border-radius: 0 0 12px 12px; }
+    .hud span { font-size: 9px; padding: 3px 5px; }
+    textarea { font-size: 12px; }
+
+    .panel[data-panel="char"] { order: 1; }
+    .panel[data-panel="clips"] { order: 2; }
+    .panel[data-panel="limits"] { order: 3; }
+    .panel[data-panel="pose"] { order: 4; }
+    .panel[data-panel="bones"] { order: 5; }
+    .panel[data-panel="presets"] { order: 6; }
+    .panel[data-panel="anim"] { order: 7; }
+    .panel[data-panel="timeline"] { order: 8; }
+    .panel[data-panel="export"] { order: 9; }
+  }
+
+  /* landscape phones: the sticky stage would eat the viewport */
+  @media (max-height: 540px) and (max-width: 980px) {
+    .stage { position: static; }
+    #wrap { height: 58dvh; min-height: 210px; }
+    body.stage-focus #wrap { height: 82dvh; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <div>
+        <div class="brand-title">Paper Cast</div>
+        <div class="brand-sub">pose studio · v12</div>
+      </div>
+    </div>
+    <div class="chip">поз <b id="chip-poses">·</b></div>
+    <div class="chip">костей <b>15</b></div>
+    <div class="chip">лимиты <b>on</b></div>
+    <nav class="toplinks">
+      <a href="/pose-studio.html" class="on">Pose Studio</a>
+      <a href="/character-studio.html">Character Lab</a>
+      <a href="/character-builder.html">Builder</a>
+      <a href="/rig3d.html">3D вид</a>
+      <a href="/director-demo.html">Режиссёр</a>
+      <a href="/p/12" target="_blank" rel="noopener">Сцена</a>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <section class="stage">
+      <div class="stage-head">
+        <div>
+          <div class="eyebrow">authoring</div>
+          <h1 class="stage-title">Позы и жесты</h1>
+          <div class="stage-note">Тяните любую точку: кисть, стопу, локоть, колено, плечо, бедро, голову. Кольцо у кисти — поворот ладони, панель «Пальцы» — форма кисти.</div>
+        </div>
+        <div class="stage-tools">
+          <button class="btn" id="undo" title="Отменить (Ctrl+Z)">↶</button>
+          <button class="btn" id="redo" title="Вернуть (Ctrl+Shift+Z)">↷</button>
+          <button class="btn" id="bonesBtn" title="Показать подписи суставов">подписи</button>
+          <div class="mode-chip" id="mode-chip">EDIT</div>
+          <button class="btn ghost" id="focus" title="Развернуть сцену" aria-label="Развернуть сцену">⛶</button>
+        </div>
+      </div>
+      <div id="wrap">
+        <canvas id="cv"></canvas>
+        <div id="handles">
+          <div class="handle" id="hL" data-side="L" data-label="кисть L"></div>
+          <div class="handle" id="hR" data-side="R" data-label="кисть R"></div>
+          <div class="rot" id="rotL" data-side="L" title="поворот ладони L"></div>
+          <div class="rot" id="rotR" data-side="R" title="поворот ладони R"></div>
+        </div>
+        <div id="bones"></div>
+        <div class="hud" id="hud"></div>
+      </div>
+      <div class="fingers" id="fingerbar">
+        <span class="flabel">ПАЛЬЦЫ</span>
+        <button class="side on" data-hand="R">R</button>
+        <button class="side" data-hand="L">L</button>
+        <button data-finger="relaxed">расслаб.</button>
+        <button data-finger="open">ладонь</button>
+        <button data-finger="point">указать</button>
+        <button data-finger="peace">виктория</button>
+        <button data-finger="thumb">класс</button>
+        <button data-finger="ok">ок</button>
+        <button data-finger="fist">кулак</button>
+        <button data-finger="pinch">щепоть</button>
+      </div>
+      <div class="transport">
+        <button class="primary" id="play">▶ Play</button>
+        <button id="stop">■ Stop</button>
+        <input type="range" id="scrub" min="0" max="1200" step="1" value="0">
+        <span class="time" id="time">0 ms</span>
+        <select id="loopmode" style="width:auto">
+          <option value="pingpong">пинг-понг</option>
+          <option value="loop">цикл</option>
+          <option value="once">один раз</option>
+        </select>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <details class="panel" open data-panel="char">
+        <summary>Персонаж</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="char">
+              <option value="mark">Mark</option>
+              <option value="mira">Mira</option>
+            </select>
+            <label class="switch"><input type="checkbox" id="skeleton"> скелет на канвасе</label>
+          </div>
+          <div id="yaw-ctrl"></div>
+          <div class="hintline">Поворот 3/4 и профиль на краях: корпус сужается, голова поворачивается, дальняя рука уходит за торс.</div>
+        </div>
+      </details>
+
+      <details class="panel" open data-panel="pose">
+        <summary>Поза</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="preset"></select>
+            <button class="btn" id="reset">neutral</button>
+          </div>
+          <div id="pose-controls"></div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="clips">
+        <summary>Библиотека жестов</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="clip"></select>
+            <button class="btn primary" id="clip-play">Play</button>
+          </div>
+          <div class="hintline">Клипы: антиципация → жест → возврат. Loop/пинг-понг — сверху, у таймлайна.</div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="bones">
+        <summary>Кости (FK)</summary>
+        <div class="panel-body">
+          <div class="hintline">Каждая кость отдельно: позвоночник, шея, голова, плечи, локти, кисти, бёдра, колени, стопы. 0° — как в позе.</div>
+          <div id="bone-controls"></div>
+          <button class="btn" id="bones-reset">Сбросить кости</button>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="limits">
+        <summary>Лимиты</summary>
+        <div class="panel-body">
+          <div class="issues" id="issues"></div>
+          <div class="hintline" id="angles"></div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="presets">
+        <summary>Пресеты</summary>
+        <div class="panel-body">
+          <div class="row">
+            <input type="text" id="pname" placeholder="имя пресета" value="myPose">
+            <button class="btn primary" id="save">Save</button>
+          </div>
+          <div class="plist" id="plist"></div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="timeline">
+        <summary>Таймлайн</summary>
+        <div class="panel-body">
+          <div class="row">
+            <input type="number" id="tl-dur" min="200" max="20000" step="50" value="1600" style="width:96px">
+            <button class="btn primary" id="tl-add">+ ключ</button>
+            <button class="btn" id="tl-play">▶</button>
+          </div>
+          <div class="tl-track" id="tl-track"></div>
+          <div id="tl-keys" class="plist"></div>
+          <div class="hintline">Ключ хранит позу целиком (включая кости). Ease — вход в ключ. Клик по дорожке — перемотка.</div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="anim">
+        <summary>Анимация A → B</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="anim-a"></select>
+            <select id="anim-b"></select>
+          </div>
+          <div id="anim-controls"></div>
+          <div class="hintline">Пресеты участвуют в анимации наравне с встроенными позами. Цикл жизни (дыхание/качание) включается ниже.</div>
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="life" checked> life</label>
+          </div>
+          <div id="life-controls"></div>
+        </div>
+      </details>
+
+      <details class="panel" data-panel="export">
+        <summary>Экспорт</summary>
+        <div class="panel-body">
+          <div class="row">
+            <button class="btn" id="export-json">JSON</button>
+            <button class="btn" id="export-scene">Scene JS</button>
+            <button class="btn" id="copy">Copy</button>
+          </div>
+          <textarea id="export" spellcheck="false" placeholder="Здесь появится JSON или JS для сцены"></textarea>
+        </div>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<script src="/vendor/paper-cast.js?v=31"></script>
+<script src="/vendor/paper-cast-session.js?v=2"></script>
+<script>
+(function () {
+  'use strict'
+  const $ = (s) => document.querySelector(s)
+  const clone = (o) => JSON.parse(JSON.stringify(o))
+  const RAD = Math.PI / 180
+  const LS = 'papercast.poseStudio.v1'
+
+  let presets = {}
+  try { presets = JSON.parse(localStorage.getItem(LS) || '{}') || {} } catch (e) { presets = {} }
+
+  const FK_KEYS = ['spine', 'neck', 'head', 'shL', 'elbowL', 'wristL', 'shR', 'elbowR', 'wristR', 'hipL', 'kneeL', 'ankleL', 'hipR', 'kneeR', 'ankleR']
+  function ensureFk(p) {
+    p.fk = p.fk || {}
+    for (const k of FK_KEYS) if (typeof p.fk[k] !== 'number') p.fk[k] = 0
+    return p
+  }
+
+  const state = {
+    char: 'mark',
+    pose: clone(window.PaperCast.POSES.neutral),
+    name: 'neutral',
+    yaw: 0,
+    life: { on: true, breath: 1, sway: 1, nod: 1 },
+    time: 0,
+    mode: 'edit',
+    anim: { a: 'neutral', b: 'wave', dur: 1200, mode: 'pingpong', playing: false, t0: 0 },
+    clipId: 'wave',
+    showSkeleton: false,
+    hand: 'R',
+  }
+
+  // one character across Lab / Builder / Pose / 3D
+  const SESSION = window.PaperCastSession || null
+  let remoteApply = false
+  const session = SESSION ? SESSION.read() : {}
+  const urlChar = SESSION ? SESSION.fromURL() : null
+  if (urlChar) session.active = urlChar
+  if (session.active && window.PaperCast.CHARACTERS[session.active]) state.char = session.active
+  if (session.pose) {
+    const src = (presets && presets[session.pose]) || window.PaperCast.POSES[session.pose]
+    if (src) { state.pose = clone(src); state.name = session.pose }
+  }
+  if (typeof session.yaw === 'number') state.yaw = Math.max(-0.75, Math.min(0.75, session.yaw))
+  function saveSession() {
+    if (!SESSION || remoteApply) return
+    SESSION.write({ active: state.char, pose: state.name, yaw: state.yaw })
+  }
+  function applyRemoteSession(s) {
+    if (!s) return
+    remoteApply = true
+    if (s.active && window.PaperCast.CHARACTERS[s.active]) state.char = s.active
+    if (s.pose) {
+      const src = (presets && presets[s.pose]) || window.PaperCast.POSES[s.pose]
+      if (src) { state.pose = ensureFk(clone(src)); state.name = s.pose }
+    }
+    if (typeof s.yaw === 'number') state.yaw = Math.max(-1, Math.min(1, s.yaw))
+    const skin = SESSION.readSkin(state.char)
+    rig.setCharacter(state.char)
+    rig.setAppearance(skin)
+    rig.setPoseObject(state.pose)
+    rig.setYaw(state.yaw)
+    $('#char').value = state.char
+    const ps = $('#preset')
+    if (ps) ps.value = window.PaperCast.POSES[state.name] ? state.name : 'neutral'
+    refreshControls()
+    sync()
+    remoteApply = false
+  }
+  if (SESSION) SESSION.on(applyRemoteSession)
+
+  ensureFk(state.pose)
+  state.timeline = { dur: 1600, keys: [{ at: 0, pose: clone(state.pose), ease: 'inOut' }], sel: 0 }
+
+  const history = []
+  let hIndex = -1
+  let applying = false
+  let hTimer = null
+  function snap() {
+    return JSON.parse(JSON.stringify({ pose: state.pose, yaw: state.yaw, char: state.char }))
+  }
+  function pushHistory() {
+    if (applying) return
+    const cur = snap()
+    const last = history[hIndex]
+    if (last && JSON.stringify(last) === JSON.stringify(cur)) return
+    history.splice(hIndex + 1)
+    history.push(cur)
+    if (history.length > 60) history.shift()
+    hIndex = history.length - 1
+  }
+  function scheduleHistory() {
+    clearTimeout(hTimer)
+    hTimer = setTimeout(() => { pushHistory(); saveSession() }, 300)
+  }
+  function applySnap(sn) {
+    applying = true
+    state.pose = ensureFk(JSON.parse(JSON.stringify(sn.pose)))
+    state.yaw = sn.yaw
+    state.char = sn.char
+    $('#char').value = state.char
+    yawInput.value = String(state.yaw)
+    refreshControls()
+    sync()
+    applying = false
+    saveSession()
+  }
+  function undo() {
+    clearTimeout(hTimer); pushHistory()
+    if (hIndex > 0) { hIndex -= 1; applySnap(history[hIndex]) }
+  }
+  function redo() {
+    clearTimeout(hTimer); pushHistory()
+    if (hIndex < history.length - 1) { hIndex += 1; applySnap(history[hIndex]) }
+  }
+  $('#undo').addEventListener('click', undo)
+  $('#redo').addEventListener('click', redo)
+
+  const canvas = $('#cv')
+  const wrap = $('#wrap')
+  const hud = $('#hud')
+  const issuesEl = $('#issues')
+  const anglesEl = $('#angles')
+  const scrub = $('#scrub')
+  const timeEl = $('#time')
+  const modeChip = $('#mode-chip')
+  const handlesEl = $('#handles')
+  const bonesEl = $('#bones')
+  state.bones = false
+  const BONES = [
+    { id: 'neck', label: 'шея', parent: 'hip', joint: 'neck', key: 'spine' },
+    { id: 'head', label: 'голова', parent: 'neck', joint: 'head', key: 'neck' },
+    { id: 'elbowL', label: 'локоть L', parent: 'shL', joint: 'elbowL', key: 'shL' },
+    { id: 'elbowR', label: 'локоть R', parent: 'shR', joint: 'elbowR', key: 'shR' },
+    { id: 'kneeL', label: 'колено L', parent: 'hipL', joint: 'kneeL', key: 'hipL' },
+    { id: 'ankleL', label: 'стопа L', parent: 'kneeL', joint: 'ankleL', key: 'kneeL', foot: 'L' },
+    { id: 'kneeR', label: 'колено R', parent: 'hipR', joint: 'kneeR', key: 'hipR' },
+    { id: 'ankleR', label: 'стопа R', parent: 'kneeR', joint: 'ankleR', key: 'kneeR', foot: 'R' },
+    { id: 'shL', label: 'плечо L', parent: 'shL', joint: 'elbowL', key: 'shL', at: 'shL' },
+    { id: 'shR', label: 'плечо R', parent: 'shR', joint: 'elbowR', key: 'shR', at: 'shR' },
+    { id: 'hipL', label: 'бедро L', parent: 'hipL', joint: 'kneeL', key: 'hipL', at: 'hipL' },
+    { id: 'hipR', label: 'бедро R', parent: 'hipR', joint: 'kneeR', key: 'hipR', at: 'hipR' },
+  ]
+  const boneEls = {}
+  for (const b of BONES) {
+    const el = document.createElement('div')
+    el.className = 'bone'
+    el.dataset.label = b.label
+    el.style.display = 'none'
+    bonesEl.appendChild(el)
+    boneEls[b.id] = el
+    el.addEventListener('pointerdown', (e) => startBoneDrag(b, e))
+    if (b.key) el.addEventListener('dblclick', () => {
+      ensureFk(state.pose)
+      state.pose.fk[b.key] = 0
+      refreshControls(); edit()
+    })
+  }
+
+  const rig = window.PaperCast.create(canvas, {
+    character: state.char,
+    pose: state.pose,
+    life: state.life,
+    yaw: state.yaw,
+    appearance: SESSION ? SESSION.readSkin(state.char) : {},
+    autoGaze: false,
+    blink: true,
+  })
+
+  // ── layout / coordinate helpers ──────────────────────────────────────────
+  function layout() {
+    const r = wrap.getBoundingClientRect()
+    const s = Math.min(r.width / 600, r.height / 900)
+    return { s: s || 1, ox: (r.width - 600 * s) / 2, oy: (r.height - 900 * s) / 2, r }
+  }
+  function fromClient(cx, cy) {
+    const L = layout()
+    return [(cx - L.r.left - L.ox) / L.s, (cy - L.r.top - L.oy) / L.s]
+  }
+  function toWrap(pt) {
+    const L = layout()
+    return [L.ox + pt[0] * L.s, L.oy + pt[1] * L.s]
+  }
+  // pose-space hand coords -> rig coords (and back)
+  function invPoint(pt) {
+    const b = state.pose.body
+    const rot = (b.rot || 0) * RAD
+    const hip = [300 + (b.x || 0), 545 + (b.y || 0)]
+    const dx = pt[0] - hip[0]
+    const dy = pt[1] - hip[1]
+    const c = Math.cos(-rot), s = Math.sin(-rot)
+    return [hip[0] + dx * c - dy * s - (b.x || 0), hip[1] + dx * s + dy * c - (b.y || 0)]
+  }
+
+  function poseOf(name) {
+    if (presets[name]) return clone(presets[name])
+    if (window.PaperCast.POSES[name]) return window.PaperCast.POSES[name]
+    return state.pose
+  }
+
+  // ── scene sync ───────────────────────────────────────────────────────────
+  function clipDuration() {
+    const c = window.PaperCast.CLIPS[state.clipId]
+    return c ? c.duration : 1200
+  }
+  function sync() {
+    rig.setCharacter(state.char)
+    rig.setYaw(state.yaw)
+    rig.setLife(state.life)
+    if (state.mode === 'timeline') {
+      rig.setClip(tlClip(), 0)
+      rig.seek(state.time)
+      scrub.max = String(state.timeline.dur)
+      scrub.value = String(Math.min(state.time, state.timeline.dur))
+      updateTlHead()
+    } else if (state.mode === 'clip') {
+      rig.setClip(state.clipId, 0)
+      rig.seek(state.time)
+      scrub.max = String(clipDuration())
+      scrub.value = String(Math.min(state.time, clipDuration()))
+    } else if (state.mode === 'anim') {
+      rig.setPoseKeys([
+        { at: 0, pose: poseOf(state.anim.a) },
+        { at: state.anim.dur, pose: poseOf(state.anim.b) },
+      ])
+      rig.seek(state.time)
+      scrub.max = String(state.anim.dur)
+      scrub.value = String(Math.min(state.time, state.anim.dur))
+    } else {
+      rig.setPoseKeys([{ at: 0, pose: state.pose }])
+      rig.seek(state.time)
+      scrub.max = '1200'
+      scrub.value = String(Math.min(state.time, 1200))
+    }
+    modeChip.textContent = state.mode === 'timeline' ? 'TIMELINE' : state.mode === 'clip' ? 'CLIP' : state.mode === 'anim' ? 'A/B' : 'EDIT'
+    modeChip.classList.toggle('anim', state.mode !== 'edit')
+    drawHandles()
+    updateLimits()
+  }
+
+  function edit() {
+    state.mode = 'edit'
+    state.anim.playing = false
+    sync()
+    scheduleHistory()
+  }
+
+  // ── handles ──────────────────────────────────────────────────────────────
+  const handleEls = { L: $('#hL'), R: $('#hR') }
+  const rotEls = { L: $('#rotL'), R: $('#rotR') }
+  function drawHandles() {
+    const show = state.mode === 'edit'
+    handlesEl.style.display = show ? 'block' : 'none'
+    const sk = window.PaperCast.skeleton(state.pose, state.yaw)
+    for (const b of BONES) {
+      const el = boneEls[b.id]
+      if (!show) { el.style.display = 'none'; continue }
+      const p = sk[b.at || b.joint]
+      if (!p) { el.style.display = 'none'; continue }
+      const [x, y] = toWrap(p)
+      el.style.display = 'block'
+      el.style.left = x + 'px'
+      el.style.top = y + 'px'
+    }
+    if (!show) { rotEls.L.style.display = 'none'; rotEls.R.style.display = 'none'; return }
+    for (const side of ['L', 'R']) {
+      const wr = side === 'L' ? sk.wristL : sk.wristR
+      const el = side === 'L' ? sk.elbowL : sk.elbowR
+      const [x, y] = toWrap(wr)
+      handleEls[side].style.left = x + 'px'
+      handleEls[side].style.top = y + 'px'
+      handleEls[side].classList.toggle('active', state.hand === side)
+      // rotation ring sits beside the wrist, on the outside of the forearm
+      let nx = -(wr[1] - el[1]), ny = wr[0] - el[0]
+      const len = Math.hypot(nx, ny) || 1
+      nx /= len; ny /= len
+      if ((side === 'R' && nx < 0) || (side === 'L' && nx > 0)) { nx = -nx; ny = -ny }
+      const [rx, ry] = toWrap([wr[0] + nx * 36, wr[1] + ny * 36])
+      rotEls[side].style.display = 'block'
+      rotEls[side].style.left = rx + 'px'
+      rotEls[side].style.top = ry + 'px'
+    }
+  }
+
+  function startBoneDrag(def, ev) {
+    ev.preventDefault()
+    const el = boneEls[def.id]
+    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const move = (e) => {
+      const pt = fromClient(e.clientX, e.clientY)
+      const sk = window.PaperCast.skeleton(state.pose, state.yaw)
+      if (def.foot) {
+        // drag the foot: solve the two-bone leg and convert to hip swing + knee
+        const side = def.foot
+        const hip = side === 'L' ? sk.hipL : sk.hipR
+        const R = window.PaperCast.RIG
+        const u = R.upperLeg, l = R.lowerLeg
+        let dx = pt[0] - hip[0], dy = pt[1] - hip[1]
+        let d = Math.hypot(dx, dy) || 1
+        const max = (u + l) * 0.995, min = Math.abs(u - l) + 6
+        d = Math.max(min, Math.min(max, d))
+        const th = Math.atan2(dy, dx)
+        const clampCos = (v) => Math.max(-1, Math.min(1, v))
+        const alpha = Math.acos(clampCos((u * u + d * d - l * l) / (2 * u * d)))
+        const beta = Math.acos(clampCos((l * l + d * d - u * u) / (2 * l * d)))
+        const swing = (th - alpha) * 180 / Math.PI - 90
+        const knee = (alpha + beta) * 180 / Math.PI
+        const legKey = 'leg' + side
+        state.pose[legKey] = Object.assign({}, state.pose[legKey], {
+          swing: Math.max(-30, Math.min(45, swing)),
+          knee: Math.max(0, Math.min(135, knee)),
+        })
+        syncPoseControls()
+        edit()
+        return
+      }
+      const parent = sk[def.parent]
+      const joint = sk[def.joint]
+      if (!parent || !joint) return
+      const cur = Math.atan2(joint[1] - parent[1], joint[0] - parent[0])
+      const tgt = Math.atan2(pt[1] - parent[1], pt[0] - parent[0])
+      let delta = (tgt - cur) * 180 / Math.PI
+      while (delta > 180) delta -= 360
+      while (delta < -180) delta += 360
+      const limMap = { spine: 'spine', neck: 'neck', shL: 'sh', shR: 'sh', elbowL: 'elbow', elbowR: 'elbow', hipL: 'hip', hipR: 'hip', kneeL: 'knee', kneeR: 'knee' }
+      const lim = window.PaperCast.LIMITS.fk[limMap[def.key]]
+      ensureFk(state.pose)
+      const next = state.pose.fk[def.key] + delta
+      state.pose.fk[def.key] = Math.max(lim[0], Math.min(lim[1], next))
+      syncPoseControls()
+      edit()
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+
+  $('#bonesBtn').addEventListener('click', () => {
+    state.bones = !state.bones
+    $('#bonesBtn').classList.toggle('on', state.bones)
+    document.body.classList.toggle('show-labels', state.bones)
+  })
+
+  function startDrag(side, ev) {
+    ev.preventDefault()
+    state.hand = side
+    updateFingerBar()
+    const el = handleEls[side]
+    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const move = (e) => {
+      const pt = fromClient(e.clientX, e.clientY)
+      const sk = window.PaperCast.skeleton(state.pose, state.yaw)
+      const sh = side === 'L' ? sk.shL : sk.shR
+      let dx = pt[0] - sh[0], dy = pt[1] - sh[1]
+      const d = Math.hypot(dx, dy) || 1
+      const max = (window.PaperCast.RIG.upperArm + window.PaperCast.RIG.lowerArm) *
+        window.PaperCast.LIMITS.arm.reachMax
+      const min = window.PaperCast.LIMITS.arm.reachMin
+      const dc = Math.max(min, Math.min(max, d))
+      const target = [sh[0] + (dx / d) * dc, sh[1] + (dy / d) * dc]
+      state.pose['arm' + side].hand = invPoint(target)
+      edit()
+    }
+    const up = (e) => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+  handleEls.L.addEventListener('pointerdown', (e) => startDrag('L', e))
+  handleEls.R.addEventListener('pointerdown', (e) => startDrag('R', e))
+
+  // ── hand rotation + finger presets ───────────────────────────────────────
+  function syncPoseControls() {
+    refreshControls()
+    drawHandles()
+    updateFingerBar()
+  }
+  function startRotDrag(side, ev) {
+    ev.preventDefault()
+    state.hand = side
+    const el = rotEls[side]
+    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const start = state.pose['arm' + side].handRot || 0
+    const sk0 = window.PaperCast.skeleton(state.pose, state.yaw)
+    const wr = side === 'L' ? sk0.wristL : sk0.wristR
+    const elb = side === 'L' ? sk0.elbowL : sk0.elbowR
+    const base = Math.atan2(wr[1] - elb[1], wr[0] - elb[0])
+    const a0 = Math.atan2(fromClient(ev.clientX, ev.clientY)[1] - wr[1], fromClient(ev.clientX, ev.clientY)[0] - wr[0]) - base
+    const move = (e2) => {
+      const pt = fromClient(e2.clientX, e2.clientY)
+      const a = Math.atan2(pt[1] - wr[1], pt[0] - wr[0]) - base
+      let d = (a - a0) * 180 / Math.PI
+      while (d > 180) d -= 360
+      while (d < -180) d += 360
+      state.pose['arm' + side] = Object.assign({}, state.pose['arm' + side], {
+        handRot: Math.max(-90, Math.min(90, Math.round(start + d))),
+      })
+      edit()
+      drawHandles()
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+  rotEls.L.addEventListener('pointerdown', (e) => startRotDrag('L', e))
+  rotEls.R.addEventListener('pointerdown', (e) => startRotDrag('R', e))
+  rotEls.L.addEventListener('dblclick', () => { state.pose.armL.handRot = 0; edit() })
+  rotEls.R.addEventListener('dblclick', () => { state.pose.armR.handRot = 0; edit() })
+
+  function updateFingerBar() {
+    const bar = $('#fingerbar')
+    if (!bar) return
+    const side = state.hand
+    bar.querySelectorAll('[data-hand]').forEach((b) => b.classList.toggle('on', b.dataset.hand === side))
+    const cur = (state.pose['arm' + side] || {}).handPose || 'relaxed'
+    bar.querySelectorAll('[data-finger]').forEach((b) => b.classList.toggle('on', b.dataset.finger === cur))
+    handleEls.L.classList.toggle('active', side === 'L')
+    handleEls.R.classList.toggle('active', side === 'R')
+  }
+  document.querySelectorAll('#fingerbar [data-hand]').forEach((b) => {
+    b.addEventListener('click', () => { state.hand = b.dataset.hand; drawHandles(); updateFingerBar() })
+  })
+  document.querySelectorAll('#fingerbar [data-finger]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const side = state.hand
+      state.pose['arm' + side] = Object.assign({}, state.pose['arm' + side], { handPose: b.dataset.finger })
+      updateFingerBar()
+      edit()
+    })
+  })
+
+  // ── inspector controls ───────────────────────────────────────────────────
+  const controls = []
+  function getPath(obj, path) {
+    return path.split('.').reduce((o, k) => (o ? o[k] : undefined), obj)
+  }
+  function setPath(obj, path, v) {
+    const parts = path.split('.')
+    let o = obj
+    for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]]
+    o[parts[parts.length - 1]] = v
+  }
+  function slider(parent, label, min, max, step, path, fmt) {
+    const row = document.createElement('div')
+    row.className = 'ctrl'
+    const lab = document.createElement('label')
+    const name = document.createElement('span')
+    name.textContent = label
+    const b = document.createElement('b')
+    lab.appendChild(name); lab.appendChild(b)
+    const input = document.createElement('input')
+    input.type = 'range'; input.min = String(min); input.max = String(max); input.step = String(step)
+    const val = document.createElement('span')
+    val.className = 'val'
+    const format = fmt || ((v) => String(Math.round(v * 100) / 100))
+    const read = () => { const v = Number(getPath(state.pose, path)); return Number.isFinite(v) ? v : 0 }
+    input.value = String(read())
+    b.textContent = format(read())
+    input.addEventListener('input', () => {
+      const v = Number(input.value)
+      if (path.startsWith('fk.') && !state.pose.fk) state.pose.fk = {}
+      setPath(state.pose, path, v)
+      b.textContent = format(v)
+      val.textContent = format(v)
+      edit()
+    })
+    row.appendChild(lab); row.appendChild(input); row.appendChild(val)
+    parent.appendChild(row)
+    controls.push({ input, path, format, b })
+    return input
+  }
+  function selectRow(parent, label, options, get, set) {
+    const row = document.createElement('div')
+    row.className = 'ctrl'
+    const lab = document.createElement('label')
+    lab.textContent = label
+    const sel = document.createElement('select')
+    for (const o of options) {
+      const opt = document.createElement('option')
+      opt.value = o[0]; opt.textContent = o[1]
+      sel.appendChild(opt)
+    }
+    sel.value = String(get())
+    sel.addEventListener('change', () => { set(sel.value); edit() })
+    row.appendChild(lab); row.appendChild(sel)
+    parent.appendChild(row)
+    return sel
+  }
+
+  const poseBox = $('#pose-controls')
+  slider(poseBox, 'body x', -46, 46, 1, 'body.x')
+  slider(poseBox, 'body y', -26, 26, 1, 'body.y')
+  slider(poseBox, 'body rot°', -16, 16, 1, 'body.rot')
+  slider(poseBox, 'наклон головы°', -30, 30, 1, 'head.tilt')
+  slider(poseBox, 'поворот головы', -0.8, 0.8, 0.02, 'head.turn')
+  slider(poseBox, 'кивок головы°', -20, 20, 1, 'head.nod')
+  slider(poseBox, 'бедро L (в сторону)°', -30, 45, 1, 'legL.swing')
+  slider(poseBox, 'колено L°', 0, 135, 1, 'legL.knee')
+  slider(poseBox, 'бедро R (в сторону)°', -30, 45, 1, 'legR.swing')
+  slider(poseBox, 'колено R°', 0, 135, 1, 'legR.knee')
+
+  const boneBox = $('#bone-controls')
+  const BONES_UI = [
+    ['spine', 'позвоночник', 'spine'],
+    ['neck', 'шея', 'neck'],
+    ['head', 'голова', 'head'],
+    ['shL', 'плечо L', 'sh'],
+    ['elbowL', 'локоть L', 'elbow'],
+    ['wristL', 'кисть L', 'wrist'],
+    ['shR', 'плечо R', 'sh'],
+    ['elbowR', 'локоть R', 'elbow'],
+    ['wristR', 'кисть R', 'wrist'],
+    ['hipL', 'бедро L', 'hip'],
+    ['kneeL', 'колено L', 'knee'],
+    ['ankleL', 'стопа L', 'ankle'],
+    ['hipR', 'бедро R', 'hip'],
+    ['kneeR', 'колено R', 'knee'],
+    ['ankleR', 'стопа R', 'ankle'],
+  ]
+  for (const [key, label, lim] of BONES_UI) {
+    const r = window.PaperCast.LIMITS.fk[lim]
+    slider(boneBox, label + '° (' + r[0] + '…' + r[1] + ')', r[0], r[1], 1, 'fk.' + key, (v) => Math.round(v) + '°')
+  }
+  $('#bones-reset').addEventListener('click', () => {
+    ensureFk(state.pose)
+    for (const k of FK_KEYS) state.pose.fk[k] = 0
+    refreshControls()
+    edit()
+  })
+
+  slider(poseBox, 'ладонь L: поворот°', -90, 90, 1, 'armL.handRot')
+  slider(poseBox, 'ладонь R: поворот°', -90, 90, 1, 'armR.handRot')
+
+  // character panel
+  const yawBox = $('#yaw-ctrl')
+  const yawInput = document.createElement('input')
+  yawInput.type = 'range'; yawInput.min = '-1'; yawInput.max = '1'; yawInput.step = '0.01'; yawInput.value = '0'
+  yawInput.style.width = '100%'; yawInput.style.accentColor = 'var(--teal)'
+  const yawLab = document.createElement('label')
+  yawLab.textContent = 'yaw (3/4)'
+  yawLab.style.cssText = 'color:var(--muted);font-size:11px;display:block;margin-bottom:3px'
+  yawBox.appendChild(yawLab); yawBox.appendChild(yawInput)
+  yawInput.addEventListener('input', () => {
+    state.yaw = Number(yawInput.value)
+    sync()
+    scheduleHistory()
+  })
+  $('#char').addEventListener('change', (e) => { state.char = e.target.value; sync(); scheduleHistory() })
+  $('#skeleton').addEventListener('change', (e) => {
+    state.showSkeleton = e.target.checked
+    rig.setSkeleton(state.showSkeleton)
+    rig.seek(state.time)
+  })
+
+  // preset select
+  const presetSel = $('#preset')
+  function fillPoseSelects() {
+    presetSel.innerHTML = ''
+    for (const name of Object.keys(window.PaperCast.POSES)) {
+      const o = document.createElement('option')
+      o.value = name; o.textContent = name
+      presetSel.appendChild(o)
+    }
+    presetSel.value = window.PaperCast.POSES[state.name] ? state.name : 'neutral'
+    for (const id of ['#anim-a', '#anim-b']) {
+      const sel = $(id)
+      const keep = sel.value
+      sel.innerHTML = ''
+      for (const name of Object.keys(window.PaperCast.POSES)) {
+        const o = document.createElement('option')
+        o.value = name; o.textContent = name
+        sel.appendChild(o)
+      }
+      for (const name of Object.keys(presets)) {
+        const o = document.createElement('option')
+        o.value = name; o.textContent = '★ ' + name
+        sel.appendChild(o)
+      }
+      const want = id === '#anim-a' ? state.anim.a : state.anim.b
+      sel.value = [...sel.options].some((o) => o.value === want) ? want : (keep || 'neutral')
+    }
+  }
+  presetSel.addEventListener('change', () => {
+    const src = window.PaperCast.POSES[presetSel.value]
+    if (!src) return
+    state.pose = ensureFk(clone(src))
+    state.name = presetSel.value
+    refreshControls()
+    edit()
+  })
+  $('#reset').addEventListener('click', () => {
+    state.pose = ensureFk(clone(window.PaperCast.POSES.neutral))
+    state.name = 'neutral'
+    presetSel.value = 'neutral'
+    refreshControls()
+    edit()
+  })
+  function refreshControls() {
+    for (const c of controls) {
+      const v = Number(getPath(state.pose, c.path))
+      c.input.value = String(v)
+      if (c.b) c.b.textContent = c.format(v)
+    }
+  }
+
+  // ── limits ───────────────────────────────────────────────────────────────
+  function elbow(sk, side) {
+    const sh = side === 'L' ? sk.shL : sk.shR
+    const el = side === 'L' ? sk.elbowL : sk.elbowR
+    const wr = side === 'L' ? sk.wristL : sk.wristR
+    const a = [sh[0] - el[0], sh[1] - el[1]]
+    const b = [wr[0] - el[0], wr[1] - el[1]]
+    const la = Math.hypot(a[0], a[1]) || 1
+    const lb = Math.hypot(b[0], b[1]) || 1
+    return Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1]) / (la * lb)))) / RAD
+  }
+  function updateLimits() {
+    const sk = window.PaperCast.skeleton(state.pose, state.yaw)
+    const v = window.PaperCast.validatePose(state.pose)
+    issuesEl.innerHTML = ''
+    if (v.ok) {
+      const d = document.createElement('div')
+      d.className = 'okline'
+      d.textContent = 'В пределах лимитов'
+      issuesEl.appendChild(d)
+    } else {
+      for (const it of v.issues) {
+        const d = document.createElement('div')
+        d.className = 'issue'
+        d.textContent = it.joint + '.' + it.axis + ' = ' + it.value + ' (норма ' + it.limit[0] + '…' + it.limit[1] + ')'
+        issuesEl.appendChild(d)
+      }
+    }
+    const an = window.PaperCast.anatomyReport ? window.PaperCast.anatomyReport(state.pose) : []
+    const bad = an.filter((r) => !r.ok)
+    for (const r of bad) {
+      const d = document.createElement('div')
+      d.className = 'issue'
+      d.textContent = 'анатомия: ' + r.joint + '.' + r.axis + ' = ' + Math.round(r.value) + '° (норма ' + r.range[0] + '…' + r.range[1] + ')'
+      issuesEl.appendChild(d)
+    }
+    anglesEl.textContent = 'локоть L ' + elbow(sk, 'L').toFixed(0) + '° · R ' + elbow(sk, 'R').toFixed(0) + '° · анатомия ' + (bad.length ? bad.length + '!' : 'ok')
+    // live HUD on the stage
+    const h = []
+    h.push('reach L ' + Math.round(Math.hypot(sk.wristL[0] - sk.shL[0], sk.wristL[1] - sk.shL[1])))
+    h.push('reach R ' + Math.round(Math.hypot(sk.wristR[0] - sk.shR[0], sk.wristR[1] - sk.shR[1])))
+    h.push('yaw ' + state.yaw.toFixed(2))
+    hud.innerHTML = ''
+    for (const text of h) {
+      const s = document.createElement('span')
+      s.textContent = text
+      hud.appendChild(s)
+    }
+  }
+
+  // ── presets ──────────────────────────────────────────────────────────────
+  const plist = $('#plist')
+  const pname = $('#pname')
+  function savePresets() { localStorage.setItem(LS, JSON.stringify(presets)) }
+  function renderPresets() {
+    plist.innerHTML = ''
+    const names = Object.keys(presets)
+    if (!names.length) {
+      const d = document.createElement('div')
+      d.className = 'hintline'
+      d.textContent = 'Пока пусто: настройте позу и нажмите Save.'
+      plist.appendChild(d)
+    }
+    for (const name of names) {
+      const row = document.createElement('div')
+      row.className = 'pitem'
+      const nm = document.createElement('span')
+      nm.className = 'nm'; nm.textContent = name
+      const load = document.createElement('button')
+      load.className = 'mini'; load.textContent = 'load'
+      load.addEventListener('click', () => {
+        state.pose = ensureFk(clone(presets[name]))
+        state.name = name
+        refreshControls()
+        if (window.PaperCast.POSES[name]) presetSel.value = name
+        edit()
+      })
+      const del = document.createElement('button')
+      del.className = 'mini'; del.textContent = 'del'
+      del.addEventListener('click', () => {
+        delete presets[name]
+        savePresets(); renderPresets(); fillPoseSelects()
+      })
+      row.appendChild(nm); row.appendChild(load); row.appendChild(del)
+      plist.appendChild(row)
+    }
+  }
+  $('#save').addEventListener('click', () => {
+    const name = (pname.value || '').trim() || 'pose'
+    presets[name] = clone(state.pose)
+    state.name = name
+    savePresets()
+    renderPresets(); fillPoseSelects()
+  })
+
+  // ── animation ────────────────────────────────────────────────────────────
+  const animBox = $('#anim-controls')
+  const durInput = document.createElement('input')
+  durInput.type = 'range'; durInput.min = '200'; durInput.max = '6000'; durInput.step = '50'; durInput.value = String(state.anim.dur)
+  durInput.style.cssText = 'width:100%;accent-color:var(--teal)'
+  const durLab = document.createElement('label')
+  durLab.style.cssText = 'color:var(--muted);font-size:11px;display:flex;justify-content:space-between'
+  durLab.innerHTML = '<span>длительность</span><b id="dur-v"></b>'
+  const durVal = durLab.querySelector('#dur-v')
+  durVal.textContent = state.anim.dur + ' ms'
+  durInput.addEventListener('input', () => {
+    state.anim.dur = Number(durInput.value)
+    durVal.textContent = state.anim.dur + ' ms'
+    if (state.mode === 'anim') { state.time = Math.min(state.time, state.anim.dur); sync() }
+  })
+  animBox.appendChild(durLab); animBox.appendChild(durInput)
+
+  const lifeBox = $('#life-controls')
+  function lifeSlider(label, key) {
+    const row = document.createElement('div')
+    row.className = 'ctrl'
+    const lab = document.createElement('label')
+    lab.textContent = label
+    const input = document.createElement('input')
+    input.type = 'range'; input.min = '0'; input.max = '2'; input.step = '0.05'
+    input.value = String(state.life[key])
+    input.addEventListener('input', () => {
+      state.life[key] = Number(input.value)
+      sync()
+    })
+    row.appendChild(lab); row.appendChild(input)
+    lifeBox.appendChild(row)
+  }
+  lifeSlider('дыхание', 'breath')
+  lifeSlider('качание', 'sway')
+  lifeSlider('кивок', 'nod')
+  $('#life').addEventListener('change', (e) => {
+    state.life.on = e.target.checked
+    sync()
+  })
+
+  $('#anim-a').addEventListener('change', (e) => { state.anim.a = e.target.value })
+  $('#anim-b').addEventListener('change', (e) => { state.anim.b = e.target.value })
+  $('#loopmode').addEventListener('change', (e) => { state.anim.mode = e.target.value })
+
+  function tick(now) {
+    if (!state.anim.playing) return
+    const dur = Math.max(120, state.mode === 'timeline' ? state.timeline.dur : state.mode === 'clip' ? clipDuration() : state.anim.dur)
+    let t = now - state.anim.t0
+    if (state.anim.mode === 'once') {
+      if (t >= dur) t = dur
+    } else if (state.anim.mode === 'loop') {
+      t = t % dur
+    } else {
+      const p = t % (dur * 2)
+      t = p < dur ? p : dur * 2 - p
+    }
+    state.time = Math.round(t)
+    rig.seek(state.time)
+    scrub.value = String(state.time)
+    timeEl.textContent = state.time + ' ms'
+    if (state.mode === 'timeline') updateTlHead()
+    if (state.anim.mode === 'once' && t >= dur) {
+      state.anim.playing = false
+      return
+    }
+    requestAnimationFrame(tick)
+  }
+  // ── timeline ─────────────────────────────────────────────────────────────
+  const tlTrack = $('#tl-track')
+  const tlKeysBox = $('#tl-keys')
+  const tlDur = $('#tl-dur')
+  tlDur.value = String(state.timeline.dur)
+  function tlSorted() { return state.timeline.keys.slice().sort((a, b) => a.at - b.at) }
+  function tlClip() {
+    return {
+      id: 'timeline',
+      duration: state.timeline.dur,
+      loop: false,
+      keys: tlSorted().map((k) => ({ at: Math.max(0, Math.min(state.timeline.dur, k.at)), pose: k.pose, ease: k.ease || 'inOut' })),
+    }
+  }
+  function updateTlHead() {
+    const head = $('#tl-head')
+    if (!head) return
+    const k = state.timeline.dur ? Math.max(0, Math.min(1, state.time / state.timeline.dur)) : 0
+    head.style.left = (k * 100) + '%'
+  }
+  function renderTimeline() {
+    const keys = tlSorted()
+    tlTrack.innerHTML = ''
+    for (const k of keys) {
+      const d = document.createElement('div')
+      d.className = 'tl-key' + (state.timeline.keys.indexOf(k) === state.timeline.sel ? ' sel' : '')
+      d.style.left = (state.timeline.dur ? (k.at / state.timeline.dur) * 100 : 0) + '%'
+      d.title = k.at + ' ms'
+      d.addEventListener('click', (e) => {
+        e.stopPropagation()
+        state.timeline.sel = state.timeline.keys.indexOf(k)
+        state.mode = 'timeline'
+        state.time = k.at
+        sync()
+        renderTimeline()
+      })
+      tlTrack.appendChild(d)
+    }
+    const head = document.createElement('div')
+    head.className = 'tl-head'
+    head.id = 'tl-head'
+    tlTrack.appendChild(head)
+    updateTlHead()
+
+    tlKeysBox.innerHTML = ''
+    keys.forEach((k) => {
+      const row = document.createElement('div')
+      row.className = 'tl-row'
+      const t = document.createElement('input')
+      t.type = 'number'; t.min = '0'; t.max = String(state.timeline.dur); t.step = '10'; t.value = String(k.at)
+      t.addEventListener('change', () => {
+        k.at = Math.max(0, Math.min(state.timeline.dur, Number(t.value) || 0))
+        sync(); renderTimeline()
+      })
+      const e = document.createElement('select')
+      for (const name of ['inOut', 'linear', 'in', 'out', 'backIn', 'backOut', 'expoOut']) {
+        const o = document.createElement('option'); o.value = name; o.textContent = name; e.appendChild(o)
+      }
+      e.value = k.ease || 'inOut'
+      e.addEventListener('change', () => { k.ease = e.value; sync() })
+      const load = document.createElement('button')
+      load.className = 'mini'; load.textContent = 'взять'
+      load.title = 'Загрузить позу ключа в редактор'
+      load.addEventListener('click', () => {
+        state.pose = ensureFk(clone(k.pose))
+        state.mode = 'edit'
+        refreshControls(); sync()
+      })
+      const cap = document.createElement('button')
+      cap.className = 'mini'; cap.textContent = 'снять'
+      cap.title = 'Записать текущую позу в ключ'
+      cap.addEventListener('click', () => {
+        k.pose = clone(state.pose)
+        if (state.mode === 'timeline') sync()
+        renderTimeline()
+      })
+      const del = document.createElement('button')
+      del.className = 'mini'; del.textContent = '×'
+      del.title = 'Удалить ключ'
+      del.addEventListener('click', () => {
+        if (state.timeline.keys.length <= 1) return
+        const i = state.timeline.keys.indexOf(k)
+        state.timeline.keys.splice(i, 1)
+        state.timeline.sel = 0
+        sync(); renderTimeline()
+      })
+      row.appendChild(t); row.appendChild(e); row.appendChild(load); row.appendChild(cap); row.appendChild(del)
+      tlKeysBox.appendChild(row)
+    })
+  }
+  function seekTimeline(t) {
+    state.mode = 'timeline'
+    state.anim.playing = false
+    state.time = Math.max(0, Math.min(state.timeline.dur, t))
+    sync()
+  }
+  tlTrack.addEventListener('pointerdown', (e) => {
+    const r = tlTrack.getBoundingClientRect()
+    seekTimeline(Math.round(((e.clientX - r.left) / r.width) * state.timeline.dur))
+    renderTimeline()
+  })
+  tlDur.addEventListener('change', () => {
+    state.timeline.dur = Math.max(200, Math.min(20000, Number(tlDur.value) || 1600))
+    for (const k of state.timeline.keys) k.at = Math.min(k.at, state.timeline.dur)
+    if (state.mode === 'timeline') sync()
+    renderTimeline()
+  })
+  $('#tl-add').addEventListener('click', () => {
+    const at = Math.round(state.mode === 'timeline' ? state.time : 0)
+    state.timeline.keys.push({ at, pose: clone(state.pose), ease: 'inOut' })
+    state.timeline.sel = state.timeline.keys.length - 1
+    seekTimeline(at)
+    renderTimeline()
+  })
+  $('#tl-play').addEventListener('click', () => {
+    state.mode = 'timeline'
+    state.time = 0
+    state.anim.playing = true
+    state.anim.t0 = performance.now()
+    sync()
+    requestAnimationFrame(tick)
+  })
+
+  $('#play').addEventListener('click', () => {
+    state.mode = 'anim'
+    state.anim.playing = true
+    state.time = 0
+    state.anim.t0 = performance.now()
+    sync()
+    requestAnimationFrame(tick)
+  })
+  $('#stop').addEventListener('click', () => {
+    state.anim.playing = false
+  })
+  scrub.addEventListener('input', () => {
+    if (state.mode === 'edit') {
+      state.mode = state.clipId ? 'clip' : 'anim'
+      sync()
+    }
+    state.anim.playing = false
+    state.time = Number(scrub.value)
+    rig.seek(state.time)
+    timeEl.textContent = state.time + ' ms'
+    if (state.mode === 'timeline') updateTlHead()
+  })
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+      e.preventDefault()
+      e.shiftKey ? redo() : undo()
+      return
+    }
+    if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+      e.preventDefault()
+      state.anim.playing ? (state.anim.playing = false) : $('#play').click()
+    }
+  })
+
+  // ── export ───────────────────────────────────────────────────────────────
+  const exportEl = $('#export')
+  function usedPoses() {
+    const used = {}
+    const names = state.mode === 'anim' ? [state.anim.a, state.anim.b] : [state.name]
+    for (const n of names) if (presets[n]) used[n] = presets[n]
+    return used
+  }
+  function keysFor(poseName) {
+    if (state.mode === 'anim') {
+      return [
+        { at: 0, pose: state.anim.a },
+        { at: state.anim.dur, pose: state.anim.b },
+      ]
+    }
+    return [{ at: 0, pose: poseName }]
+  }
+  $('#export-json').addEventListener('click', () => {
+    if (state.mode === 'timeline' || state.timeline.keys.length > 1) {
+      exportEl.value = JSON.stringify({ clip: tlClip(), yaw: state.yaw, life: state.life }, null, 2)
+      return
+    }
+    if (state.mode === 'clip') {
+      const clip = window.PaperCast.CLIPS[state.clipId]
+      exportEl.value = JSON.stringify({ clip, yaw: state.yaw, life: state.life }, null, 2)
+      return
+    }
+    const name = state.name || 'pose'
+    const data = {
+      poses: Object.assign({}, usedPoses(), state.mode === 'edit' ? { [name]: state.pose } : {}),
+      keys: keysFor(name),
+      yaw: state.yaw,
+      life: state.life,
+    }
+    exportEl.value = JSON.stringify(data, null, 2)
+  })
+  $('#export-scene').addEventListener('click', () => {
+    if (state.mode === 'timeline' || state.timeline.keys.length > 1) {
+      exportEl.value = [
+        'PaperCast.registerClip(\'timeline\', ' + JSON.stringify(tlClip()) + ')',
+        'const cast = PaperCast.create(canvas, { character: ' + JSON.stringify(state.char) + ', yaw: ' + state.yaw + ' })',
+        'cast.playClip(\'timeline\', 0)',
+      ].join('\n')
+      return
+    }
+    if (state.mode === 'clip') {
+      const clip = window.PaperCast.CLIPS[state.clipId]
+      exportEl.value = [
+        'PaperCast.registerClip(' + JSON.stringify(state.clipId) + ', ' + JSON.stringify(clip) + ')',
+        'const cast = PaperCast.create(canvas, { character: ' + JSON.stringify(state.char) + ', yaw: ' + state.yaw + ' })',
+        'cast.playClip(' + JSON.stringify(state.clipId) + ', 0)',
+      ].join('\n')
+      return
+    }
+    const name = state.name || 'pose'
+    const poses = Object.assign({}, usedPoses(), state.mode === 'edit' ? { [name]: state.pose } : {})
+    const lines = []
+    for (const [n, p] of Object.entries(poses)) {
+      lines.push('PaperCast.registerPose(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ')')
+    }
+    const keys = keysFor(name)
+    lines.push('const cast = PaperCast.create(canvas, { character: ' + JSON.stringify(state.char) + ', yaw: ' + state.yaw + ' })')
+    lines.push('cast.setPoseKeys(' + JSON.stringify(keys) + ')')
+    exportEl.value = lines.join('\n')
+  })
+  $('#copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(exportEl.value) } catch (e) {}
+  })
+
+  // ── gesture clips ────────────────────────────────────────────────────────
+  const clipSel = $('#clip')
+  for (const id of Object.keys(window.PaperCast.CLIPS)) {
+    const o = document.createElement('option')
+    o.value = id; o.textContent = id
+    clipSel.appendChild(o)
+  }
+  clipSel.value = state.clipId
+  clipSel.addEventListener('change', () => {
+    state.clipId = clipSel.value
+    if (state.mode === 'clip') { state.time = 0; sync() }
+  })
+  $('#clip-play').addEventListener('click', () => {
+    state.clipId = clipSel.value
+    state.mode = 'clip'
+    state.time = 0
+    state.anim.playing = true
+    state.anim.t0 = performance.now()
+    sync()
+    requestAnimationFrame(tick)
+  })
+  function stopClip() { state.anim.playing = false }
+
+  // ── boot ─────────────────────────────────────────────────────────────────
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    document.querySelectorAll('.panel').forEach((p) => {
+      p.open = p.dataset.panel === 'char' || p.dataset.panel === 'pose'
+    })
+  }
+  $('#chip-poses').textContent = String(Object.keys(window.PaperCast.POSES).length)
+  $('#char').value = state.char
+  fillPoseSelects()
+  renderPresets()
+  refreshControls()
+  sync()
+  renderTimeline()
+  pushHistory()
+  const mMobile = window.matchMedia('(max-width: 900px)')
+  const mShort = window.matchMedia('(max-height: 540px) and (max-width: 980px)')
+  function syncCompact() {
+    if (!mMobile.matches || mShort.matches) {
+      document.body.classList.remove('compact-stage')
+      return
+    }
+    const on = window.scrollY > 56 && !document.body.classList.contains('stage-focus')
+    document.body.classList.toggle('compact-stage', on)
+  }
+  window.addEventListener('scroll', syncCompact, { passive: true })
+  mMobile.addEventListener('change', syncCompact)
+  mShort.addEventListener('change', syncCompact)
+
+  $('#focus').addEventListener('click', () => {
+    const on = document.body.classList.toggle('stage-focus')
+    $('#focus').textContent = on ? '⤡' : '⛶'
+    $('#focus').setAttribute('aria-pressed', String(on))
+    setTimeout(() => { syncCompact(); drawHandles() }, 60)
+  })
+  new ResizeObserver(() => drawHandles()).observe(wrap)
+  window.__poseStudio = { state, rig, sync, edit, undo, redo, saveSession, history: () => ({ len: history.length, i: hIndex }) }
+})()
+</script>
+</body>
+</html>

@@ -143,30 +143,36 @@ const getDisplayColors = (projectId) => {
       </header>
 
       <!-- Студии: новые инструменты -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <a href="/character-studio.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">CHARACTER</div>
-          <div class="font-bold text-gray-900 group-hover:text-blue-700">Character Studio</div>
-          <div class="text-sm text-gray-500 mt-1">Полигональные персонажи, настройки внешности, липсинк и сохранение в библиотеку.</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">2D CAST</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Paper Cast Studio</div>
+          <div class="text-sm text-gray-500 mt-1">Canvas-персонажи: общий риг, 31 поза, 82 фонемы, липсинк и эмоции.</div>
         </a>
-        <a href="/object-studio.html" target="_blank" rel="noopener"
+        <a href="/character-builder.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">OBJECT</div>
-          <div class="font-bold text-gray-900 group-hover:text-blue-700">Object Studio</div>
-          <div class="text-sm text-gray-500 mt-1">Создание и редактирование объектов: GLB, габариты, сокеты, манифест, сохранение в библиотеку.</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">BUILDER</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Конструктор персонажа</div>
+          <div class="text-sm text-gray-500 mt-1">Пропорции, лицо, причёски, гардероб и животные: 10 видов скелетов.</div>
         </a>
-        <a href="/rig-studio.html" target="_blank" rel="noopener"
+        <a href="/pose-studio.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">RIG</div>
-          <div class="font-bold text-gray-900 group-hover:text-blue-700">Rig Studio</div>
-          <div class="text-sm text-gray-500 mt-1">Канонический скелет, морфы, валидация и манифест персонажа SceneRig.</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">POSES</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Pose Studio</div>
+          <div class="text-sm text-gray-500 mt-1">Кости, лимиты, пресеты, A→B и библиотека жестов.</div>
         </a>
-        <a href="/clip-editor.html" target="_blank" rel="noopener"
+        <a href="/p/1" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">CLIP</div>
-          <div class="font-bold text-gray-900 group-hover:text-blue-700">Clip Editor</div>
-          <div class="text-sm text-gray-500 mt-1">Ключи анимации на кости, таймлайн, экспорт *.sclip.json и bake в GLB.</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">SCENES</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Демо-сцены</div>
+          <div class="text-sm text-gray-500 mt-1">Движок презентаций и 2D/2.5D сцены в одном месте.</div>
+        </a>
+        <a href="/themes" target="_blank" rel="noopener"
+           class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">THEMES</div>
+          <div class="font-bold text-gray-900 group-hover:text-blue-700">Темы</div>
+          <div class="text-sm text-gray-500 mt-1">Палитры и оформление проектов.</div>
         </a>
       </div>
 

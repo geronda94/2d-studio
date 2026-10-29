@@ -54,70 +54,39 @@ docker compose down
 - Не менять `name: scene-saas` и имя тома без необходимости — иначе compose создаст второй набор контейнеров/БД.
 
 
-## 3D-ассеты (2026-10-24)
+## 2D Paper Cast (production)
 
-3D-аватар использует Ready Player Me GLB и мокап-клипы Mixamo. GLB лежит в
-репозитории; клипы — нет (лицензия Adobe ограничивает перераспространение).
+3D/Babylon заморожен. Персонажи — Canvas 2D:
 
-```bash
-python scripts/fetch_avatar_anims.py      # скачать 16 Mixamo GLB
-python scripts/extract_avatar_anims.py    # собрать avatar-anims.js
-python scripts/build_avatar_asset.py      # обернуть GLB в .js для iframe
-```
+- `http://localhost:5175/character-studio.html` — Paper Cast Studio
+  (31 поза, 82 фонемы, липсинк, палитра);
+- `http://localhost:5175/p/12` — демо-сцена `character-paper-duo`;
+- шаблон: `GET http://localhost:8002/scene-library/templates/character-paper-duo`;
+- объект: `GET http://localhost:8002/scene-library/objects/character-paper`.
 
-На сервер `core/public/models/anim/` и `.env` переносятся вручную (scp),
-не через GitHub.
-
-## SceneRig: проверка моделей
+Пересев демо:
 
 ```bash
-python -m backend.rig archetypes
-python -m backend.rig scan core/public/models/brunette.glb --archetype humanoid
-python -m backend.rig validate path/to/character.scenerig.json
-python -m unittest backend.tests.test_rig_validate backend.tests.test_rig_api
-node scripts/test_scene_clip.mjs
+docker compose exec -T backend python scripts/seed_paper_duo.py
 ```
 
-Браузерные студии (нужны запущенные frontend и backend):
-
-- `http://localhost:5175/character-studio.html` — Character Studio (внешность + липсинк);
-- `http://localhost:5175/rig-studio.html` — персонажи и риги;
-- `http://localhost:5175/object-studio.html` — объекты (`prop3d`);
-- `http://localhost:5175/clip-editor.html` — ключи анимации и `*.sclip.json`.
-
-Импорт GLB в черновик манифеста:
+API библиотеки, который нужен сценам:
 
 ```bash
-python scripts/rig_import.py core/public/models/brunette.glb \
-  --id character-brunette --family human --archetype humanoid --force
-# внутри backend:
-python scripts/seed_poly_characters.py
-python scripts/seed_poly_duo.py
-python -m backend.rig compile core/public/models/brunette.scenerig.json --out dist/
-python -m backend.rig bake dist/character-brunette.scenerig.json clips/wave.sclip.json --out dist/wave.glb
+curl http://localhost:8002/scene-library/templates
+curl http://localhost:8002/scene-library/objects/character-paper
+curl http://localhost:8002/scene-library/characters
 ```
 
+## 3D archive (frozen)
 
-Vite проксирует `/api` → backend, поэтому страница валидирует GLB через
-`POST /api/rig/validate`; манифест — `POST /api/rig/validate-manifest`.
+Всё 3D лежит в `drafts/3d/`: Babylon, GLB, SceneRig, Rig Studio, Object
+Studio, Clip Editor и старые seed/import-скрипты. Это не production;
+`core/public` больше не содержит 3D-движок. Инструкция по возврату —
+`drafts/3d/README.md`.
 
-## Blender: экспорт персонажа
-
-```bash
-blender --background character.blend \
-  --python scripts/blender/scene_rig_export.py -- \
-  --id character-hero --family human --archetype humanoid \
-  --license "CC BY 4.0" --author "You" --out dist/
-```
-
-Проверка пайплайна на тестовом риге:
-
-```bash
-blender --background --python scripts/blender/make_test_rig.py -- /tmp/rig.blend
-blender --background /tmp/rig.blend \
-  --python scripts/blender/scene_rig_export.py -- \
-  --id test-human --family human --archetype humanoid --license CC0 --out /tmp/dist
-```
+Старые команды `backend.rig`, Blender и `scripts/rig_import.py` относятся к
+архиву; не использовать для новых сцен без явного запроса.
 
 ## Local Whisper (STT)
 

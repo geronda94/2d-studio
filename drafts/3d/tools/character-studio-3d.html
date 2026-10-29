@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Character Studio — SceneRig</title>
+<style>
+  :root{--bg:#070b12;--panel:#0e1522;--panel2:#121c2c;--line:#22304a;--text:#e8eefc;
+    --muted:#8da0bf;--accent:#38bdf8;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:13px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
+  button:hover{border-color:var(--accent)}button.primary{background:#0b3a52;border-color:#155e7a;color:#dff6ff}
+  button.danger{border-color:#5b1c1c;color:#ffb4b4}
+  input,select,textarea{background:#08101c;border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
+  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  input[type=color]{padding:2px;height:32px;width:100%;cursor:pointer}
+  #app{display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header .title{font-weight:700;margin-right:6px}header .title span{color:var(--accent)}
+  header .grow{flex:1}header .status{font:11px var(--mono);color:var(--muted);white-space:nowrap}
+  header label{display:flex;gap:5px;align-items:center;font:10px var(--mono);color:var(--muted);text-transform:uppercase}
+  main{display:grid;grid-template-columns:300px 1fr 390px;min-height:0}
+  .col{display:flex;flex-direction:column;min-height:0;min-width:0}.col+.col{border-left:1px solid var(--line)}
+  .panel-h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);
+    background:var(--panel);font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .panel-h .grow{flex:1}.scroll{overflow:auto;min-height:0}
+  #stage{display:grid;grid-template-rows:1fr auto;min-height:0}
+  #canvasWrap{position:relative;min-height:0;background:radial-gradient(120% 90% at 50% 16%,#2a3852 0%,#141d2b 44%,#070b12 100%)}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+  #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:9px;z-index:5;
+    background:rgba(7,11,18,.62);color:var(--muted);font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase;
+    backdrop-filter:blur(2px)}
+  #loader.hidden{display:none}
+  .spin{width:16px;height:16px;border-radius:50%;border:2px solid #28466a;border-top-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #timeline{border-top:1px solid var(--line);background:var(--panel);padding:10px}
+  .timeRow{display:flex;gap:10px;align-items:center;font:11px var(--mono);color:var(--muted)}
+  .timeRow input[type=range]{flex:1;padding:0}
+  .fields{padding:10px;display:grid;gap:8px;border-bottom:1px solid var(--line)}
+  .fields label{display:grid;gap:4px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .swatches label{font-size:9px}
+  .row{display:flex;gap:6px;align-items:center}.row>*{flex:1}
+  .lib-item{padding:6px 10px;border-bottom:1px solid #101a2a;cursor:pointer}
+  .lib-item:hover{background:#13213a}.lib-item.sel{background:#0b2434;border-left:2px solid var(--accent)}
+  .lib-item .t{font:12px Inter,sans-serif;color:var(--text)}.lib-item .s{font:10px var(--mono);color:var(--muted)}
+  .visemes{display:flex;gap:5px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--line)}
+  .visemes button{padding:4px 8px;font:11px var(--mono)}
+  .empty{padding:14px;color:var(--muted);font-size:12px;text-align:center}
+  .hidden{display:none!important}.pill{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);font:10px var(--mono);color:var(--muted);cursor:pointer;text-decoration:none}
+  #issues{padding:8px 10px;font:11px var(--mono)}
+  .issue{border-radius:6px;padding:6px 8px;margin-bottom:6px;border:1px solid #1e2b42;background:#0b1421}
+  .issue.error{border-color:#5b1c1c;background:#1a0d0f}.issue.warning{border-color:#5a4210;background:#1a1508}
+  .issue .code{font-weight:700}.issue.error .code{color:var(--err)}.issue.warning .code{color:var(--warn)}
+  #manifest{flex:1;width:100%;resize:none;border:0;border-radius:0;background:#08101c;font:11px/1.5 var(--mono);padding:10px}
+  @media(max-width:1150px){main{grid-template-columns:260px 1fr 340px}}
+  /* Mobile: a fixed preview + fixed header, with the controls in a scrollable
+     sheet below. The character stays visible while editing and speaking. */
+  @media(max-width:900px){
+    :root{--header-h:110px}
+    html,body{height:100%;overflow:hidden}
+    #app{height:100%;display:block}
+    header{position:fixed;top:0;left:0;right:0;z-index:50}
+    #stage{position:fixed;top:var(--header-h);left:0;right:0;height:56vh;z-index:10;
+      background:var(--bg);border-left:0;border-top:0;border-bottom:1px solid var(--line)}
+    main{position:fixed;top:calc(var(--header-h) + 56vh);left:0;right:0;bottom:0;
+      display:flex;flex-direction:column;overflow:auto;z-index:20;background:var(--bg)}
+    .col{min-height:0;flex:none}
+    .col .scroll{overflow:visible}
+    .col+.col{border-left:0;border-top:1px solid var(--line)}
+    #manifest{min-height:120px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Character<span>Studio</span></div>
+    <label>База
+      <select id="base">
+        <option value="mark">Mark HD</option>
+        <option value="mira">Mira HD</option>
+        <option value="mark_custom">Mark classic</option>
+        <option value="mira_custom">Mira classic</option>
+      </select>
+    </label>
+    <label>Кадр
+      <select id="preset">
+        <option value="bust" selected>bust</option>
+        <option value="face">face</option>
+        <option value="full">full</option>
+        <option value="wide">wide</option>
+      </select>
+    </label>
+    <button id="applyPreset">Применить</button>
+    <button id="newChar">Новый</button>
+    <button id="saveChar" class="primary">Сохранить</button>
+    <span class="grow"></span>
+    <a href="/" class="pill">← Проект</a>
+    <span id="status" class="status">idle</span>
+  </header>
+  <main>
+    <section class="col">
+      <div class="panel-h"><span>Внешность</span><span class="grow"></span><span id="baseLabel">mark</span></div>
+      <div class="scroll">
+        <div class="fields">
+          <label>ID / slug<input id="slug" value="character-mark-1"></label>
+          <label>Название<input id="title" value="Mark"></label>
+          <div class="swatches">
+            <label>Кожа<input id="skin" type="color" value="#b8805e"></label>
+            <label>Волосы<input id="hair" type="color" value="#1a130f"></label>
+            <label>Верх<input id="top" type="color" value="#294d8c"></label>
+            <label>Низ<input id="bottom" type="color" value="#292b33"></label>
+            <label>Обувь<input id="shoes" type="color" value="#141417"></label>
+            <label>Глаза<input id="eyes" type="color" value="#2e6147"></label>
+            <label>Губы<input id="lips" type="color" value="#8c3d38"></label>
+            <label>Масштаб<input id="scale" type="number" min="0.6" max="1.6" step="0.01" value="1"></label>
+          </div>
+          <div class="swatches" style="grid-template-columns:repeat(2,1fr)">
+            <label>Причёска
+              <select id="hairStyle">
+                <option value="short">short</option>
+                <option value="bob">bob</option>
+                <option value="ponytail">ponytail</option>
+                <option value="bun">bun</option>
+              </select>
+            </label>
+            <label>Верх
+              <select id="topStyle">
+                <option value="tee">tee</option>
+                <option value="shirt">shirt</option>
+                <option value="hoodie">hoodie</option>
+                <option value="dress">dress</option>
+              </select>
+            </label>
+            <label>Низ
+              <select id="bottomStyle">
+                <option value="pants">pants</option>
+                <option value="shorts">shorts</option>
+                <option value="skirt">skirt</option>
+              </select>
+            </label>
+            <label>Обувь
+              <select id="shoesStyle">
+                <option value="sneaker">sneaker</option>
+                <option value="boot">boot</option>
+              </select>
+            </label>
+          </div>
+          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
+            <span>Тело</span><span class="grow"></span>
+            <button id="resetShape" style="padding:2px 7px">Сброс</button>
+          </div>
+          <label>Плечи<input id="shapeShoulder" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Грудь<input id="shapeChest" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Талия<input id="shapeWaist" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Бёдра<input id="shapeHips" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Живот<input id="shapeBelly" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
+            <span>Лицо</span><span class="grow"></span>
+          </div>
+          <label>Ширина лица<input id="shapeFaceWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Длина лица<input id="shapeFaceLength" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Челюсть<input id="shapeJawWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Подбородок<input id="shapeChin" type="range" min="0" max="0.5" step="0.01" value="0"></label>
+          <label>Щёки<input id="shapeCheek" type="range" min="0" max="0.4" step="0.01" value="0"></label>
+          <label>Губы<input id="shapeLipFull" type="range" min="0" max="1" step="0.01" value="0"></label>
+          <label>Настроение
+            <select id="mood">
+              <option value="neutral" selected>neutral</option>
+              <option value="joy">joy</option>
+              <option value="sad">sad</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:row;gap:8px;align-items:center;text-transform:none;font-size:12px">
+            <input id="glasses" type="checkbox" style="width:auto"> очки
+          </label>
+          <label style="display:flex;flex-direction:row;gap:8px;align-items:center;text-transform:none;font-size:12px">
+            <input id="hood" type="checkbox" style="width:auto"> капюшон
+          </label>
+          <div class="row">
+            <button id="presetMark">Mark</button>
+            <button id="presetMira">Mira</button>
+          </div>
+        </div>
+        <div class="panel-h"><span>Библиотека</span><span class="grow"></span><button id="refreshLib" style="padding:2px 7px">↻</button></div>
+        <div id="library"><div class="empty">Нет сохранённых персонажей</div></div>
+      </div>
+    </section>
+    <section class="col" id="stage">
+      <div id="canvasWrap"><canvas id="c"></canvas><div id="loader" class="hidden"><span class="spin"></span><span id="loaderText">Загрузка 3D…</span></div></div>
+      <div id="timeline">
+        <div class="timeRow">
+          <button id="play" class="primary" style="min-width:70px">▶ Play</button>
+          <input id="time" type="range" min="0" max="4000" step="1" value="0">
+          <span id="timeLabel">0.00 / 4.00 с</span>
+        </div>
+      </div>
+    </section>
+    <section class="col">
+      <div class="panel-h"><span>Липсинк</span><span class="grow"></span><span id="visemeCount">0</span></div>
+      <div class="fields">
+        <label>Реплика<input id="line" value="Привет! Это живой полигональный персонаж."></label>
+        <div class="row">
+          <label>Длительность, с<input id="duration" type="number" min="0.5" max="30" step="0.5" value="4"></label>
+          <button id="speak" class="primary">Озвучить</button>
+        </div>
+      </div>
+      <div class="fields" style="padding-top:0;border-bottom:0">
+        <label>Движение
+          <select id="motion">
+            <option value="idle" selected>idle — дыхание</option>
+            <option value="talk">talk — речь</option>
+            <option value="walk">walk — ходьба</option>
+          </select>
+        </label>
+        <label>Жест
+          <select id="gesture">
+            <option value="none" selected>нет</option>
+            <option value="wave">wave — рука вверх</option>
+            <option value="point">point — указать</option>
+            <option value="explain">explain — обе руки</option>
+          </select>
+        </label>
+        <label>Выражение
+          <select id="emotion">
+            <option value="neutral" selected>neutral</option>
+            <option value="joy">joy</option>
+            <option value="sad">sad</option>
+            <option value="anger">anger</option>
+            <option value="surprise">surprise</option>
+            <option value="fear">fear</option>
+            <option value="think">think</option>
+            <option value="disgust">disgust</option>
+          </select>
+        </label>
+        <label>Взгляд
+          <select id="gaze">
+            <option value="auto" selected>auto — живые саккады</option>
+            <option value="camera">в камеру</option>
+            <option value="left">влево</option>
+            <option value="right">вправо</option>
+            <option value="up">вверх</option>
+            <option value="down">вниз</option>
+          </select>
+        </label>
+      </div>
+      <div class="visemes">
+        <button data-v="1">А/Э</button><button data-v="2">Б/М/П</button><button data-v="3">Ф/В</button>
+        <button data-v="4">Д/Т</button><button data-v="5">У</button><button data-v="6">Ч/Ш</button>
+        <button data-v="7">Л</button><button data-v="8">О</button><button data-v="0">тишина</button>
+      </div>
+      <div class="panel-h"><span>Статус</span><span class="grow"></span><button id="validate">Проверить</button></div>
+      <div id="issues"><div class="empty">Загрузите персонажа</div></div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Манифест</span><span class="grow"></span>
+        <button id="copy">Copy</button><button id="download">Download</button></div>
+      <textarea id="manifest" spellcheck="false"></textarea>
+    </section>
+  </main>
+</div>
+<script src="/vendor/babylon.js"></script>
+<script src="/vendor/babylonjs.loaders.min.js"></script>
+<script src="/vendor/scene-clip.js?v=3"></script>
+<script src="/vendor/scene-rig.js?v=13"></script>
+<script>
+const $=(id)=>document.getElementById(id)
+const HERO_MAP={Hips:'hips',Spine:'spine',Spine1:'spine1',Spine2:'chest',Neck:'neck',Head:'head',LeftEye:'eye.L',RightEye:'eye.R',LeftShoulder:'shoulder.L',RightShoulder:'shoulder.R',LeftArm:'upperArm.L',RightArm:'upperArm.R',LeftForeArm:'lowerArm.L',RightForeArm:'lowerArm.R',LeftHand:'hand.L',RightHand:'hand.R',LeftHandMiddle1:'middle1.L',RightHandMiddle1:'middle1.R',LeftUpLeg:'upperLeg.L',RightUpLeg:'upperLeg.R',LeftLeg:'lowerLeg.L',RightLeg:'lowerLeg.R',LeftFoot:'foot.L',RightFoot:'foot.R',LeftToeBase:'toe.L',RightToeBase:'toe.R'}
+const BASES={
+  mark:{label:'Mark HD',glb:'/models/hero/mark-hd.glb',mobile:'/models/hero/mark-hd-mobile.glb',rig:null,license:{name:'Avatar SDK / local sample — verify',author:'Avatar SDK'},skin:'#c98b6b',hair:'#241812',top:'#2d5f46',bottom:'#45454c',shoes:'#151312',eyes:'#3c6a8a',lips:'#8f4d45',glasses:false,height:1.80,armRestZ:-1.50,armTwist:0,handTwist:1.15,headPitch:0.10,map:HERO_MAP},
+  mira:{label:'Mira HD',glb:'/models/brunette.glb',rig:'/models/brunette.scenerig.json',license:{name:'Ready Player Me — free avatar',author:'Ready Player Me'},skin:'#dba68a',hair:'#3a2018',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,height:1.70,armRestZ:-0.50,headPitch:0.0,map:HERO_MAP},
+  mark_custom:{label:'Mark classic',glb:'/models/characters/character-mark.glb',rig:'/models/characters/character-mark.scenerig.json',skin:'#b8805e',hair:'#1a130f',top:'#294d8c',bottom:'#292b33',shoes:'#141417',eyes:'#2e6147',lips:'#8c3d38',glasses:false,hood:true,height:1.80},
+  mira_custom:{label:'Mira classic',glb:'/models/characters/character-mira.glb',rig:'/models/characters/character-mira.scenerig.json',skin:'#dba68a',hair:'#752914',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,hood:false,height:1.69},
+}
+BASES.hero_mark=BASES.mark; BASES.hero_mira=BASES.mira
+const state={base:'mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gesture:'none',emotion:'neutral',gaze:'auto',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'},shape:{}}
+const SHAPE_KEYS={bodyShoulder:'shapeShoulder',bodyChest:'shapeChest',bodyWaist:'shapeWaist',bodyHips:'shapeHips',bodyBelly:'shapeBelly',faceWidth:'shapeFaceWidth',faceLength:'shapeFaceLength',jawWidth:'shapeJawWidth',chin:'shapeChin',cheek:'shapeCheek',lipFull:'shapeLipFull'}
+const OUTFIT_KEYS={hair:'hairStyle',top:'topStyle',bottom:'bottomStyle',shoes:'shoesStyle'}
+const setStatus=(t)=>{$('status').textContent=t}
+const isMobile=()=>matchMedia('(pointer:coarse)').matches||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+const showLoader=(t)=>{$('loaderText').textContent=t||'Загрузка 3D…';$('loader').classList.remove('hidden')}
+const hideLoader=()=>{$('loader').classList.add('hidden')}
+const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
+function appearance(){
+  return {skin:$('skin').value,hair:$('hair').value,top:$('top').value,bottom:$('bottom').value,shoes:$('shoes').value,eyes:$('eyes').value,lips:$('lips').value,scale:Number($('scale').value)||1,glasses:$('glasses').checked,hood:$('hood').checked}
+}
+function setAppearanceFields(a){
+  for(const k of ['skin','hair','top','bottom','shoes','eyes','lips']) if(a && a[k]) $(k).value=a[k]
+  if(a && a.scale) $('scale').value=a.scale
+  if(a) { $('glasses').checked=!!a.glasses; $('hood').checked=!!a.hood }
+}
+function applyAppearance(){ if(state.rig) state.rig.setAppearance(appearance()); buildManifest() }
+function gazeOptions(){
+  const v=$('gaze')?$('gaze').value:'auto'
+  if(v==='auto') return {x:0,y:0,auto:true,head:true}
+  if(v==='camera') return {x:0,y:0,auto:false,head:true}
+  if(v==='left') return {x:-0.55,y:0,auto:false,head:true}
+  if(v==='right') return {x:0.55,y:0,auto:false,head:true}
+  if(v==='up') return {x:0,y:0.45,auto:false,head:true}
+  if(v==='down') return {x:0,y:-0.45,auto:false,head:true}
+  return {x:0,y:0,auto:true,head:true}
+}
+function applyEmotion(){ state.emotion=$('emotion').value; if(state.rig&&state.rig.setEmotion) state.rig.setEmotion(state.emotion); buildManifest() }
+function applyGaze(){ state.gaze=$('gaze').value; const g=gazeOptions(); if(state.rig&&state.rig.setGaze) state.rig.setGaze(g.x,g.y,{auto:g.auto,head:g.head}); buildManifest() }
+function shape(){
+  const out={}
+  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) out[k]=Number(el.value)||0 }
+  return out
+}
+function setShapeFields(s){
+  s=s||{}
+  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) el.value=String(Number(s[k])||0) }
+}
+function applyShape(){
+  state.shape=shape()
+  if(state.rig && state.rig.setShape) state.rig.setShape(state.shape)
+  buildManifest()
+}
+function syncOutfitFields(){
+  for(const k in OUTFIT_KEYS){ const el=$(OUTFIT_KEYS[k]); if(el) el.value=state.outfit[k]||el.value }
+}
+function applyOutfitFromUI(){
+  state.outfit=Object.assign({},state.outfit,{
+    hair:$('hairStyle').value,top:$('topStyle').value,
+    bottom:$('bottomStyle').value,shoes:$('shoesStyle').value,
+  })
+  if(state.rig) state.rig.setOutfit(state.outfit)
+  buildManifest()
+}
+async function createRig(fallback=false){
+  if(state.rig){ try{state.rig.destroy()}catch(e){} state.rig=null }
+  const base=BASES[state.base]
+  const src=(isMobile()&&base.mobile)?base.mobile:base.glb
+  $('baseLabel').textContent=base.label
+  showLoader('Загрузка '+base.label+'…')
+  setStatus('loading '+base.label)
+  $('preset').value=$('preset').value||'bust'
+  let rig
+  try{ rig=SceneRig.create($('c'),{src,preset:$('preset').value,appearance:appearance(),mood:$('mood').value,motion:state.motion,gender:state.gender,outfit:state.outfit,emotion:state.emotion,gaze:gazeOptions(),boneMap:base.map||null,armRestZ:base.armRestZ||0,armTwist:base.armTwist||0,handTwist:base.handTwist||0,headPitch:base.headPitch||0,interactive:true,height:base.height||(state.gender==='female'?1.69:1.8)}) }
+  catch(e){ hideLoader(); fail('Не удалось создать 3D-сцену: '+((e&&e.message)||e)); return }
+  state.rig=rig
+  window.__rig=rig
+  window.__rigInfo = rig.info
+  try{ await rig.ready }
+  catch(e){
+    if(!fallback && isMobile() && state.base==='mark'){
+      console.warn('HD model failed on mobile; using classic fallback',e)
+      try{rig.destroy()}catch(_){}
+      state.base='mark_custom'; $('base').value='mark_custom'
+      return createRig(true)
+    }
+    hideLoader(); fail('Не удалось загрузить персонажа: '+((e&&(e.error||e.message))||JSON.stringify(e))); return
+  }
+  hideLoader()
+  rig.setAppearance(appearance())
+  rig.setOutfit(state.outfit)
+  if(rig.setShape) rig.setShape(state.shape)
+  if(state.visemes.length) rig.setVisemes(state.visemes)
+  rig.setMotion(state.motion)
+  if(rig.setGesture) rig.setGesture(state.gesture)
+  if(rig.setEmotion) rig.setEmotion(state.emotion)
+  if(rig.setGaze) rig.setGaze(gazeOptions().x,gazeOptions().y,{auto:gazeOptions().auto})
+  rig.setMood($('mood').value)
+  seek(state.time)
+  setStatus('loaded '+base.label)
+}
+function seek(t){
+  state.time=Math.max(0,Math.min(state.duration,t))
+  if(state.rig) state.rig.seek(state.time*1000)
+  $('time').value=String(Math.round(state.time*1000))
+  $('timeLabel').textContent=state.time.toFixed(2)+' / '+state.duration.toFixed(2)+' с'
+}
+function play(){ if(state.playing||!state.rig)return; state.playing=true; $('play').textContent='❚❚ Pause'; state.last=performance.now()
+  const step=(now)=>{ if(!state.playing)return; const dt=(now-state.last)/1000; state.last=now
+    let t=state.time+dt; if(t>=state.duration)t=0; seek(t); state.raf=requestAnimationFrame(step)}
+  state.raf=requestAnimationFrame(step)}
+function pause(){ state.playing=false; cancelAnimationFrame(state.raf); $('play').textContent='▶ Play' }
+function setManual(v){
+  state.visemes=[{t:0,viseme:Number(v)}]
+  state.motion='talk'; $('motion').value='talk'
+  if(state.rig){ state.rig.setMotion('talk'); state.rig.setVisemes(state.visemes) }
+  seek(0); $('visemeCount').textContent='1'
+  buildManifest()
+}
+async function speak(){
+  const text=$('line').value.trim(); if(!text)return
+  state.duration=Math.max(0.5,Number($('duration').value)||4)
+  seek(0)
+  setStatus('visemes…')
+  try{
+    const res=await fetch('/api/scene-library/text-to-visemes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,start:0,end:Math.round(state.duration*1000)})})
+    const data=await res.json(); if(!res.ok)throw new Error(data.detail||('HTTP '+res.status))
+    state.visemes=Array.isArray(data)?data:[]
+    if(state.rig){ state.rig.setMotion('talk'); state.motion='talk'; $('motion').value='talk'; state.rig.setVisemes(state.visemes) }
+    $('visemeCount').textContent=String(state.visemes.length)
+    $('time').max=String(Math.round(state.duration*1000))
+    seek(0); play(); setStatus('speaking '+state.visemes.length+' visemes'); buildManifest()
+  }catch(e){console.error(e);fail('STT/visemes: '+(e.message||e))}
+}
+function manifest(){
+  const base=BASES[state.base]
+  return {format:'sceneasset/1',id:$('slug').value||('character-'+state.base),title:$('title').value||base.label,
+    kind:'character',base:state.base,family:'human',archetype:'humanoid',category:'character',
+    rig:base.rig,geometry:{type:'gltf',file:base.glb,units:'m',up:'Y',facing:'+Z'},
+    appearance:appearance(),gender:state.gender,outfit:state.outfit,shape:shape(),gesture:state.gesture,emotion:state.emotion,gaze:state.gaze,motion:state.motion,
+    license:base.license||{name:'CC0',author:'SceneEngine'}}
+}
+function buildManifest(){ $('manifest').value=JSON.stringify(manifest(),null,2) }
+async function saveCharacter(){
+  const m=manifest()
+  if(!/^[a-z0-9][a-z0-9-]{1,63}$/.test(m.id)){ fail('ID: латиница, цифры и дефис, 2–64 символа'); return }
+  setStatus('saving…')
+  try{
+    const url=state.assetId?'/api/scene-assets/'+state.assetId:'/api/scene-assets'
+    const res=await fetch(url,{method:state.assetId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:m.id,title:m.title,kind:'character',category:'character',manifest:m,source_url:m.geometry.file,preview_url:null})})
+    const data=await res.json(); if(!res.ok)throw new Error(data.detail||('HTTP '+res.status))
+    state.assetId=data.id; setStatus('saved '+data.slug); await loadLibrary(); buildManifest()
+  }catch(e){console.error(e);fail('Не удалось сохранить: '+(e.message||e))}
+}
+async function loadLibrary(){
+  try{const res=await fetch('/api/scene-assets?kind=character');state.library=res.ok?await res.json():[]}catch(e){state.library=[]}
+  const host=$('library'); host.innerHTML=''
+  if(!state.library.length){host.innerHTML='<div class="empty">Нет сохранённых персонажей</div>';return}
+  for(const a of state.library){const el=document.createElement('div');el.className='lib-item'+(a.id===state.assetId?' sel':'')
+    el.innerHTML=`<div class="t">${a.title||a.slug}</div><div class="s">${a.slug}</div>`
+    el.onclick=()=>loadCharacter(a.id);host.appendChild(el)}
+}
+async function loadCharacter(id){
+  setStatus('loading character…')
+  try{
+    const res=await fetch('/api/scene-assets/'+id); const a=await res.json(); if(!res.ok)throw new Error(a.detail)
+    const m=a.manifest||{}; state.assetId=a.id
+    const file=(m.geometry&&m.geometry.file)||''
+    state.base=(m.base&&BASES[m.base])?m.base:(/mira|brunette/i.test(file)?'mira':'mark')
+    if(state.base==='hero_mark') state.base='mark'
+    if(state.base==='hero_mira') state.base='mira'
+    state.gender=(m.gender==='female'||state.base==='mira'||state.base==='mira_custom')?'female':'male'
+    state.outfit=Object.assign({
+      top:state.gender==='female'?'shirt':'hoodie',
+      bottom:state.gender==='female'?'skirt':'pants',
+      shoes:state.gender==='female'?'boot':'sneaker',
+      hair:state.gender==='female'?'ponytail':'short',
+    }, m.outfit||{})
+    $('base').value=state.base; $('baseLabel').textContent=BASES[state.base].label
+    $('slug').value=m.id||a.slug; $('title').value=m.title||a.title
+    setAppearanceFields(m.appearance||{})
+    state.shape=m.shape||{}
+    state.gesture=m.gesture||'none'; $('gesture').value=state.gesture
+    state.emotion=m.emotion||'neutral'; $('emotion').value=state.emotion
+    state.gaze=m.gaze||'auto'; $('gaze').value=state.gaze
+    state.motion=m.motion||'idle'; $('motion').value=state.motion
+    syncOutfitFields(); setShapeFields(state.shape)
+    await createRig()
+    await loadLibrary(); buildManifest(); setStatus('loaded '+a.slug)
+  }catch(e){console.error(e);fail('Не удалось открыть: '+(e.message||e))}
+}
+function newCharacter(){
+  state.assetId=null; state.visemes=[]; state.time=0; state.motion='idle'; $('motion').value='idle'
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'
+  $('slug').value='character-'+state.base+'-'+Math.floor(Date.now()/1000)%10000
+  $('title').value=BASES[state.base].label
+  applyPreset(state.base); createRig(); loadLibrary(); buildManifest()
+}
+function applyPreset(name){
+  const b=BASES[name]||BASES.mark
+  state.gender=(name==='mira'||name==='mira_custom'||name==='hero_mira')?'female':'male'
+  state.outfit=state.gender==='female'
+    ? {top:'shirt',bottom:'skirt',shoes:'boot',hair:'ponytail'}
+    : {top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'}
+  setAppearanceFields(b); $('base').value=name; state.base=name; state.assetId=null
+  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'; syncOutfitFields()
+  $('baseLabel').textContent=b.label
+  $('slug').value='character-'+name+'-1'
+  $('title').value=b.label
+  buildManifest()
+}
+async function validateCharacter(){
+  const base=BASES[state.base]
+  setStatus('validating…')
+  try{
+    const blob=await (await fetch(base.glb)).blob()
+    const fd=new FormData(); fd.append('file',blob,base.label+'.glb'); fd.append('archetype','humanoid')
+    const res=await fetch('/api/rig/validate',{method:'POST',body:fd})
+    const d=await res.json(); if(!res.ok)throw new Error(d.detail||('HTTP '+res.status))
+    renderIssues(d); setStatus(d.ok?'valid':'invalid')
+  }catch(e){setStatus('validate failed');$('issues').innerHTML=`<div class="issue error"><div class="code">api.error</div><div>${escapeHtml(e.message||e)}</div></div>`}
+}
+function renderIssues(rep){const flat=[];const walk=(r)=>{for(const i of r.issues||[])flat.push(i);for(const c of r.children||[])walk(c)};walk(rep)
+  const host=$('issues');host.innerHTML=''
+  if(!flat.length){host.innerHTML='<div class="empty">Ошибок нет</div>';return}
+  for(const i of flat){const d=document.createElement('div');d.className='issue '+i.level
+    d.innerHTML=`<div class="code">${i.code}</div><div>${escapeHtml(i.message)}</div>`;host.appendChild(d)}}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('base').onchange=()=>{state.base=$('base').value; applyPreset(state.base); createRig()}
+$('applyPreset').onclick=()=>createRig()
+$('newChar').onclick=newCharacter
+$('saveChar').onclick=saveCharacter
+$('refreshLib').onclick=loadLibrary
+$('play').onclick=()=>{state.playing?pause():play()}
+$('time').oninput=()=>{pause();seek(Number($('time').value)/1000)}
+$('speak').onclick=speak
+for(const id of Object.values(OUTFIT_KEYS)){ const el=$(id); if(el) el.onchange=applyOutfitFromUI }
+for(const id of Object.values(SHAPE_KEYS)){ const el=$(id); if(el) el.oninput=applyShape }
+$('resetShape').onclick=()=>{ setShapeFields({}); applyShape() }
+$('motion').onchange=()=>{state.motion=$('motion').value;if(state.rig)state.rig.setMotion(state.motion);seek(state.time)}
+$('gesture').onchange=()=>{state.gesture=$('gesture').value;if(state.rig&&state.rig.setGesture)state.rig.setGesture(state.gesture);seek(state.time);buildManifest()}
+$('emotion').onchange=applyEmotion
+$('gaze').onchange=applyGaze
+for(const id of ['skin','hair','top','bottom','shoes','eyes','lips','scale','glasses','hood'])$(id).addEventListener('input',applyAppearance)
+$('mood').onchange=()=>{if(state.rig)state.rig.setMood($('mood').value);buildManifest()}
+for(const b of document.querySelectorAll('[data-v]'))b.onclick=()=>setManual(b.dataset.v)
+$('presetMark').onclick=()=>{applyPreset('mark');createRig()}
+$('presetMira').onclick=()=>{applyPreset('mira');createRig()}
+$('validate').onclick=validateCharacter
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('manifest').value);setStatus('manifest copied')}catch(e){fail('Clipboard unavailable')}}
+$('download').onclick=()=>{const blob=new Blob([$('manifest').value],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=($('slug').value||'character')+'.sceneasset.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('duration').oninput=()=>{state.duration=Math.max(0.5,Number($('duration').value)||4);$('time').max=String(Math.round(state.duration*1000))}
+function layoutMobile(){
+  if(window.innerWidth>900){document.documentElement.style.removeProperty('--header-h');return}
+  const h=document.querySelector('header').offsetHeight;
+  document.documentElement.style.setProperty('--header-h',h+'px');
+}
+window.addEventListener('resize',layoutMobile);
+if(window.ResizeObserver) new ResizeObserver(layoutMobile).observe(document.querySelector('header'));
+layoutMobile();
+const q=new URLSearchParams(location.search)
+const qb=q.get('base')
+if(qb&&BASES[qb]) state.base=qb
+const qp=q.get('preset')
+if(qp&&['face','bust','full','wide'].includes(qp)) $('preset').value=qp
+applyPreset(state.base); buildManifest(); createRig(); loadLibrary()
+</script>
+</body>
+</html>

@@ -48,7 +48,7 @@ function escapeStyle(code) {
   return String(code || '').replace(/<\/style/gi, '<\\/style')
 }
 
-export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '', charSource = '', sceneClipSource = '', sceneRigSource = '', riveSource = '', riveCharSource = '', riveBuffer = '', riveActorSource = '', riveActorBuffer = '', riveOldManBuffer = '' }) {
+export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss = '', format = 'landscape', view = '', gsapSource = '', kitSource = '', charSource = '', paperSource = '', animalSource = '', stageSource = '', riveSource = '', riveCharSource = '', riveBuffer = '', riveActorSource = '', riveActorBuffer = '', riveOldManBuffer = '' }) {
   const html = String(code.html || '')
   const css = escapeStyle(code.css || '')
   const js = escapeScript(code.js || '')
@@ -78,8 +78,9 @@ export function buildSceneDoc({ code = {}, sceneProps = {}, cues = [], themeCss 
 ${gsapSource ? `<script>${escapeScript(gsapSource)}</script>` : ''}
 ${kitSource ? `<script>${escapeScript(kitSource)}</script>` : ''}
 ${charSource ? `<script>${escapeScript(charSource)}</script>` : ''}
-${sceneClipSource ? `<script>${escapeScript(sceneClipSource)}</script>` : ''}
-${sceneRigSource ? `<script>${escapeScript(sceneRigSource)}</script>` : ''}
+${paperSource ? `<script>${escapeScript(paperSource)}</script>` : ''}
+${animalSource ? `<script>${escapeScript(animalSource)}</script>` : ''}
+${stageSource ? `<script>${escapeScript(stageSource)}</script>` : ''}
 ${riveSource ? `<script>${escapeScript(riveSource)}</script>` : ''}
 ${riveCharSource ? `<script>${escapeScript(riveCharSource)}</script>` : ''}
 ${riveActorSource ? `<script>${escapeScript(riveActorSource)}</script>` : ''}
@@ -183,27 +184,37 @@ export function loadCharSource() {
   return charPromise
 }
 
-let sceneClipPromise = null
-export function loadSceneClipSource() {
-  if (!sceneClipPromise) {
-    sceneClipPromise = fetch('/vendor/scene-clip.js?v=3')
+let paperPromise = null
+export function loadPaperSource() {
+  if (!paperPromise) {
+    paperPromise = fetch('/vendor/paper-cast.js?v=31')
       .then((r) => (r.ok ? r.text() : ''))
       .catch(() => '')
   }
-  return sceneClipPromise
-}
-
-let sceneRigPromise = null
-export function loadSceneRigSource() {
-  if (!sceneRigPromise) {
-    sceneRigPromise = fetch('/vendor/scene-rig.js?v=3')
-      .then((r) => (r.ok ? r.text() : ''))
-      .catch(() => '')
-  }
-  return sceneRigPromise
+  return paperPromise
 }
 
 // Rive runtime — 3.3 МБ, поэтому грузится только для сцен, которым он нужен.
+let animalPromise = null
+export function loadAnimalSource() {
+  if (!animalPromise) {
+    animalPromise = fetch('/vendor/paper-cast-animals.js?v=7')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return animalPromise
+}
+
+let stagePromise = null
+export function loadStageSource() {
+  if (!stagePromise) {
+    stagePromise = fetch('/vendor/paper-cast-stage.js?v=5')
+      .then((r) => (r.ok ? r.text() : ''))
+      .catch(() => '')
+  }
+  return stagePromise
+}
+
 let rivePromise = null
 export function loadRiveSource() {
   if (!rivePromise) {

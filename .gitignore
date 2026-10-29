@@ -48,3 +48,8 @@ qa-*/
 # Mixamo clips: free to use, redistribution restricted (Adobe terms).
 # Fetch with scripts/fetch_avatar_anims.py; copy to servers manually.
 core/public/models/anim/
+
+# Frozen 3D archive: keep local code, do not commit heavy GLB/Babylon binaries.
+drafts/3d/models/
+drafts/3d/vendor/
+drafts/3d/screenshots/

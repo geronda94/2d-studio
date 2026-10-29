@@ -564,7 +564,6 @@ const tabs = [
   { id: 'environments', label: 'Worlds' },
   { id: 'objects', label: 'Objects' },
   { id: 'characters', label: 'Characters' },
-  { id: 'avatar', label: '3D' },
   { id: 'layers', label: 'Layers' },
   { id: 'cues', label: 'Cues' },
   { id: 'media', label: 'Media' },

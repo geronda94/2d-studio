@@ -3,15 +3,25 @@
 Этот репозиторий — форк движка презентаций, перестроенный под **динамические сцены**.
 Старые правила слайдов и 100+ компонентов лежат в `docs/legacy/LEGACY_AGENTS.md` и **не используются**.
 
+> **2026-10-27: 3D/Babylon заморожен.** Production-персонажи — Canvas 2D
+> `PaperCast`: один скелет, скины, 31 поза, 82 фонемы. 3D-код и GLB лежат
+> только в `drafts/3d/` и не загружаются. Подробно: `docs/CANVAS_CHARACTERS.md`.
+> Не создавай новые 3D-сцены и не возвращай Babylon в `core/public` без
+> явного запроса.
+
 Главный документ: **`docs/SCENES.md`**. Порты и запуск: **`docs/DEV.md`**.
 Текущий этап: **`docs/STATUS.md`**. Вектор: **`docs/ROADMAP_2D.md`**.
 Анимация: **`docs/ANIMATION.md`**. Ошибки/решения: **`docs/WORKLOG.md`**.
 Решения: **`docs/DECISIONS.md`**.
 Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`docs/CHARACTERS.md`**.
+Анатомия и диапазоны суставов: **`docs/ANATOMY_RIG.md`**.
 Липсинк: **`docs/LIPSYNC.md`**.
 Архитектура: **`docs/ENGINE.md`**. API: **`docs/API.md`**. Редактор: **`docs/EDITOR.md`**.
-Ассеты: **`docs/ASSETS.md`**. Риги: **`docs/RIG_FORMAT.md`**, студия: **`docs/RIG_STUDIO.md`**. Объекты/окружения: **`docs/ASSET_FORMAT.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
-Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**.
+Ассеты: **`docs/ASSETS.md`**. Риги: **`docs/RIG_FORMAT.md`**, студия: **`docs/RIG_STUDIO.md`**.
+Позы/жесты/гардероб/зоопарк скелетов/2.5D: **`docs/PAPERCAST_ROADMAP.md`**.
+Аудит и план устранения: **`docs/PAPERCAST_AUDIT.md`**. Бэклог: **`docs/PAPERCAST_BACKLOG.md`**.
+Директор сцен (окружение, каст, тайминги из конфига): **`docs/PAPERCAST_DIRECTOR.md`**. Объекты/окружения: **`docs/ASSET_FORMAT.md`**. Ошибки/правила: **`docs/LEARNINGS.md`**.
+Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**. UI студий: **`docs/PAPERCAST_UI.md`**.
 Канал: **`docs/CHANNEL_PRAVOSLAVIE.md`**. Роли ИИ: **`docs/AGENT_ROLES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
 Аудит и конвейер DeepSeek: **`docs/CLAUDE_ANALYSIS.md`**.
@@ -131,7 +141,7 @@ GET http://localhost:8002/scene-library/characters/{slug}
 - текст/оверлеи → `layer-overlay`.
 - каждый объект: `class="obj-<slug>"`, `data-layer-id`.
 
-## 3.6. 3D-аватар
+## 3.6. 3D-аватар (архив, заморожен)
 
 - Шаблон `character-3d`, драйвер `SceneKit.babylonCharacter`
   (`core/public/vendor/babylon-character.js`).
@@ -141,7 +151,7 @@ GET http://localhost:8002/scene-library/characters/{slug}
 - Управление: `setPose`, `setVisemes`, `setClips`, `setGestures`, `setMood`,
   `setGaze`; из редактора — сообщения `avatar-*`.
 
-## 3.7. Риги и персонажи (SceneRig 1.0)
+## 3.7. Риги и персонажи (SceneRig 1.0, архив)
 
 - Канон: `human` / `animal` / `winged` (`humanoid`, `quadruped`, `avian`, `insectoid`).
 - Формат и правила: `docs/RIG_FORMAT.md`; объекты/окружения: `docs/ASSET_FORMAT.md`.

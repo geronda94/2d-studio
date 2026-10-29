@@ -731,13 +731,14 @@
     return { ready: Promise.resolve(null), seek() {}, setViseme() {}, setExpression() {} }
   }
 
-  // 3D avatar (Ready Player Me GLB): Babylon renders one deterministic frame
-  // per seek(t). Bones + ARKit/Oculus morph targets, no render loop.
-  function babylonCharacter(canvas, opts) {
-    if (window.BabylonCharacter && typeof window.BabylonCharacter.create === 'function') {
-      return window.BabylonCharacter.create(canvas, opts)
+
+  // Canvas 2D paper-cut character. Shared skeleton, poses, phonemes; one frame
+  // per seek(t), no 3D engine and no render loop.
+  function paperCast(canvas, opts) {
+    if (window.PaperCast && typeof window.PaperCast.create === 'function') {
+      return window.PaperCast.create(canvas, opts)
     }
-    return { ready: Promise.resolve(null), seek() {}, applyPreset() {}, resize() {} }
+    return { ready: Promise.resolve(null), seek() {}, setPose() {}, speak() {} }
   }
 
   // Rive-backed character: the hand-built .riv rig is driven by view-model
@@ -749,5 +750,5 @@
     return { ready: Promise.resolve(null), seek() {}, setPreset() {}, setVisemes() {} }
   }
 
-  window.SceneKit = { cues, mechanism, parallax, camera, compose, views: applyViews, scatter, mulberry32, visemeAt, visemeBlend, lipsync, characterRig, portraitRig, riveCharacter, riveActor, babylonCharacter, particles, idle, grain, shadow, visemePaths: VISEME_SHAPES, mouthLayer, rive }
+  window.SceneKit = { cues, mechanism, parallax, camera, compose, views: applyViews, scatter, mulberry32, visemeAt, visemeBlend, lipsync, characterRig, portraitRig, riveCharacter, riveActor, paperCast, particles, idle, grain, shadow, visemePaths: VISEME_SHAPES, mouthLayer, rive }
 })()

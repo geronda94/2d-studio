@@ -22,7 +22,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDirector } from '../composables/useDirector'
-import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadSceneClipSource, loadSceneRigSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer } from './runtime'
+import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadPaperSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer, loadAnimalSource, loadStageSource } from './runtime'
 
 const props = defineProps({
   code: { type: Object, default: () => ({}) },
@@ -54,8 +54,9 @@ const format = ref(props.format || 'landscape')
 let gsapSource = ''
 let kitSource = ''
 let charSource = ''
-let sceneClipSource = ''
-let sceneRigSource = ''
+let paperSource = ''
+let animalSource = ''
+let stageSource = ''
 let riveSource = ''
 let riveCharSource = ''
 let riveBuffer = ''
@@ -104,9 +105,12 @@ async function rebuild() {
   if (!kitSource) kitSource = await loadKitSource()
   if (!charSource) charSource = await loadCharSource()
   const sceneJs = String((props.code && props.code.js) || '')
-  const wantsSceneRig = /SceneRig|scene-rig/i.test(sceneJs)
-  if (wantsSceneRig && !sceneClipSource) sceneClipSource = await loadSceneClipSource()
-  if (wantsSceneRig && !sceneRigSource) sceneRigSource = await loadSceneRigSource()
+  const wantsPaper = /PaperCast|paper-cast|obj-paper/i.test(sceneJs)
+  if (wantsPaper && !paperSource) paperSource = await loadPaperSource()
+  const wantsAnimal = /PaperCastAnimals|paper-cast-animals|obj-animal/i.test(sceneJs)
+  if (wantsAnimal && !animalSource) animalSource = await loadAnimalSource()
+  const wantsStage = /PaperCastStage|paper-cast-stage|paper-stage/i.test(sceneJs)
+  if (wantsStage && !stageSource) stageSource = await loadStageSource()
   const wantsRive = /rive/i.test(sceneJs)
   const wantsRiveChar = /RiveCharacter|riveCharacter|rive-character/i.test(sceneJs)
   const wantsRiveActor = /RiveActor|riveActor|rive-actor/i.test(sceneJs)
@@ -126,8 +130,9 @@ async function rebuild() {
     gsapSource,
     kitSource,
     charSource,
-    sceneClipSource: wantsSceneRig ? sceneClipSource : '',
-    sceneRigSource: wantsSceneRig ? sceneRigSource : '',
+    paperSource: wantsPaper ? paperSource : '',
+    animalSource: wantsAnimal ? animalSource : '',
+    stageSource: wantsStage ? stageSource : '',
     riveSource: wantsRive ? riveSource : '',
     riveCharSource: wantsRiveChar ? riveCharSource : '',
     riveBuffer: wantsRiveChar ? riveBuffer : '',

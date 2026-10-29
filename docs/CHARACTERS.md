@@ -1,47 +1,25 @@
 # CHARACTERS — персонажи, риги и липсинк
 
-Статус: **решение принято (2026-10-25)** — SceneRig 1.0 поверх glTF 2.0,
-см. `docs/RIG_FORMAT.md`. Rive остаётся legacy-рантаймом; SVG-риг `character`
-используется для простых 2D-сцен.
+Статус: **2D production (2026-10-27)**. 3D/Babylon заморожен.
 
-Персонажи делятся на два уровня.
+**Production:** Paper Cast на Canvas 2D. Один скелет, скины Mark/Mira,
+31 статичная поза, 82 фонемы → 18 форм рта, эмоции, морфы век, взгляд.
+Файлы:
+- `core/public/vendor/paper-cast.js` — риг и данные;
+- `core/public/character-studio.html` — студия;
+- `backend/scene_library.py` — шаблон `character-paper-duo` и объект
+  `character-paper`;
+- `scripts/seed_paper_duo.py` — демо `/p/12`.
+Подробно: `docs/CANVAS_CHARACTERS.md`.
 
-**Hero (по умолчанию).** `Mark HD` — Avatar SDK-меш, `Mira HD` — Ready Player
-Me; текстуры, 66–72 морфа, Oculus-15, eye-look, веки/морщины/складки уже в
-меше. `SceneRig` получает `boneMap` (исходные имена → канон), `armRestZ`
-(мир-пространственный разворот T-pose-рук в A-pose) и `headPitch` (калибровка
-наклона головы). Файлы: `core/public/models/hero/avatarsdk-man.glb`,
-`core/public/models/brunette.glb`. Это стандарт для диалоговых сцен и
-`/p/11`. Лицензии: RPM-аватар — free avatar Ready Player Me; Avatar SDK-меш
-взят из локальной библиотеки, перед публичной раздачей проверьте его условия.
-
-**Custom / crowd.** `Mark` и `Mira` (генератор v3,
-`core/public/models/characters/`), 25 костей, 34 морфа, гардероб
-tee/shirt/hoodie/dress, pants/shorts/skirt, sneakers/boots, причёски,
-слайдеры тела/лица. Используются для массовки и глубокой кастомизации.
-Character Studio: `core/public/character-studio.html`.
-Генератор: `scripts/blender/make_poly_characters_v3.py`, пресеты —
-`assets/characters/presets/*.json`.
-
-### Управление SceneRig
-
-```js
-rig.setVisemes([{ t: 0, viseme: 1 }, ...])
-rig.setMotion('idle' | 'talk')
-rig.setMood('neutral' | 'joy' | 'sad')
-rig.setGesture('none' | 'wave' | 'point' | 'explain')
-rig.setEmotion('neutral' | 'joy' | 'sad' | 'anger' | 'surprise' | 'fear' | 'think' | 'disgust')
-rig.setGaze(x, y, { auto: true, head: true })
-rig.setShape({ bodyShoulder: 0.2, faceWidth: 0.15, lipFull: 0.3, ... })
-rig.setOutfit({ top: 'hoodie', bottom: 'pants', shoes: 'sneaker', hair: 'short' })
-rig.setAppearance({ skin: '#bd8766', top: '#24477a', ... })
-```
-
-Руки: ладонь к бедру, пальцы вниз по предплечью, большой палец вперёд;
-`lowerArm` X < 0 сгибает локоть вперёд. Полное правило — `AGENTS.md` §3.7.1
-и `docs/LEARNINGS.md` §7. Любой roll кисти вокруг оси руки запрещён.
+**Legacy / archive.** HD-персонажи (`mark-hd.glb`, `brunette.glb`), glTF
+SceneRig, Babylon, Rig Studio, Clip Editor и Object Studio перенесены в
+`drafts/3d/` и не загружаются в runtime. Код сохранён для возможного
+возврата; production-сцены на него не ссылаются. Старый SVG-риг `character`
+и Rive остаются legacy, но новые диалоговые сцены делаются на Paper Cast.
 
 Ниже — исходный research, сохранён для истории.
+
 
 ---
 
@@ -410,7 +388,7 @@ shirt, pants, shoe, lip, iris, scarf, skirt, cassock) и флаги
 - Для массовки и других возрастов нужны новые готовые `.riv` или
   доработка собственного рига.
 
-## 10. 3D-аватар (GLB + Babylon, 2026-10-24)
+## 10. 3D-аватар (GLB + Babylon, 2026-10-24, архив)
 
 Полноценный 3D-персонаж для студийных сцен: Ready Player Me GLB, Babylon.js,
 мокап-клипы Mixamo. Работает в sandbox-iframe и остаётся детерминированным:

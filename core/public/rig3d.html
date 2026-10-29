@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paper Cast — 3D view</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg:#0b0f14; --panel:#121820; --panel-2:#18212b; --line:#26313d;
+    --text:#e8e4da; --muted:#92a0ab; --teal:#67d8c8; --teal-dim:#2f7e76; --gold:#d8b46f;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); }
+  body { font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; font-size:13px; }
+  button, input, select { font:inherit; color:inherit; }
+  .app { min-height:100dvh; display:flex; flex-direction:column; }
+  .topbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(18,24,32,.97); position:sticky; top:0; z-index:20; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .mark { width:30px; height:30px; border:1px solid var(--teal-dim); border-radius:8px; position:relative; }
+  .mark::before, .mark::after { content:''; position:absolute; background:var(--teal); }
+  .mark::before { width:12px; height:1px; top:14px; left:8px; }
+  .mark::after { width:1px; height:12px; top:8px; left:14px; }
+  .title { font-weight:750; letter-spacing:.14em; font-size:12px; text-transform:uppercase; }
+  .sub { color:var(--muted); font:10px/1.2 ui-monospace,monospace; }
+  .links { margin-left:auto; display:flex; gap:12px; }
+  .links a { color:var(--muted); text-decoration:none; font-size:11px; }
+  .links a:hover { color:var(--text); }
+  .links a.on { color:var(--teal); }
+  .workspace { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:12px; padding:12px; width:min(1700px,100%); margin:0 auto; flex:1; align-items:start; }
+  .stage { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#0e141b; min-width:0; }
+  .stage-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .stage-title { font-size:15px; font-weight:700; }
+  .modes { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .mode { border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:999px; padding:6px 10px; font-size:11px; cursor:pointer; }
+  .mode.on { color:var(--teal); border-color:var(--teal-dim); background:rgba(103,216,200,.08); }
+  #wrap { position:relative; height:min(76vh,840px); background:radial-gradient(ellipse at 50% 30%,#1a2430 0%,#0c1218 60%,#080b10 100%); }
+  #cv { position:absolute; inset:0; width:100%; height:100%; display:block; cursor:grab; }
+  .hintbar { position:absolute; left:10px; bottom:10px; display:flex; gap:6px; flex-wrap:wrap; pointer-events:none; }
+  .hintbar span { font:10px/1 ui-monospace,monospace; color:#cdd8db; background:rgba(10,14,20,.6); border:1px solid rgba(255,255,255,.12); border-radius:6px; padding:4px 6px; }
+  .inspector { display:flex; flex-direction:column; gap:10px; }
+  .panel { border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .panel h3 { margin:0; font:10px/1.2 ui-monospace,monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .ctrl { display:flex; flex-direction:column; gap:4px; }
+  .ctrl label { color:var(--muted); font-size:11px; display:flex; justify-content:space-between; }
+  .ctrl label b { color:var(--text); font:10px/1 ui-monospace,monospace; }
+  input[type=range] { width:100%; accent-color:var(--teal); }
+  select { background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:7px 8px; }
+  textarea { width:100%; min-height:120px; resize:vertical; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--muted); font:10.5px/1.5 ui-monospace,monospace; padding:8px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row > * { min-width:0; }
+  .btn { border:1px solid var(--line); background:var(--panel-2); border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; }
+  .btn:hover { border-color:var(--teal-dim); }
+  .btn.primary { background:rgba(103,216,200,.12); border-color:var(--teal-dim); color:var(--teal); }
+  .hint { color:var(--muted); font-size:11px; line-height:1.45; }
+  @media (max-width: 1000px) { .workspace { grid-template-columns:1fr; } #wrap { height:52dvh; min-height:320px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="mark"></div><div><div class="title">Paper Cast</div><div class="sub">3d view · turntable</div></div></div>
+    <nav class="links">
+      <a href="/rig3d.html" class="on">3D вид</a>
+      <a href="/character-studio.html">Character Lab</a>
+      <a href="/pose-studio.html">Pose Studio</a>
+      <a href="/character-builder.html">Builder</a>
+      <a href="/director-demo.html">Режиссёр</a>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <section class="stage">
+      <div class="stage-head">
+        <div class="stage-title">3D-вид и оси</div>
+        <div class="modes">
+          <button class="mode on" data-view="front">фронт</button>
+          <button class="mode" data-view="left">слева</button>
+          <button class="mode" data-view="right">справа</button>
+          <button class="mode" data-view="back">сзади</button>
+        </div>
+      </div>
+      <div id="wrap">
+        <canvas id="cv"></canvas>
+        <div class="hintbar" id="hud"></div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="panel">
+        <h3>Поворот и глубина</h3>
+        <div class="ctrl"><label>поворот персонажа <b id="t-turn"></b></label><input id="turn" type="range" min="0" max="360" step="1" value="0"></div>
+        <div class="ctrl"><label>глубина (z) <b id="t-depth"></b></label><input id="depth" type="range" min="-1" max="1" step="0.01" value="0"></div>
+        <div class="ctrl"><label>масштаб <b id="t-zoom"></b></label><input id="zoom" type="range" min="0.6" max="1.6" step="0.01" value="1"></div>
+        <div class="row"><label class="hint"><input type="checkbox" id="bones" checked> скелет 3D</label></div>
+      </div>
+
+      <div class="panel">
+        <h3>Камера</h3>
+        <div class="ctrl"><label>орбита <b id="t-orbit"></b></label><input id="orbit" type="range" min="-180" max="180" step="1" value="0"></div>
+        <div class="ctrl"><label>наклон <b id="t-pitch"></b></label><input id="pitch" type="range" min="-15" max="45" step="1" value="12"></div>
+        <div class="hint">Крутите сцену мышью/пальцем по канвасу. «Слева/справа/сзади» — это камера; «поворот» — сам персонаж.</div>
+      </div>
+
+      <div class="panel">
+        <h3>Поза</h3>
+        <select id="pose"></select>
+        <div class="hint">Поворот 0–90° — фронт/3-4; 90–270° — спина; глубина двигает по Z.</div>
+      </div>
+
+      <div class="panel">
+        <h3>Экспорт</h3>
+        <div class="row">
+          <button class="btn" id="exp-json">JSON</button>
+          <button class="btn" id="exp-js">Scene JS</button>
+          <button class="btn" id="copy">Copy</button>
+        </div>
+        <textarea id="out" spellcheck="false"></textarea>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script src="/vendor/paper-cast.js?v=31"></script>
+<script src="/vendor/paper-cast-session.js?v=2"></script>
+<script>
+(function () {
+  'use strict'
+  const $ = (s) => document.querySelector(s)
+  const TAU = Math.PI * 2
+  const canvas = $('#cv')
+  const ctx = canvas.getContext('2d')
+
+  const state = {
+    turn: 0, depth: 0, zoom: 1, orbit: 0, pitch: 12,
+    showBones: true, pose: 'neutral',
+  }
+
+  const SESSION = window.PaperCastSession || null
+  const session = SESSION ? SESSION.read() : {}
+  const urlChar = SESSION ? SESSION.fromURL() : null
+  if (urlChar) session.active = urlChar
+  const startChar = session.active && window.PaperCast.CHARACTERS[session.active] ? session.active : 'mark'
+  if (session.pose && window.PaperCast.POSES[session.pose]) state.pose = session.pose
+
+  // hidden rig canvas
+  const host = document.createElement('div')
+  host.style.cssText = 'position:fixed;left:-12000px;top:0;width:600px;height:900px;overflow:hidden'
+  document.body.appendChild(host)
+  const rigCanvas = document.createElement('canvas')
+  rigCanvas.width = 600; rigCanvas.height = 900
+  rigCanvas.style.cssText = 'width:600px;height:900px;display:block'
+  host.appendChild(rigCanvas)
+  const rig = window.PaperCast.create(rigCanvas, {
+    character: startChar,
+    pose: state.pose,
+    appearance: SESSION ? SESSION.readSkin(startChar) : {},
+    autoGaze: false,
+    life: true,
+  })
+
+  for (const name of Object.keys(window.PaperCast.POSES)) {
+    const o = document.createElement('option'); o.value = name; o.textContent = name
+    $('#pose').appendChild(o)
+  }
+  $('#pose').value = state.pose
+
+  if (SESSION) SESSION.on((s) => {
+    if (!s) return
+    const ch = s.active && window.PaperCast.CHARACTERS[s.active] ? s.active : startChar
+    rig.setCharacter(ch)
+    rig.setAppearance(SESSION.readSkin(ch))
+    if (s.pose && window.PaperCast.POSES[s.pose]) {
+      state.pose = s.pose
+      rig.setPoseObject(window.PaperCast.POSES[s.pose])
+      const ps = $('#pose')
+      if (ps) ps.value = s.pose
+    }
+    applyArt()
+  })
+
+  function applyArt() {
+    const t = state.turn
+    const back = t > 90 && t < 270
+    rig.setBack(back)
+    let yaw = 0
+    if (!back) yaw = t <= 90 ? (t / 90) * 0.7 : -((360 - t) / 90) * 0.7
+    rig.setYaw(Math.max(-0.75, Math.min(0.75, yaw)))
+    rig.seek(1200)
+  }
+
+  // 3D projection: orthographic, orbit around Y, then pitch
+  function project(p, W, H, depth) {
+    const orbit = state.orbit * Math.PI / 180
+    const pitch = state.pitch * Math.PI / 180
+    const X = p[0], Y = 900 - p[1], Z = p[2] + depth
+    const x1 = X * Math.cos(orbit) + Z * Math.sin(orbit)
+    const z1 = -X * Math.sin(orbit) + Z * Math.cos(orbit)
+    const y1 = Y * Math.cos(pitch) - z1 * Math.sin(pitch)
+    const z2 = Y * Math.sin(pitch) + z1 * Math.cos(pitch)
+    const s = (Math.min(W, H) / 1000) * state.zoom
+    return { x: W / 2 + x1 * s, y: H * 0.82 - y1 * s, z: z2, s }
+  }
+
+  function floorGrid(W, H, depth) {
+    const a = project([-420, 900, -260], W, H, depth)
+    const b = project([420, 900, -260], W, H, depth)
+    ctx.strokeStyle = 'rgba(140,190,200,.12)'
+    ctx.lineWidth = 1
+    for (let i = -4; i <= 4; i++) {
+      const p1 = project([i * 100, 900, -260], W, H, depth)
+      const p2 = project([i * 100, 900, 300], W, H, depth)
+      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke()
+    }
+    for (let i = -3; i <= 3; i++) {
+      const p1 = project([-420, 900, i * 100], W, H, depth)
+      const p2 = project([420, 900, i * 100], W, H, depth)
+      ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke()
+    }
+  }
+
+  const BONES = [
+    ['hip', 'neck'], ['neck', 'head'],
+    ['shL', 'elbowL'], ['elbowL', 'wristL'],
+    ['shR', 'elbowR'], ['elbowR', 'wristR'],
+    ['hipL', 'kneeL'], ['kneeL', 'ankleL'],
+    ['hipR', 'kneeR'], ['kneeR', 'ankleR'],
+    ['hipL', 'hipR'], ['shL', 'shR'],
+  ]
+
+  function drawSkeleton(W, H, depth) {
+    if (!state.showBones) return
+    const a = state.turn * Math.PI / 180
+    const sk = window.PaperCast.skeleton3D(state.pose, a)
+    const pts = {}
+    for (const k of Object.keys(sk)) pts[k] = project(sk[k], W, H, depth)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(105,214,255,.85)'
+    ctx.fillStyle = 'rgba(105,214,255,.9)'
+    ctx.lineWidth = 2
+    for (const [a2, b2] of BONES) {
+      if (!pts[a2] || !pts[b2]) continue
+      ctx.beginPath(); ctx.moveTo(pts[a2].x, pts[a2].y); ctx.lineTo(pts[b2].x, pts[b2].y); ctx.stroke()
+    }
+    for (const k of Object.keys(pts)) {
+      ctx.beginPath(); ctx.arc(pts[k].x, pts[k].y, 3.5, 0, TAU); ctx.fill()
+    }
+    ctx.restore()
+  }
+
+  function draw() {
+    const r = canvas.getBoundingClientRect()
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr))
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    const w = r.width, h = r.height
+    ctx.clearRect(0, 0, w, h)
+    // background
+    const bg = ctx.createLinearGradient(0, 0, 0, h)
+    bg.addColorStop(0, '#1a2430'); bg.addColorStop(1, '#080b10')
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h)
+    const depthZ = state.depth * 120
+    floorGrid(w, h, depthZ)
+    // ground shadow
+    const ground = project([0, 900, 0], w, h, depthZ)
+    ctx.save()
+    ctx.globalAlpha = 0.35
+    ctx.fillStyle = '#000'
+    ctx.beginPath(); ctx.ellipse(ground.x, ground.y + 6, 110 * state.zoom, 22 * state.zoom, 0, 0, TAU); ctx.fill()
+    ctx.restore()
+    // character billboard
+    const b = project([0, 900, 0], w, h, depthZ)
+    const s = b.s * 0.86
+    const side = Math.abs(state.orbit) > 55 && Math.abs(state.orbit) < 125
+    ctx.save()
+    ctx.globalAlpha = side ? 0.28 : 1
+    ctx.drawImage(rigCanvas, b.x - 300 * s, b.y - 900 * s, 600 * s, 900 * s)
+    ctx.restore()
+    drawSkeleton(w, h, depthZ)
+    // HUD
+    const back = state.turn > 90 && state.turn < 270
+    $('#hud').innerHTML = '<span>арт: ' + (back ? 'спина' : 'фронт') + '</span>'
+      + '<span>поворот ' + state.turn + '°</span>'
+      + '<span>z ' + state.depth.toFixed(2) + '</span>'
+      + '<span>камера ' + state.orbit + '° / ' + state.pitch + '°</span>'
+      + (side ? '<span>сбоку: скелет, арт приглушён</span>' : '')
+  }
+
+  function sync() {
+    applyArt(); draw()
+    $('#t-turn').textContent = state.turn + '°'
+    $('#t-depth').textContent = state.depth.toFixed(2)
+    $('#t-zoom').textContent = state.zoom.toFixed(2) + '×'
+    $('#t-orbit').textContent = state.orbit + '°'
+    $('#t-pitch').textContent = state.pitch + '°'
+  }
+
+  $('#turn').addEventListener('input', (e) => { state.turn = Number(e.target.value); sync() })
+  $('#depth').addEventListener('input', (e) => { state.depth = Number(e.target.value); sync() })
+  $('#zoom').addEventListener('input', (e) => { state.zoom = Number(e.target.value); sync() })
+  $('#orbit').addEventListener('input', (e) => { state.orbit = Number(e.target.value); sync() })
+  $('#pitch').addEventListener('input', (e) => { state.pitch = Number(e.target.value); sync() })
+  $('#bones').addEventListener('change', (e) => { state.showBones = e.target.checked; sync() })
+  $('#pose').addEventListener('change', (e) => { state.pose = e.target.value; rig.setPose(state.pose); sync() })
+
+  document.querySelectorAll('[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.view
+      document.querySelectorAll('[data-view]').forEach((b2) => b2.classList.toggle('on', b2 === btn))
+      if (v === 'front') { state.orbit = 0; state.turn = 0 }
+      if (v === 'back') { state.orbit = 0; state.turn = 180 }
+      if (v === 'left') { state.orbit = -90; state.turn = 0 }
+      if (v === 'right') { state.orbit = 90; state.turn = 0 }
+      $('#orbit').value = String(state.orbit)
+      $('#turn').value = String(state.turn)
+      sync()
+    })
+  })
+
+  // drag to orbit
+  let drag = null
+  canvas.addEventListener('pointerdown', (e) => {
+    drag = { x: e.clientX, y: e.clientY, orbit: state.orbit, pitch: state.pitch }
+    canvas.setPointerCapture(e.pointerId)
+  })
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drag) return
+    state.orbit = Math.max(-180, Math.min(180, drag.orbit + (e.clientX - drag.x) * 0.4))
+    state.pitch = Math.max(-15, Math.min(45, drag.pitch - (e.clientY - drag.y) * 0.2))
+    $('#orbit').value = String(Math.round(state.orbit))
+    $('#pitch').value = String(Math.round(state.pitch))
+    sync()
+  })
+  canvas.addEventListener('pointerup', () => { drag = null })
+  canvas.addEventListener('pointercancel', () => { drag = null })
+
+  const out = $('#out')
+  $('#exp-json').addEventListener('click', () => {
+    out.value = JSON.stringify({
+      turn: state.turn,
+      depth: +state.depth.toFixed(2),
+      art: state.turn > 90 && state.turn < 270 ? 'back' : 'front',
+      orbit: state.orbit,
+      pitch: state.pitch,
+      skeleton3D: window.PaperCast.skeleton3D(state.pose, state.turn * Math.PI / 180),
+    }, null, 2)
+  })
+  $('#exp-js').addEventListener('click', () => {
+    out.value = [
+      'const cast = PaperCast.create(canvas, {',
+      '  character: "mark", pose: ' + JSON.stringify(state.pose) + ',',
+      '  yaw: ' + (state.turn > 90 && state.turn < 270 ? 0 : Math.sin(state.turn * Math.PI / 180) * 0.7) + ',',
+      '  back: ' + (state.turn > 90 && state.turn < 270) + ',',
+      '})',
+      'cast.seek(t)',
+    ].join('\n')
+  })
+  $('#copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(out.value) } catch (e) {} })
+
+  new ResizeObserver(() => draw()).observe($('#wrap'))
+  sync()
+})()
+</script>
+</body>
+</html>

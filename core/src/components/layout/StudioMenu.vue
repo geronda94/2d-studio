@@ -7,10 +7,11 @@ onMounted(() => window.addEventListener('click', close))
 onUnmounted(() => window.removeEventListener('click', close))
 
 const items = [
-  { href: '/character-studio.html', label: 'Character Studio', hint: 'Внешность, скелет и липсинк' },
-  { href: '/object-studio.html', label: 'Object Studio', hint: 'Создание и редактирование объектов' },
-  { href: '/rig-studio.html', label: 'Rig Studio', hint: 'Скелет, морфы, манифест персонажа' },
-  { href: '/clip-editor.html', label: 'Clip Editor', hint: 'Ключи анимации и *.sclip.json' },
+  { href: '/character-builder.html', label: 'Конструктор персонажа', hint: 'пропорции, гардероб, 10 животных' },
+  { href: '/pose-studio.html', label: 'Pose Studio', hint: 'жесты, лимиты, клипы, пресеты' },
+  { href: '/character-studio.html', label: 'Paper Cast Studio', hint: '2D-риг, 31 поза, 82 фонемы' },
+  { href: '/rig3d.html', label: '3D-вид рига', hint: 'турнтейбл, оси, скелет и глубина' },
+  { href: '/p/1', label: 'Демо-сцены', hint: 'Сцены движка и 2D-персонажи' },
 ]
 </script>
 

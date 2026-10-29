@@ -17,22 +17,24 @@ from backend.database import SessionLocal, engine
 ASSETS = [
     {
         "slug": "character-mark",
-        "title": "Mark",
-        "source_url": "/models/characters/character-mark.glb",
-        "rig": "/models/characters/character-mark.scenerig.json",
+        "title": "Mark HD",
+        "base": "mark",
+        "source_url": "/models/hero/mark-hd.glb",
+        "rig": None,
         "appearance": {
-            "skin": "#b8805e", "hair": "#1a130f", "top": "#294d8c",
-            "bottom": "#292b33", "shoes": "#141417", "eyes": "#2e6147",
-            "lips": "#8c3d38", "glasses": False, "hood": True, "scale": 1,
+            "skin": "#c98b6b", "hair": "#241812", "top": "#2d5f46",
+            "bottom": "#45454c", "shoes": "#151312", "eyes": "#3c6a8a",
+            "lips": "#8f4d45", "glasses": False, "hood": False, "scale": 1,
         },
     },
     {
         "slug": "character-mira",
-        "title": "Mira",
-        "source_url": "/models/characters/character-mira.glb",
-        "rig": "/models/characters/character-mira.scenerig.json",
+        "title": "Mira HD",
+        "base": "mira",
+        "source_url": "/models/brunette.glb",
+        "rig": "/models/brunette.scenerig.json",
         "appearance": {
-            "skin": "#dba68a", "hair": "#752914", "top": "#33734f",
+            "skin": "#dba68a", "hair": "#3a2018", "top": "#33734f",
             "bottom": "#382b3d", "shoes": "#3d1c1a", "eyes": "#3373a0",
             "lips": "#ad4c4c", "glasses": True, "hood": False, "scale": 1,
         },
@@ -50,6 +52,7 @@ def run():
                 "id": a["slug"],
                 "title": a["title"],
                 "kind": "character",
+                "base": a.get("base"),
                 "category": "character",
                 "family": "human",
                 "archetype": "humanoid",
@@ -57,7 +60,7 @@ def run():
                 "geometry": {"type": "gltf", "file": a["source_url"],
                              "units": "m", "up": "Y", "facing": "+Z"},
                 "appearance": a["appearance"],
-                "license": {"name": "CC0", "author": "SceneEngine"},
+                "license": {"name": "check-local-source", "author": "SceneEngine / Avatar SDK / Ready Player Me"},
             }
             row = db.query(models.SceneAsset).filter(models.SceneAsset.slug == a["slug"]).first()
             if row:

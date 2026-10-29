@@ -1,505 +1,873 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Character Studio — SceneRig</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Paper Cast — 2D character lab</title>
+<link rel="icon" href="data:,">
 <style>
-  :root{--bg:#070b12;--panel:#0e1522;--panel2:#121c2c;--line:#22304a;--text:#e8eefc;
-    --muted:#8da0bf;--accent:#38bdf8;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
-  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
-    font:13px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
-  button,input,select,textarea{font:inherit;color:inherit}
-  button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
-  button:hover{border-color:var(--accent)}button.primary{background:#0b3a52;border-color:#155e7a;color:#dff6ff}
-  button.danger{border-color:#5b1c1c;color:#ffb4b4}
-  input,select,textarea{background:#08101c;border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
-  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
-  input[type=color]{padding:2px;height:32px;width:100%;cursor:pointer}
-  #app{display:grid;grid-template-rows:auto 1fr;height:100%}
-  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
-  header .title{font-weight:700;margin-right:6px}header .title span{color:var(--accent)}
-  header .grow{flex:1}header .status{font:11px var(--mono);color:var(--muted);white-space:nowrap}
-  header label{display:flex;gap:5px;align-items:center;font:10px var(--mono);color:var(--muted);text-transform:uppercase}
-  main{display:grid;grid-template-columns:300px 1fr 390px;min-height:0}
-  .col{display:flex;flex-direction:column;min-height:0;min-width:0}.col+.col{border-left:1px solid var(--line)}
-  .panel-h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);
-    background:var(--panel);font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-  .panel-h .grow{flex:1}.scroll{overflow:auto;min-height:0}
-  #stage{display:grid;grid-template-rows:1fr auto;min-height:0}
-  #canvasWrap{position:relative;min-height:0;background:radial-gradient(120% 90% at 50% 16%,#2a3852 0%,#141d2b 44%,#070b12 100%)}
-  #c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
-  #timeline{border-top:1px solid var(--line);background:var(--panel);padding:10px}
-  .timeRow{display:flex;gap:10px;align-items:center;font:11px var(--mono);color:var(--muted)}
-  .timeRow input[type=range]{flex:1;padding:0}
-  .fields{padding:10px;display:grid;gap:8px;border-bottom:1px solid var(--line)}
-  .fields label{display:grid;gap:4px;font:10px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-  .swatches label{font-size:9px}
-  .row{display:flex;gap:6px;align-items:center}.row>*{flex:1}
-  .lib-item{padding:6px 10px;border-bottom:1px solid #101a2a;cursor:pointer}
-  .lib-item:hover{background:#13213a}.lib-item.sel{background:#0b2434;border-left:2px solid var(--accent)}
-  .lib-item .t{font:12px Inter,sans-serif;color:var(--text)}.lib-item .s{font:10px var(--mono);color:var(--muted)}
-  .visemes{display:flex;gap:5px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--line)}
-  .visemes button{padding:4px 8px;font:11px var(--mono)}
-  .empty{padding:14px;color:var(--muted);font-size:12px;text-align:center}
-  .hidden{display:none!important}.pill{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);font:10px var(--mono);color:var(--muted);cursor:pointer;text-decoration:none}
-  #issues{padding:8px 10px;font:11px var(--mono)}
-  .issue{border-radius:6px;padding:6px 8px;margin-bottom:6px;border:1px solid #1e2b42;background:#0b1421}
-  .issue.error{border-color:#5b1c1c;background:#1a0d0f}.issue.warning{border-color:#5a4210;background:#1a1508}
-  .issue .code{font-weight:700}.issue.error .code{color:var(--err)}.issue.warning .code{color:var(--warn)}
-  #manifest{flex:1;width:100%;resize:none;border:0;border-radius:0;background:#08101c;font:11px/1.5 var(--mono);padding:10px}
-  @media(max-width:1150px){main{grid-template-columns:260px 1fr 340px}}
-  /* Mobile: a fixed preview + fixed header, with the controls in a scrollable
-     sheet below. The character stays visible while editing and speaking. */
-  @media(max-width:900px){
-    :root{--header-h:110px}
-    html,body{height:100%;overflow:hidden}
-    #app{height:100%;display:block}
-    header{position:fixed;top:0;left:0;right:0;z-index:50}
-    #stage{position:fixed;top:var(--header-h);left:0;right:0;height:56vh;z-index:10;
-      background:var(--bg);border-left:0;border-top:0;border-bottom:1px solid var(--line)}
-    main{position:fixed;top:calc(var(--header-h) + 56vh);left:0;right:0;bottom:0;
-      display:flex;flex-direction:column;overflow:auto;z-index:20;background:var(--bg)}
-    .col{min-height:0;flex:none}
-    .col .scroll{overflow:visible}
-    .col+.col{border-left:0;border-top:1px solid var(--line)}
-    #manifest{min-height:120px}
+  :root {
+    --bg: #0b0f14;
+    --panel: #121820;
+    --panel-2: #18212b;
+    --line: #26313d;
+    --line-soft: rgba(150, 175, 195, .16);
+    --text: #e8e4da;
+    --muted: #92a0ab;
+    --cream: #efe4d1;
+    --cream-deep: #e3d4ba;
+    --ink: #20232d;
+    --teal: #67d8c8;
+    --teal-dim: #2f7e76;
+    --orange: #e28a5a;
+    --gold: #d8b46f;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-x: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .app { min-height: 100dvh; display: flex; flex-direction: column; }
+  .topbar {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 16px 22px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18, 24, 32, .96), rgba(11, 15, 20, .96));
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 34px; height: 34px; border: 1px solid var(--teal-dim); border-radius: 9px;
+    display: grid; place-items: center; position: relative; background: rgba(103, 216, 200, .06);
+  }
+  .brand-mark::before, .brand-mark::after {
+    content: ''; position: absolute; background: var(--teal);
+  }
+  .brand-mark::before { width: 14px; height: 1px; top: 16px; }
+  .brand-mark::after { width: 1px; height: 14px; left: 16px; }
+  .brand-mark span { width: 5px; height: 5px; border: 1px solid var(--teal); border-radius: 50%; }
+  .brand-title { font-weight: 750; letter-spacing: .16em; font-size: 12px; text-transform: uppercase; }
+  .brand-sub { color: var(--muted); font: 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
+  .topstats { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .chip {
+    border: 1px solid var(--line); background: rgba(255, 255, 255, .02); color: var(--muted);
+    border-radius: 999px; padding: 5px 10px; font: 10px/1.1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .06em; white-space: nowrap;
+  }
+  .chip b { color: var(--teal); font-weight: 600; }
+  .toplinks { display: flex; gap: 8px; align-items: center; }
+  .toplinks a {
+    color: var(--muted); text-decoration: none; font-size: 11px; border-bottom: 1px dotted transparent;
+  }
+  .toplinks a:hover { color: var(--text); border-color: var(--teal); }
+  .toplinks a.on { color: var(--text); border-color: var(--teal); }
+  .news {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    padding: 14px 16px 0; width: min(1640px, 100%); margin: 0 auto;
+  }
+  .news-card {
+    position: relative; display: flex; flex-direction: column; gap: 4px;
+    border: 1px solid rgba(103, 216, 200, .35); border-radius: 12px;
+    background: linear-gradient(120deg, rgba(103,216,200,.10), rgba(226,138,90,.06));
+    padding: 12px 14px; text-decoration: none; color: var(--text);
+    transition: border-color .2s, transform .2s;
+  }
+  .news-card:hover { border-color: var(--teal); transform: translateY(-1px); }
+  .news-card b { font-size: 14px; letter-spacing: -.01em; }
+  .news-card span { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+  .news-badge {
+    position: absolute; right: 10px; top: 10px; font: 9px/1 ui-monospace, monospace;
+    letter-spacing: .12em; color: #0b0f14; background: var(--teal);
+    border-radius: 999px; padding: 3px 6px;
+  }
+  @media (max-width: 720px) { .news { grid-template-columns: 1fr; } }
+
+  .workspace {
+    display: grid; grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 16px; padding: 16px; flex: 1; align-items: start;
+    width: min(1640px, 100%); margin: 0 auto;
+  }
+  .stage {
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    background: #0e141b; min-width: 0; box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+  }
+  .stage-head {
+    display: flex; justify-content: space-between; gap: 14px; align-items: flex-start;
+    padding: 15px 18px; border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font: 10px/1.2 ui-monospace, monospace; letter-spacing: .2em; color: var(--teal); text-transform: uppercase; }
+  .stage-title { margin: 4px 0 0; font-size: clamp(22px, 3vw, 38px); line-height: 1; letter-spacing: -.04em; font-weight: 720; }
+  .stage-note { margin-top: 6px; color: var(--muted); max-width: 56ch; font-size: 12px; }
+  .stage-badge {
+    flex: 0 0 auto; text-align: right; border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 10px; font: 10px/1.4 ui-monospace, monospace; color: var(--muted); background: rgba(255,255,255,.02);
+  }
+  .stage-badge b { display: block; color: var(--gold); font-weight: 600; letter-spacing: .12em; }
+  .cast {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    height: min(78vh, 800px);
+    padding: 16px; background:
+      radial-gradient(ellipse at 50% 8%, rgba(103, 216, 200, .10), transparent 50%),
+      radial-gradient(ellipse at 20% 90%, rgba(226, 138, 90, .08), transparent 58%),
+      #0c1218;
+  }
+  .actor {
+    min-width: 0; display: flex; flex-direction: column; height: 100%;
+    border: 1px solid rgba(216, 201, 178, .45); border-radius: 12px;
+    background: var(--cream); color: var(--ink); overflow: hidden; position: relative;
+    box-shadow: 0 18px 40px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.25);
+    transition: border-color .2s, transform .2s;
+  }
+  .actor.active { border-color: var(--teal); transform: translateY(-2px); }
+  .actor-top {
+    display: flex; align-items: center; gap: 8px; padding: 9px 11px 6px;
+    font: 10px/1 ui-monospace, monospace; letter-spacing: .10em; color: rgba(32,35,45,.62);
+  }
+  .actor-top .idx { color: rgba(32,35,45,.35); }
+  .actor-top .name { font-weight: 750; color: var(--ink); letter-spacing: .16em; }
+  .actor-top .meta { margin-left: auto; }
+  .canvas-wrap {
+    position: relative; width: 100%; flex: 1; min-height: 0;
+    background:
+      linear-gradient(rgba(32,35,45,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(32,35,45,.055) 1px, transparent 1px),
+      radial-gradient(ellipse at 50% 40%, #f7eedf 0%, #efe4d1 55%, #e5d6bd 100%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    overflow: hidden;
+  }
+  .canvas-wrap::before, .canvas-wrap::after {
+    content: ''; position: absolute; width: 14px; height: 14px; border-color: rgba(32,35,45,.22);
+    pointer-events: none;
+  }
+  .canvas-wrap::before { left: 10px; top: 10px; border-left: 1px solid; border-top: 1px solid; }
+  .canvas-wrap::after { right: 10px; bottom: 10px; border-right: 1px solid; border-bottom: 1px solid; }
+  .canvas-wrap canvas { width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
+  .actor-foot {
+    display: flex; justify-content: space-between; gap: 8px; padding: 6px 11px 10px;
+    font: 10px/1.2 ui-monospace, monospace; letter-spacing: .06em; color: rgba(32,35,45,.58);
+    border-top: 1px solid rgba(32,35,45,.10);
+  }
+  .actor-foot .live { color: var(--teal-dim); }
+  .stage-foot {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; flex-wrap: wrap;
+  }
+  .stage-foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+  .stage-foot .spacer { flex: 1; }
+  .transport {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px 16px;
+    border-top: 1px solid var(--line-soft); flex-wrap: wrap;
+  }
+  .play-btn {
+    border: 1px solid var(--teal-dim); background: rgba(103,216,200,.10); color: var(--teal);
+    border-radius: 9px; padding: 8px 13px; min-width: 76px; font: 10px/1 ui-monospace, monospace;
+    letter-spacing: .13em; font-weight: 650;
+  }
+  .play-btn:hover { background: rgba(103,216,200,.18); }
+  .time {
+    font: 11px/1 ui-monospace, monospace; color: var(--text); min-width: 102px;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] { accent-color: var(--teal); }
+  .timeline { flex: 1 1 240px; min-width: 140px; height: 5px; }
+  .transport select {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+    padding: 6px 8px; font: 10px/1 ui-monospace, monospace; color: var(--muted);
+  }
+  .check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; }
+  .check input { accent-color: var(--teal); }
+
+  .panel {
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+    max-height: calc(100dvh - 32px); overflow: auto; position: sticky; top: 16px;
+    scrollbar-width: thin; scrollbar-color: #33414d transparent;
+  }
+  .panel::-webkit-scrollbar { width: 7px; }
+  .panel::-webkit-scrollbar-thumb { background: #33414d; border-radius: 10px; }
+  .section { padding: 15px; border-bottom: 1px solid var(--line-soft); }
+  .section:last-child { border-bottom: 0; }
+  .section-title {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px;
+    font: 10px/1.2 ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  }
+  .section-title b { color: var(--text); font-weight: 600; }
+  .section-title .count { color: var(--teal); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .stat {
+    background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 9px;
+    padding: 8px 7px; min-width: 0;
+  }
+  .stat b { display: block; font: 19px/1.1 ui-monospace, monospace; color: var(--teal); letter-spacing: -.03em; }
+  .stat span { display: block; margin-top: 3px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+  .segmented { display: flex; gap: 3px; background: #0d1319; border: 1px solid var(--line); border-radius: 8px; padding: 3px; }
+  .segmented button {
+    flex: 1; border: 0; background: transparent; color: var(--muted); border-radius: 6px;
+    padding: 7px 8px; font: 10px/1 ui-monospace, monospace; letter-spacing: .08em;
+  }
+  .segmented button.active { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+  .segmented button:hover { color: var(--text); }
+  .characters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .char-card {
+    display: flex; align-items: center; gap: 8px; text-align: left; border: 1px solid var(--line);
+    background: var(--panel-2); border-radius: 9px; padding: 7px; color: var(--muted); min-width: 0;
+  }
+  .char-card.active { border-color: var(--teal-dim); color: var(--text); background: rgba(103,216,200,.07); }
+  .char-dot { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); flex: 0 0 auto; }
+  .char-card b { display: block; font-size: 11px; color: var(--text); font-weight: 600; }
+  .char-card small { display: block; font: 9px/1.3 ui-monospace, monospace; color: var(--muted); }
+  .pose-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-height: 268px; overflow: auto; padding-right: 2px; }
+  .pose-btn {
+    border: 1px solid var(--line); background: #10161d; color: var(--muted); border-radius: 7px;
+    padding: 7px 5px; text-align: left; font-size: 10px; line-height: 1.2; min-height: 34px;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .pose-btn:hover { border-color: var(--teal-dim); color: var(--text); }
+  .pose-btn.active { border-color: var(--teal); background: rgba(103,216,200,.10); color: var(--teal); }
+  .emotion-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .emotion-btn {
+    border: 1px solid var(--line); background: #10161d; color: var(--muted); border-radius: 999px;
+    padding: 5px 9px; font-size: 10px;
+  }
+  .emotion-btn:hover { color: var(--text); border-color: var(--teal-dim); }
+  .emotion-btn.active { color: var(--ink); background: var(--gold); border-color: var(--gold); }
+  .phoneme-tools { display: flex; gap: 5px; margin-bottom: 8px; }
+  .phoneme-tools button {
+    border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px;
+    padding: 4px 8px; font: 9px/1 ui-monospace, monospace;
+  }
+  .phoneme-tools button.active { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.07); }
+  .phoneme-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 208px; overflow: auto;
+    padding: 2px 2px 2px 0;
+  }
+  .phoneme {
+    border: 1px solid var(--line-soft); background: #0f151c; color: var(--muted); border-radius: 6px;
+    min-height: 31px; padding: 3px 2px; font: 12px/1.1 ui-monospace, monospace; position: relative;
+  }
+  .phoneme small { display: block; font-size: 7px; color: #687783; margin-top: 2px; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+  .phoneme:hover { color: var(--text); border-color: var(--teal-dim); }
+  .phoneme.active { border-color: var(--teal); color: var(--teal); background: rgba(103,216,200,.08); }
+  .phoneme.active small { color: var(--teal-dim); }
+  .speech-box { display: flex; flex-direction: column; gap: 7px; }
+  .speech-input {
+    width: 100%; resize: vertical; min-height: 54px; border: 1px solid var(--line); border-radius: 8px;
+    background: #0d1319; color: var(--text); padding: 8px 9px; font-size: 11px; line-height: 1.45;
+  }
+  .speech-input:focus { outline: none; border-color: var(--teal-dim); }
+  .speech-actions { display: flex; align-items: center; gap: 7px; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 7px;
+    padding: 7px 10px; font-size: 10px; font-weight: 600; letter-spacing: .04em;
+  }
+  .btn:hover { border-color: var(--teal-dim); }
+  .btn.primary { border-color: var(--teal-dim); background: rgba(103,216,200,.10); color: var(--teal); }
+  .speech-meta { color: var(--muted); font: 9px/1.3 ui-monospace, monospace; }
+  .appearance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .color-field { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 7px; padding: 5px 6px; background: #10161d; }
+  .color-field input[type="color"] { width: 23px; height: 23px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+  .color-field span { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .footer-note { color: #5f6d78; font-size: 10px; line-height: 1.5; margin-top: 10px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(12px);
+    background: #e8e4da; color: var(--ink); border-radius: 8px; padding: 8px 13px;
+    font-size: 11px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (max-width: 1100px) {
+    .workspace { grid-template-columns: minmax(0, 1fr); }
+    .panel { position: static; max-height: none; }
+    .canvas-wrap { max-height: none; }
+  }
+  @media (max-width: 680px) {
+    .cast { height: auto; grid-template-columns: 1fr; }
+    .news { display: none; }
+    .toplinks { gap: 8px; flex-wrap: wrap; }
+    .toplinks a { white-space: nowrap; font-size: 10px; }
+    .canvas-wrap { max-height: 56dvh; }
+    .canvas-wrap { flex: none; aspect-ratio: 2 / 3; }
+    .topbar { padding: 12px 14px; gap: 10px; }
+    .topstats { order: 3; width: 100%; margin-left: 0; }
+    .workspace { padding: 10px; gap: 10px; }
+    .stage-head { padding: 12px; }
+    .stage-note { display: none; }
+    .cast { gap: 7px; padding: 10px; }
+    .actor-top { padding: 7px 8px 4px; }
+    .actor-top .meta { display: none; }
+    .actor-foot { padding: 5px 8px 8px; font-size: 9px; }
+    .stage-badge { display: none; }
+    .pose-grid { grid-template-columns: repeat(2, 1fr); }
+    .phoneme-grid { grid-template-columns: repeat(5, 1fr); }
+    .stats { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <div class="title">Character<span>Studio</span></div>
-    <label>База
-      <select id="base">
-        <option value="mark">Mark</option>
-        <option value="mira">Mira</option>
-        <option value="hero_mark">Mark HD</option>
-        <option value="hero_mira">Mira HD</option>
-      </select>
-    </label>
-    <label>Кадр
-      <select id="preset">
-        <option value="bust" selected>bust</option>
-        <option value="face">face</option>
-        <option value="full">full</option>
-        <option value="wide">wide</option>
-      </select>
-    </label>
-    <button id="applyPreset">Применить</button>
-    <button id="newChar">Новый</button>
-    <button id="saveChar" class="primary">Сохранить</button>
-    <span class="grow"></span>
-    <a href="/" class="pill">← Проект</a>
-    <span id="status" class="status">idle</span>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span></span></div>
+      <div>
+        <div class="brand-title">Paper Cast</div>
+        <div class="brand-sub">2D / 2.5D character lab · canvas</div>
+      </div>
+    </div>
+    <div class="topstats">
+      <span class="chip"><b>1</b> RIG / <b>2</b> SKINS</span>
+      <span class="chip"><b>31</b> POSES</span>
+      <span class="chip"><b>82</b> PHONEMES</span>
+      <span class="chip"><b>18</b> MOUTHS</span>
+      <span class="chip">BUILD <b>v12</b></span>
+    </div>
+    <nav class="toplinks">
+      <a href="/character-studio.html" class="on">Character Lab</a>
+      <a href="/pose-studio.html">Pose Studio</a>
+      <a href="/character-builder.html">Builder</a>
+      <a href="/rig3d.html">3D вид</a>
+      <a href="/director-demo.html">Режиссёр</a>
+      <a href="/">На главную</a>
+      <a href="/p/1">Демо-сцены</a>
+    </nav>
   </header>
-  <main>
-    <section class="col">
-      <div class="panel-h"><span>Внешность</span><span class="grow"></span><span id="baseLabel">mark</span></div>
-      <div class="scroll">
-        <div class="fields">
-          <label>ID / slug<input id="slug" value="character-mark-1"></label>
-          <label>Название<input id="title" value="Mark"></label>
-          <div class="swatches">
-            <label>Кожа<input id="skin" type="color" value="#b8805e"></label>
-            <label>Волосы<input id="hair" type="color" value="#1a130f"></label>
-            <label>Верх<input id="top" type="color" value="#294d8c"></label>
-            <label>Низ<input id="bottom" type="color" value="#292b33"></label>
-            <label>Обувь<input id="shoes" type="color" value="#141417"></label>
-            <label>Глаза<input id="eyes" type="color" value="#2e6147"></label>
-            <label>Губы<input id="lips" type="color" value="#8c3d38"></label>
-            <label>Масштаб<input id="scale" type="number" min="0.6" max="1.6" step="0.01" value="1"></label>
-          </div>
-          <div class="swatches" style="grid-template-columns:repeat(2,1fr)">
-            <label>Причёска
-              <select id="hairStyle">
-                <option value="short">short</option>
-                <option value="bob">bob</option>
-                <option value="ponytail">ponytail</option>
-                <option value="bun">bun</option>
-              </select>
-            </label>
-            <label>Верх
-              <select id="topStyle">
-                <option value="tee">tee</option>
-                <option value="shirt">shirt</option>
-                <option value="hoodie">hoodie</option>
-                <option value="dress">dress</option>
-              </select>
-            </label>
-            <label>Низ
-              <select id="bottomStyle">
-                <option value="pants">pants</option>
-                <option value="shorts">shorts</option>
-                <option value="skirt">skirt</option>
-              </select>
-            </label>
-            <label>Обувь
-              <select id="shoesStyle">
-                <option value="sneaker">sneaker</option>
-                <option value="boot">boot</option>
-              </select>
-            </label>
-          </div>
-          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
-            <span>Тело</span><span class="grow"></span>
-            <button id="resetShape" style="padding:2px 7px">Сброс</button>
-          </div>
-          <label>Плечи<input id="shapeShoulder" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Грудь<input id="shapeChest" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Талия<input id="shapeWaist" type="range" min="0" max="0.4" step="0.01" value="0"></label>
-          <label>Бёдра<input id="shapeHips" type="range" min="0" max="0.4" step="0.01" value="0"></label>
-          <label>Живот<input id="shapeBelly" type="range" min="0" max="0.4" step="0.01" value="0"></label>
-          <div class="panel-h" style="padding-left:0;padding-right:0;border:0">
-            <span>Лицо</span><span class="grow"></span>
-          </div>
-          <label>Ширина лица<input id="shapeFaceWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Длина лица<input id="shapeFaceLength" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Челюсть<input id="shapeJawWidth" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Подбородок<input id="shapeChin" type="range" min="0" max="0.5" step="0.01" value="0"></label>
-          <label>Щёки<input id="shapeCheek" type="range" min="0" max="0.4" step="0.01" value="0"></label>
-          <label>Губы<input id="shapeLipFull" type="range" min="0" max="1" step="0.01" value="0"></label>
-          <label>Настроение
-            <select id="mood">
-              <option value="neutral" selected>neutral</option>
-              <option value="joy">joy</option>
-              <option value="sad">sad</option>
-            </select>
-          </label>
-          <label style="display:flex;flex-direction:row;gap:8px;align-items:center;text-transform:none;font-size:12px">
-            <input id="glasses" type="checkbox" style="width:auto"> очки
-          </label>
-          <label style="display:flex;flex-direction:row;gap:8px;align-items:center;text-transform:none;font-size:12px">
-            <input id="hood" type="checkbox" style="width:auto"> капюшон
-          </label>
-          <div class="row">
-            <button id="presetMark">Mark</button>
-            <button id="presetMira">Mira</button>
-          </div>
+
+  <div class="news">
+    <a class="news-card" href="/character-builder.html?v=12" target="_blank" rel="noopener">
+      <span class="news-badge">NEW</span>
+      <b>Конструктор персонажа →</b>
+      <span>Пропорции (голова, плечи, руки, ноги), лицо, причёски, гардероб, кепка/очки/шарф, 10 видов животных.</span>
+    </a>
+    <a class="news-card" href="/pose-studio.html?v=12" target="_blank" rel="noopener">
+      <span class="news-badge">NEW</span>
+      <b>Pose Studio →</b>
+      <span>Перетаскивание костей, лимиты суставов, пресеты, A→B и 8 клипов жестов.</span>
+    </a>
+  </div>
+
+  <main class="workspace">
+    <section class="stage">
+      <div class="stage-head">
+        <div>
+          <div class="eyebrow">Shared skeleton / paper cut</div>
+          <h1 class="stage-title">Бумажный дуэт</h1>
+          <div class="stage-note">Один скелет, две внешности. Позы, жесты, эмоции, моргание, взгляд и полный набор фонем — детерминированно, без 3D-рантайма.</div>
         </div>
-        <div class="panel-h"><span>Библиотека</span><span class="grow"></span><button id="refreshLib" style="padding:2px 7px">↻</button></div>
-        <div id="library"><div class="empty">Нет сохранённых персонажей</div></div>
+        <div class="stage-badge"><b>2D / 2.5D</b>CANVAS 2D<br>SEEK(T) READY</div>
+      </div>
+
+      <div class="cast">
+        <article class="actor active" id="card-mark" data-char="mark">
+          <div class="actor-top"><span class="idx">01</span><span class="name">MARK</span><span class="meta">15 BONES · 18 MOUTHS</span></div>
+          <div class="canvas-wrap"><canvas id="markCanvas" width="600" height="900" aria-label="Mark"></canvas></div>
+          <div class="actor-foot"><span id="markState">neutral</span><span class="live">LIVE</span></div>
+        </article>
+        <article class="actor" id="card-mira" data-char="mira">
+          <div class="actor-top"><span class="idx">02</span><span class="name">MIRA</span><span class="meta">15 BONES · 18 MOUTHS</span></div>
+          <div class="canvas-wrap"><canvas id="miraCanvas" width="600" height="900" aria-label="Mira"></canvas></div>
+          <div class="actor-foot"><span id="miraState">neutral</span><span class="live">LIVE</span></div>
+        </article>
+      </div>
+
+      <div class="stage-foot">
+        <span class="dot"></span>
+        <span id="stageStatus">POSE neutral · EMOTION neutral · PHONEME sil</span>
+        <span class="spacer"></span>
+        <span>shared rig · deterministic seek(t)</span>
+      </div>
+
+      <div class="transport">
+        <button class="play-btn" id="playBtn">PLAY</button>
+        <span class="time" id="timeLabel">00:00.00 / 00:06.00</span>
+        <input type="range" class="timeline" id="timeRange" min="0" max="6000" step="10" value="0" aria-label="Таймлайн">
+        <select id="speedSelect" aria-label="Скорость">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+        <label class="check"><input type="checkbox" id="loopCheck" checked> LOOP</label>
       </div>
     </section>
-    <section class="col" id="stage">
-      <div id="canvasWrap"><canvas id="c"></canvas></div>
-      <div id="timeline">
-        <div class="timeRow">
-          <button id="play" class="primary" style="min-width:70px">▶ Play</button>
-          <input id="time" type="range" min="0" max="4000" step="1" value="0">
-          <span id="timeLabel">0.00 / 4.00 с</span>
+
+    <aside class="panel">
+      <section class="section">
+        <div class="section-title"><b>Риг</b><span class="count">shared</span></div>
+        <div class="stats">
+          <div class="stat"><b>15</b><span>joints</span></div>
+          <div class="stat"><b>31</b><span>poses</span></div>
+          <div class="stat"><b>82</b><span>phonemes</span></div>
+          <div class="stat"><b>18</b><span>mouths</span></div>
         </div>
-      </div>
-    </section>
-    <section class="col">
-      <div class="panel-h"><span>Липсинк</span><span class="grow"></span><span id="visemeCount">0</span></div>
-      <div class="fields">
-        <label>Реплика<input id="line" value="Привет! Это живой полигональный персонаж."></label>
-        <div class="row">
-          <label>Длительность, с<input id="duration" type="number" min="0.5" max="30" step="0.5" value="4"></label>
-          <button id="speak" class="primary">Озвучить</button>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Персонаж</b><span class="count">skin</span></div>
+        <div class="characters">
+          <button class="char-card active" data-character="mark"><span class="char-dot" style="background:#d79a72"></span><span><b>Mark</b><small>short / beard</small></span></button>
+          <button class="char-card" data-character="mira"><span class="char-dot" style="background:#e2b08c"></span><span><b>Mira</b><small>bob / glasses</small></span></button>
         </div>
-      </div>
-      <div class="fields" style="padding-top:0;border-bottom:0">
-        <label>Движение
-          <select id="motion">
-            <option value="idle" selected>idle — дыхание</option>
-            <option value="talk">talk — речь</option>
-            <option value="walk">walk — ходьба</option>
-          </select>
-        </label>
-        <label>Жест
-          <select id="gesture">
-            <option value="none" selected>нет</option>
-            <option value="wave">wave — рука вверх</option>
-            <option value="point">point — указать</option>
-            <option value="explain">explain — обе руки</option>
-          </select>
-        </label>
-        <label>Выражение
-          <select id="emotion">
-            <option value="neutral" selected>neutral</option>
-            <option value="joy">joy</option>
-            <option value="sad">sad</option>
-            <option value="anger">anger</option>
-            <option value="surprise">surprise</option>
-            <option value="fear">fear</option>
-            <option value="think">think</option>
-            <option value="disgust">disgust</option>
-          </select>
-        </label>
-        <label>Взгляд
-          <select id="gaze">
-            <option value="auto" selected>auto — живые саккады</option>
-            <option value="camera">в камеру</option>
-            <option value="left">влево</option>
-            <option value="right">вправо</option>
-            <option value="up">вверх</option>
-            <option value="down">вниз</option>
-          </select>
-        </label>
-      </div>
-      <div class="visemes">
-        <button data-v="1">А/Э</button><button data-v="2">Б/М/П</button><button data-v="3">Ф/В</button>
-        <button data-v="4">Д/Т</button><button data-v="5">У</button><button data-v="6">Ч/Ш</button>
-        <button data-v="7">Л</button><button data-v="8">О</button><button data-v="0">тишина</button>
-      </div>
-      <div class="panel-h"><span>Статус</span><span class="grow"></span><button id="validate">Проверить</button></div>
-      <div id="issues"><div class="empty">Загрузите персонажа</div></div>
-      <div class="panel-h" style="border-top:1px solid var(--line)"><span>Манифест</span><span class="grow"></span>
-        <button id="copy">Copy</button><button id="download">Download</button></div>
-      <textarea id="manifest" spellcheck="false"></textarea>
-    </section>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Позы и жесты</b><span class="count">31</span></div>
+        <div class="pose-grid" id="poseGrid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Эмоция</b><span class="count" id="emotionName">neutral</span></div>
+        <div class="emotion-row" id="emotionRow"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Фонемы</b><span class="count" id="phonemeCount">82</span></div>
+        <div class="phoneme-tools">
+          <button class="active" data-lang="ru">RU</button>
+          <button data-lang="en">EN</button>
+          <button data-lang="all">ALL</button>
+          <button id="silBtn" style="margin-left:auto">sil</button>
+        </div>
+        <div class="phoneme-grid" id="phonemeGrid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Речь</b><span class="count">text → visemes</span></div>
+        <div class="speech-box">
+          <textarea class="speech-input" id="speechText" spellcheck="false">Привет. Это общий скелет, общие позы и липсинк.</textarea>
+          <div class="speech-actions">
+            <button class="btn primary" id="speakBtn">Озвучить</button>
+            <button class="btn" id="clearSpeechBtn">Сброс</button>
+            <span class="speech-meta" id="speechMeta">0 визёмов</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>Внешность</b><span class="count" id="appearanceName">Mark</span></div>
+        <div class="appearance">
+          <label class="color-field"><input type="color" id="skinColor" value="#d79a72"><span>кожа</span></label>
+          <label class="color-field"><input type="color" id="topColor" value="#2f6b50"><span>верх</span></label>
+          <label class="color-field"><input type="color" id="hairColor" value="#2a201c"><span>волосы</span></label>
+        </div>
+        <div class="toggles">
+          <label class="check"><input type="checkbox" id="skeletonCheck"> скелет</label>
+          <label class="check"><input type="checkbox" id="blinkCheck" checked> моргание</label>
+          <label class="check"><input type="checkbox" id="gazeCheck" checked> взгляд</label>
+        </div>
+        <div class="footer-note">Цвета меняются у выбранного персонажа. Риг, позы и фонемы общие для обоих.</div>
+      </section>
+
+      <section class="section">
+        <div class="speech-actions">
+          <button class="btn" id="copyBtn">Скопировать конфиг</button>
+          <button class="btn" id="resetBtn">Сбросить</button>
+        </div>
+        <div class="footer-note">2D-сцена: <code>PaperCast.create(canvas, opts)</code> → <code>seek(t)</code>. 3D/Babylon вынесен в <code>drafts/3d</code>.</div>
+      </section>
+    </aside>
   </main>
+
+  <div class="toast" id="toast"></div>
 </div>
-<script src="/vendor/babylon.js"></script>
-<script src="/vendor/babylonjs.loaders.min.js"></script>
-<script src="/vendor/scene-clip.js?v=3"></script>
-<script src="/vendor/scene-rig.js?v=3"></script>
+
+<script src="/vendor/paper-cast.js?v=31"></script>
+<script src="/vendor/paper-cast-session.js?v=2"></script>
 <script>
-const $=(id)=>document.getElementById(id)
-const BASES={
-  mark:{label:'Mark',glb:'/models/characters/character-mark.glb',rig:'/models/characters/character-mark.scenerig.json',skin:'#b8805e',hair:'#1a130f',top:'#294d8c',bottom:'#292b33',shoes:'#141417',eyes:'#2e6147',lips:'#8c3d38',glasses:false,hood:true},
-  mira:{label:'Mira',glb:'/models/characters/character-mira.glb',rig:'/models/characters/character-mira.scenerig.json',skin:'#dba68a',hair:'#752914',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,hood:false},
-  hero_mark:{label:'Mark HD',glb:'/models/hero/avatarsdk-man.glb',rig:null,skin:'#c98b6b',hair:'#241812',top:'#294d8c',bottom:'#24242b',shoes:'#111114',eyes:'#3c6a8a',lips:'#8f4d45',glasses:false,height:1.80,armRestZ:-1.4,headPitch:0.10,
-    map:{Hips:'hips',Spine:'spine',Spine1:'spine1',Spine2:'chest',Neck:'neck',Head:'head',LeftEye:'eye.L',RightEye:'eye.R',LeftShoulder:'shoulder.L',RightShoulder:'shoulder.R',LeftArm:'upperArm.L',RightArm:'upperArm.R',LeftForeArm:'lowerArm.L',RightForeArm:'lowerArm.R',LeftHand:'hand.L',RightHand:'hand.R',LeftUpLeg:'upperLeg.L',RightUpLeg:'upperLeg.R',LeftLeg:'lowerLeg.L',RightLeg:'lowerLeg.R',LeftFoot:'foot.L',RightFoot:'foot.R',LeftToeBase:'toe.L',RightToeBase:'toe.R'}},
-  hero_mira:{label:'Mira HD',glb:'/models/brunette.glb',rig:'/models/brunette.scenerig.json',skin:'#dba68a',hair:'#3a2018',top:'#33734f',bottom:'#382b3d',shoes:'#3d1c1a',eyes:'#3373a0',lips:'#ad4c4c',glasses:false,height:1.70,armRestZ:-0.45,headPitch:0.0,
-    map:{Hips:'hips',Spine:'spine',Spine1:'spine1',Spine2:'chest',Neck:'neck',Head:'head',LeftEye:'eye.L',RightEye:'eye.R',LeftShoulder:'shoulder.L',RightShoulder:'shoulder.R',LeftArm:'upperArm.L',RightArm:'upperArm.R',LeftForeArm:'lowerArm.L',RightForeArm:'lowerArm.R',LeftHand:'hand.L',RightHand:'hand.R',LeftUpLeg:'upperLeg.L',RightUpLeg:'upperLeg.R',LeftLeg:'lowerLeg.L',RightLeg:'lowerLeg.R',LeftFoot:'foot.L',RightFoot:'foot.R',LeftToeBase:'toe.L',RightToeBase:'toe.R'}},
-}
-const state={base:'hero_mark',rig:null,assetId:null,visemes:[],duration:4,time:0,playing:false,raf:0,last:0,library:[],motion:'idle',gesture:'none',emotion:'neutral',gaze:'auto',gender:'male',outfit:{top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'},shape:{}}
-const SHAPE_KEYS={bodyShoulder:'shapeShoulder',bodyChest:'shapeChest',bodyWaist:'shapeWaist',bodyHips:'shapeHips',bodyBelly:'shapeBelly',faceWidth:'shapeFaceWidth',faceLength:'shapeFaceLength',jawWidth:'shapeJawWidth',chin:'shapeChin',cheek:'shapeCheek',lipFull:'shapeLipFull'}
-const OUTFIT_KEYS={hair:'hairStyle',top:'topStyle',bottom:'bottomStyle',shoes:'shoesStyle'}
-const setStatus=(t)=>{$('status').textContent=t}
-const fail=(t)=>{setStatus('error');console.error(t);alert(t)}
-function appearance(){
-  return {skin:$('skin').value,hair:$('hair').value,top:$('top').value,bottom:$('bottom').value,shoes:$('shoes').value,eyes:$('eyes').value,lips:$('lips').value,scale:Number($('scale').value)||1,glasses:$('glasses').checked,hood:$('hood').checked}
-}
-function setAppearanceFields(a){
-  for(const k of ['skin','hair','top','bottom','shoes','eyes','lips']) if(a && a[k]) $(k).value=a[k]
-  if(a && a.scale) $('scale').value=a.scale
-  if(a) { $('glasses').checked=!!a.glasses; $('hood').checked=!!a.hood }
-}
-function applyAppearance(){ if(state.rig) state.rig.setAppearance(appearance()); buildManifest() }
-function gazeOptions(){
-  const v=$('gaze')?$('gaze').value:'auto'
-  if(v==='auto') return {x:0,y:0,auto:true,head:true}
-  if(v==='camera') return {x:0,y:0,auto:false,head:true}
-  if(v==='left') return {x:-0.55,y:0,auto:false,head:true}
-  if(v==='right') return {x:0.55,y:0,auto:false,head:true}
-  if(v==='up') return {x:0,y:0.45,auto:false,head:true}
-  if(v==='down') return {x:0,y:-0.45,auto:false,head:true}
-  return {x:0,y:0,auto:true,head:true}
-}
-function applyEmotion(){ state.emotion=$('emotion').value; if(state.rig&&state.rig.setEmotion) state.rig.setEmotion(state.emotion); buildManifest() }
-function applyGaze(){ state.gaze=$('gaze').value; const g=gazeOptions(); if(state.rig&&state.rig.setGaze) state.rig.setGaze(g.x,g.y,{auto:g.auto,head:g.head}); buildManifest() }
-function shape(){
-  const out={}
-  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) out[k]=Number(el.value)||0 }
-  return out
-}
-function setShapeFields(s){
-  s=s||{}
-  for(const k in SHAPE_KEYS){ const el=$(SHAPE_KEYS[k]); if(el) el.value=String(Number(s[k])||0) }
-}
-function applyShape(){
-  state.shape=shape()
-  if(state.rig && state.rig.setShape) state.rig.setShape(state.shape)
-  buildManifest()
-}
-function syncOutfitFields(){
-  for(const k in OUTFIT_KEYS){ const el=$(OUTFIT_KEYS[k]); if(el) el.value=state.outfit[k]||el.value }
-}
-function applyOutfitFromUI(){
-  state.outfit=Object.assign({},state.outfit,{
-    hair:$('hairStyle').value,top:$('topStyle').value,
-    bottom:$('bottomStyle').value,shoes:$('shoesStyle').value,
+(() => {
+  const P = window.PaperCast
+  if (!P) {
+    document.body.innerHTML = '<p style="padding:24px;color:#fff">paper-cast.js не загрузился</p>'
+    return
+  }
+
+  const POSE_LABELS = {
+    neutral: 'Стойка', wave: 'Привет', point: 'Указать', explain: 'Объяснить',
+    shrug: 'Не знаю', think: 'Думает', thumbsUp: 'Класс', ok: 'Ок',
+    stop: 'Стоп', cheer: 'Ура', crossArms: 'Скрестил', handsOnHips: 'Руки в боки',
+    facepalm: 'Фейспалм', salute: 'Честь', bow: 'Поклон', leanIn: 'Наклон',
+    clap: 'Хлопок', count: 'Счёт', present: 'Показ', heart: 'Сердце',
+    fist: 'Кулак', peace: 'Виктория', chin: 'Подбородок', openPalms: 'Ладони',
+    tapFoot: 'Ногой', nod: 'Кивок', headShake: 'Нет', listen: 'Слушает',
+    shush: 'Тише', armsWide: 'Широко', lowPresent: 'Показ низко',
+  }
+  const EMOTIONS = [
+    ['neutral', 'нейтрально'], ['joy', 'радость'], ['sad', 'грусть'], ['anger', 'злость'],
+    ['surprise', 'удивление'], ['think', 'раздумье'], ['fear', 'испуг'], ['disgust', 'отвращение'],
+  ]
+
+  const state = {
+    t: 0,
+    playing: true,
+    speed: 1,
+    loop: true,
+    pose: 'neutral',
+    emotion: 'neutral',
+    phoneme: null,
+    filter: 'ru',
+    active: 'mark',
+    visemes: [],
+    appearance: {
+      mark: { skin: '#d79a72', shirt: '#2f6b50', hair: '#2a201c' },
+      mira: { skin: '#e2b08c', shirt: '#c98a3f', hair: '#6b3226' },
+    },
+  }
+
+  const markCanvas = document.getElementById('markCanvas')
+  const miraCanvas = document.getElementById('miraCanvas')
+  const rigs = {
+    mark: P.create(markCanvas, { character: 'mark', pose: 'neutral', emotion: 'neutral', seed: 0 }),
+    mira: P.create(miraCanvas, { character: 'mira', pose: 'neutral', emotion: 'neutral', seed: 1.7 }),
+  }
+
+  // shared character from Lab / Pose / Builder / 3D
+  const SESSION = window.PaperCastSession || null
+  const session = SESSION ? SESSION.read() : {}
+  const urlChar = SESSION ? SESSION.fromURL() : null
+  if (urlChar) session.active = urlChar
+  if (session.active === 'mark' || session.active === 'mira') state.active = session.active
+  const savedSkin = SESSION ? SESSION.readSkin(state.active) : {}
+  if (Object.keys(savedSkin).length) {
+    state.appearance[state.active] = Object.assign({}, state.appearance[state.active], savedSkin)
+    rigs[state.active].setAppearance(state.appearance[state.active])
+  }
+  function saveSession() {
+    if (!SESSION) return
+    SESSION.writeSkin(state.active, state.appearance[state.active])
+  }
+
+  function applyRemoteSession(s) {
+    if (!s || !s.active) return
+    const next = s.active === 'mira' ? 'mira' : 'mark'
+    state.active = next
+    const skin = SESSION.readSkin(next)
+    if (Object.keys(skin).length) {
+      state.appearance[next] = Object.assign({}, state.appearance[next], skin)
+      rigs[next].setAppearance(state.appearance[next])
+    }
+    document.querySelectorAll('.char-card').forEach((x) => x.classList.toggle('active', x.dataset.character === state.active))
+    document.querySelectorAll('.actor').forEach((x) => x.classList.toggle('active', x.dataset.char === state.active))
+    syncAppearanceInputs()
+  }
+  if (SESSION) SESSION.on(applyRemoteSession)
+
+  const $ = (id) => document.getElementById(id)
+  const fmt = (ms) => {
+    const s = Math.max(0, ms) / 1000
+    return '00:' + String(Math.floor(s)).padStart(2, '0') + '.' + String(Math.floor((s % 1) * 100)).padStart(2, '0')
+  }
+  let last = performance.now()
+  let raf = 0
+  let toastTimer = 0
+
+  function toast(text) {
+    const el = $('toast')
+    el.textContent = text
+    el.classList.add('show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1800)
+  }
+
+  function drawRigs() {
+    rigs.mark.seek(state.t)
+    rigs.mira.seek(state.t)
+  }
+
+  function updateStatus() {
+    $('timeLabel').textContent = fmt(state.t) + ' / ' + fmt(6000)
+    $('timeRange').value = String(Math.round(state.t))
+    $('stageStatus').textContent = 'POSE ' + state.pose + ' · EMOTION ' + state.emotion + ' · PHONEME ' + (state.phoneme || 'sil')
+    $('markState').textContent = state.pose + ' / ' + state.emotion
+    $('miraState').textContent = state.pose + ' / ' + state.emotion
+  }
+
+  let lastPaint = 0
+  let stageVisible = true
+  if (typeof IntersectionObserver !== 'undefined') {
+    const cast = document.querySelector('.cast')
+    if (cast) new IntersectionObserver(([entry]) => { stageVisible = entry.isIntersecting }).observe(cast)
+  }
+  function frame(now) {
+    const dt = Math.min(80, now - last)
+    last = now
+    if (state.playing && !document.hidden) {
+      state.t += dt * state.speed
+      if (state.t > 6000) state.t = state.loop ? state.t % 6000 : 6000
+      if (!state.loop && state.t >= 6000) {
+        state.playing = false
+        $('playBtn').textContent = 'PLAY'
+      }
+    }
+    // 30 fps and no painting off-screen keeps phones cool
+    if (!document.hidden && stageVisible && now - lastPaint >= 32) {
+      drawRigs()
+      lastPaint = now
+    }
+    updateStatus()
+    raf = requestAnimationFrame(frame)
+  }
+
+  function setPose(name) {
+    if (!P.POSES[name]) return
+    state.pose = name
+    state.phoneme = null
+    const pe = P.POSES[name] && P.POSES[name].emotion
+    if (state.emotion === 'neutral' && pe && pe !== 'neutral') setEmotion(pe)
+    rigs.mark.setPose(name)
+    rigs.mira.setPose(name)
+    document.querySelectorAll('.pose-btn').forEach((b) => b.classList.toggle('active', b.dataset.pose === name))
+    updateStatus()
+  }
+
+  function setEmotion(name) {
+    state.emotion = name
+    rigs.mark.setEmotion(name)
+    rigs.mira.setEmotion(name)
+    document.querySelectorAll('.emotion-btn').forEach((b) => b.classList.toggle('active', b.dataset.emotion === name))
+    $('emotionName').textContent = name
+    updateStatus()
+  }
+
+  function setPhoneme(id) {
+    state.phoneme = id
+    state.visemes = []
+    rigs.mark.setPhoneme(id)
+    rigs.mira.setPhoneme(id)
+    document.querySelectorAll('.phoneme').forEach((b) => b.classList.toggle('active', b.dataset.phoneme === id))
+    $('speechMeta').textContent = id ? 'фонема ' + id : '0 визёмов'
+    updateStatus()
+  }
+
+  function syncAppearanceInputs() {
+    const a = state.appearance[state.active]
+    $('skinColor').value = a.skin
+    $('topColor').value = a.shirt
+    $('hairColor').value = a.hair
+    $('appearanceName').textContent = state.active === 'mark' ? 'Mark' : 'Mira'
+  }
+
+  function applyAppearance(patch) {
+    state.appearance[state.active] = Object.assign({}, state.appearance[state.active], patch)
+    rigs[state.active].setAppearance(state.appearance[state.active])
+    syncAppearanceInputs()
+    saveSession()
+  }
+
+  function buildPoses() {
+    const grid = $('poseGrid')
+    for (const name of Object.keys(P.POSES)) {
+      const b = document.createElement('button')
+      b.className = 'pose-btn' + (name === state.pose ? ' active' : '')
+      b.dataset.pose = name
+      b.textContent = POSE_LABELS[name] || name
+      b.title = name
+      b.addEventListener('click', () => setPose(name))
+      grid.append(b)
+    }
+  }
+
+  function buildEmotions() {
+    const row = $('emotionRow')
+    for (const [id, label] of EMOTIONS) {
+      const b = document.createElement('button')
+      b.className = 'emotion-btn' + (id === state.emotion ? ' active' : '')
+      b.dataset.emotion = id
+      b.textContent = label
+      b.addEventListener('click', () => setEmotion(id))
+      row.append(b)
+    }
+  }
+
+  function buildPhonemes() {
+    const grid = $('phonemeGrid')
+    grid.innerHTML = ''
+    const all = Object.values(P.PHONEMES)
+    const filter = state.filter
+    const rows = all.filter((p) => {
+      if (filter === 'all') return p.id !== 'sil'
+      if (filter === 'ru') return p.lang === 'ru'
+      return p.lang === 'en'
+    })
+    $('phonemeCount').textContent = rows.length
+    for (const p of rows) {
+      const b = document.createElement('button')
+      b.className = 'phoneme' + (p.id === state.phoneme ? ' active' : '')
+      b.dataset.phoneme = p.id
+      b.title = p.id + ' · ' + p.example + (p.viseme ? ' → ' + p.viseme : '')
+      b.innerHTML = '<span>' + p.ipa + '</span><small>' + p.id + '</small>'
+      b.addEventListener('click', () => setPhoneme(p.id))
+      grid.append(b)
+    }
+  }
+
+  function speak() {
+    const text = $('speechText').value.trim()
+    if (!text) return
+    const duration = Math.min(5600, Math.max(1700, text.length * 62))
+    const a = rigs.mark.speak(text, duration, 0)
+    rigs.mira.setVisemes(a.map((v, i) => Object.assign({}, v, { t: v.t + (i % 3) * 12 })))
+    state.visemes = a
+    state.phoneme = null
+    state.t = 0
+    state.playing = true
+    $('playBtn').textContent = 'PAUSE'
+    $('speechMeta').textContent = a.length + ' визёмов · ' + (duration / 1000).toFixed(1) + ' с'
+    document.querySelectorAll('.phoneme').forEach((b) => b.classList.remove('active'))
+    updateStatus()
+  }
+
+  function clearSpeech() {
+    state.visemes = []
+    state.phoneme = null
+    rigs.mark.setVisemes([])
+    rigs.mira.setVisemes([])
+    rigs.mark.setPhoneme(null)
+    rigs.mira.setPhoneme(null)
+    $('speechMeta').textContent = '0 визёмов'
+    document.querySelectorAll('.phoneme').forEach((b) => b.classList.remove('active'))
+    updateStatus()
+  }
+
+  function togglePlay() {
+    state.playing = !state.playing
+    $('playBtn').textContent = state.playing ? 'PAUSE' : 'PLAY'
+  }
+
+  $('playBtn').addEventListener('click', togglePlay)
+  $('timeRange').addEventListener('input', (e) => {
+    state.t = Number(e.target.value) || 0
+    drawRigs()
+    updateStatus()
   })
-  if(state.rig) state.rig.setOutfit(state.outfit)
-  buildManifest()
-}
-async function createRig(){
-  if(state.rig){ try{state.rig.destroy()}catch(e){} state.rig=null }
-  const base=BASES[state.base]
-  $('baseLabel').textContent=base.label
-  $('preset').value=$('preset').value||'bust'
-  const rig=SceneRig.create($('c'),{src:base.glb,preset:$('preset').value,appearance:appearance(),mood:$('mood').value,motion:state.motion,gender:state.gender,outfit:state.outfit,emotion:state.emotion,gaze:gazeOptions(),boneMap:base.map||null,armRestZ:base.armRestZ||0,headPitch:base.headPitch||0,interactive:true,height:base.height||(base.label==='Mira'?1.69:1.8)})
-  state.rig=rig
-  window.__rig=rig
-  window.__rigInfo = rig.info
-  try{ await rig.ready }catch(e){ fail('Не удалось загрузить персонажа: '+((e&&(e.error||e.message))||JSON.stringify(e))); return }
-  rig.setAppearance(appearance())
-  rig.setOutfit(state.outfit)
-  if(rig.setShape) rig.setShape(state.shape)
-  if(state.visemes.length) rig.setVisemes(state.visemes)
-  rig.setMotion(state.motion)
-  if(rig.setGesture) rig.setGesture(state.gesture)
-  if(rig.setEmotion) rig.setEmotion(state.emotion)
-  if(rig.setGaze) rig.setGaze(gazeOptions().x,gazeOptions().y,{auto:gazeOptions().auto})
-  rig.setMood($('mood').value)
-  seek(state.time)
-  setStatus('loaded '+base.label)
-}
-function seek(t){
-  state.time=Math.max(0,Math.min(state.duration,t))
-  if(state.rig) state.rig.seek(state.time*1000)
-  $('time').value=String(Math.round(state.time*1000))
-  $('timeLabel').textContent=state.time.toFixed(2)+' / '+state.duration.toFixed(2)+' с'
-}
-function play(){ if(state.playing||!state.rig)return; state.playing=true; $('play').textContent='❚❚ Pause'; state.last=performance.now()
-  const step=(now)=>{ if(!state.playing)return; const dt=(now-state.last)/1000; state.last=now
-    let t=state.time+dt; if(t>=state.duration)t=0; seek(t); state.raf=requestAnimationFrame(step)}
-  state.raf=requestAnimationFrame(step)}
-function pause(){ state.playing=false; cancelAnimationFrame(state.raf); $('play').textContent='▶ Play' }
-function setManual(v){
-  state.visemes=[{t:0,viseme:Number(v)}]
-  state.motion='talk'; $('motion').value='talk'
-  if(state.rig){ state.rig.setMotion('talk'); state.rig.setVisemes(state.visemes) }
-  seek(0); $('visemeCount').textContent='1'
-  buildManifest()
-}
-async function speak(){
-  const text=$('line').value.trim(); if(!text)return
-  state.duration=Math.max(0.5,Number($('duration').value)||4)
-  seek(0)
-  setStatus('visemes…')
-  try{
-    const res=await fetch('/api/scene-library/text-to-visemes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,start:0,end:Math.round(state.duration*1000)})})
-    const data=await res.json(); if(!res.ok)throw new Error(data.detail||('HTTP '+res.status))
-    state.visemes=Array.isArray(data)?data:[]
-    if(state.rig){ state.rig.setMotion('talk'); state.motion='talk'; $('motion').value='talk'; state.rig.setVisemes(state.visemes) }
-    $('visemeCount').textContent=String(state.visemes.length)
-    $('time').max=String(Math.round(state.duration*1000))
-    seek(0); play(); setStatus('speaking '+state.visemes.length+' visemes'); buildManifest()
-  }catch(e){console.error(e);fail('STT/visemes: '+(e.message||e))}
-}
-function manifest(){
-  const base=BASES[state.base]
-  return {format:'sceneasset/1',id:$('slug').value||('character-'+state.base),title:$('title').value||base.label,
-    kind:'character',family:'human',archetype:'humanoid',category:'character',
-    rig:base.rig,geometry:{type:'gltf',file:base.glb,units:'m',up:'Y',facing:'+Z'},
-    appearance:appearance(),gender:state.gender,outfit:state.outfit,shape:shape(),gesture:state.gesture,emotion:state.emotion,gaze:state.gaze,motion:state.motion,
-    license:{name:'CC0',author:'SceneEngine'}}
-}
-function buildManifest(){ $('manifest').value=JSON.stringify(manifest(),null,2) }
-async function saveCharacter(){
-  const m=manifest()
-  if(!/^[a-z0-9][a-z0-9-]{1,63}$/.test(m.id)){ fail('ID: латиница, цифры и дефис, 2–64 символа'); return }
-  setStatus('saving…')
-  try{
-    const url=state.assetId?'/api/scene-assets/'+state.assetId:'/api/scene-assets'
-    const res=await fetch(url,{method:state.assetId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:m.id,title:m.title,kind:'character',category:'character',manifest:m,source_url:m.geometry.file,preview_url:null})})
-    const data=await res.json(); if(!res.ok)throw new Error(data.detail||('HTTP '+res.status))
-    state.assetId=data.id; setStatus('saved '+data.slug); await loadLibrary(); buildManifest()
-  }catch(e){console.error(e);fail('Не удалось сохранить: '+(e.message||e))}
-}
-async function loadLibrary(){
-  try{const res=await fetch('/api/scene-assets?kind=character');state.library=res.ok?await res.json():[]}catch(e){state.library=[]}
-  const host=$('library'); host.innerHTML=''
-  if(!state.library.length){host.innerHTML='<div class="empty">Нет сохранённых персонажей</div>';return}
-  for(const a of state.library){const el=document.createElement('div');el.className='lib-item'+(a.id===state.assetId?' sel':'')
-    el.innerHTML=`<div class="t">${a.title||a.slug}</div><div class="s">${a.slug}</div>`
-    el.onclick=()=>loadCharacter(a.id);host.appendChild(el)}
-}
-async function loadCharacter(id){
-  setStatus('loading character…')
-  try{
-    const res=await fetch('/api/scene-assets/'+id); const a=await res.json(); if(!res.ok)throw new Error(a.detail)
-    const m=a.manifest||{}; state.assetId=a.id
-    const file=(m.geometry&&m.geometry.file)||''
-    state.base=/mira/i.test(file)?'mira':'mark'
-    state.gender=(m.gender==='female'||state.base==='mira')?'female':'male'
-    state.outfit=Object.assign({
-      top:state.gender==='female'?'shirt':'hoodie',
-      bottom:state.gender==='female'?'skirt':'pants',
-      shoes:state.gender==='female'?'boot':'sneaker',
-      hair:state.gender==='female'?'ponytail':'short',
-    }, m.outfit||{})
-    $('base').value=state.base
-    $('slug').value=m.id||a.slug; $('title').value=m.title||a.title
-    setAppearanceFields(m.appearance||{})
-    state.shape=m.shape||{}
-    state.gesture=m.gesture||'none'; $('gesture').value=state.gesture
-    state.emotion=m.emotion||'neutral'; $('emotion').value=state.emotion
-    state.gaze=m.gaze||'auto'; $('gaze').value=state.gaze
-    state.motion=m.motion||'idle'; $('motion').value=state.motion
-    syncOutfitFields(); setShapeFields(state.shape)
-    await createRig()
-    await loadLibrary(); buildManifest(); setStatus('loaded '+a.slug)
-  }catch(e){console.error(e);fail('Не удалось открыть: '+(e.message||e))}
-}
-function newCharacter(){
-  state.assetId=null; state.visemes=[]; state.time=0; state.motion='idle'; $('motion').value='idle'
-  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'
-  $('slug').value='character-'+state.base+'-'+Math.floor(Date.now()/1000)%10000
-  $('title').value=BASES[state.base].label
-  applyPreset(state.base); createRig(); loadLibrary(); buildManifest()
-}
-function applyPreset(name){
-  const b=BASES[name]||BASES.mark
-  state.gender=(name==='mira'||name==='hero_mira')?'female':'male'
-  state.outfit=state.gender==='female'
-    ? {top:'shirt',bottom:'skirt',shoes:'boot',hair:'ponytail'}
-    : {top:'hoodie',bottom:'pants',shoes:'sneaker',hair:'short'}
-  setAppearanceFields(b); $('base').value=name; state.base=name; state.assetId=null
-  state.shape={}; setShapeFields({}); state.gesture='none'; $('gesture').value='none'; state.emotion='neutral'; $('emotion').value='neutral'; state.gaze='auto'; $('gaze').value='auto'; syncOutfitFields()
-  $('baseLabel').textContent=b.label
-  $('slug').value='character-'+name+'-1'
-  $('title').value=b.label
-  buildManifest()
-}
-async function validateCharacter(){
-  const base=BASES[state.base]
-  setStatus('validating…')
-  try{
-    const blob=await (await fetch(base.glb)).blob()
-    const fd=new FormData(); fd.append('file',blob,base.label+'.glb'); fd.append('archetype','humanoid')
-    const res=await fetch('/api/rig/validate',{method:'POST',body:fd})
-    const d=await res.json(); if(!res.ok)throw new Error(d.detail||('HTTP '+res.status))
-    renderIssues(d); setStatus(d.ok?'valid':'invalid')
-  }catch(e){setStatus('validate failed');$('issues').innerHTML=`<div class="issue error"><div class="code">api.error</div><div>${escapeHtml(e.message||e)}</div></div>`}
-}
-function renderIssues(rep){const flat=[];const walk=(r)=>{for(const i of r.issues||[])flat.push(i);for(const c of r.children||[])walk(c)};walk(rep)
-  const host=$('issues');host.innerHTML=''
-  if(!flat.length){host.innerHTML='<div class="empty">Ошибок нет</div>';return}
-  for(const i of flat){const d=document.createElement('div');d.className='issue '+i.level
-    d.innerHTML=`<div class="code">${i.code}</div><div>${escapeHtml(i.message)}</div>`;host.appendChild(d)}}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-$('base').onchange=()=>{state.base=$('base').value; applyPreset(state.base); createRig()}
-$('applyPreset').onclick=()=>createRig()
-$('newChar').onclick=newCharacter
-$('saveChar').onclick=saveCharacter
-$('refreshLib').onclick=loadLibrary
-$('play').onclick=()=>{state.playing?pause():play()}
-$('time').oninput=()=>{pause();seek(Number($('time').value)/1000)}
-$('speak').onclick=speak
-for(const id of Object.values(OUTFIT_KEYS)){ const el=$(id); if(el) el.onchange=applyOutfitFromUI }
-for(const id of Object.values(SHAPE_KEYS)){ const el=$(id); if(el) el.oninput=applyShape }
-$('resetShape').onclick=()=>{ setShapeFields({}); applyShape() }
-$('motion').onchange=()=>{state.motion=$('motion').value;if(state.rig)state.rig.setMotion(state.motion);seek(state.time)}
-$('gesture').onchange=()=>{state.gesture=$('gesture').value;if(state.rig&&state.rig.setGesture)state.rig.setGesture(state.gesture);seek(state.time);buildManifest()}
-$('emotion').onchange=applyEmotion
-$('gaze').onchange=applyGaze
-for(const id of ['skin','hair','top','bottom','shoes','eyes','lips','scale','glasses','hood'])$(id).addEventListener('input',applyAppearance)
-$('mood').onchange=()=>{if(state.rig)state.rig.setMood($('mood').value);buildManifest()}
-for(const b of document.querySelectorAll('[data-v]'))b.onclick=()=>setManual(b.dataset.v)
-$('presetMark').onclick=()=>{applyPreset('mark');createRig()}
-$('presetMira').onclick=()=>{applyPreset('mira');createRig()}
-$('validate').onclick=validateCharacter
-$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('manifest').value);setStatus('manifest copied')}catch(e){fail('Clipboard unavailable')}}
-$('download').onclick=()=>{const blob=new Blob([$('manifest').value],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=($('slug').value||'character')+'.sceneasset.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$('duration').oninput=()=>{state.duration=Math.max(0.5,Number($('duration').value)||4);$('time').max=String(Math.round(state.duration*1000))}
-function layoutMobile(){
-  if(window.innerWidth>900){document.documentElement.style.removeProperty('--header-h');return}
-  const h=document.querySelector('header').offsetHeight;
-  document.documentElement.style.setProperty('--header-h',h+'px');
-}
-window.addEventListener('resize',layoutMobile);
-if(window.ResizeObserver) new ResizeObserver(layoutMobile).observe(document.querySelector('header'));
-layoutMobile();
-applyPreset('hero_mark'); buildManifest(); createRig(); loadLibrary()
+  $('speedSelect').addEventListener('change', (e) => {
+    state.speed = Number(e.target.value) || 1
+  })
+  $('loopCheck').addEventListener('change', (e) => {
+    state.loop = e.target.checked
+  })
+  function setActive(name) {
+    state.active = name === 'mira' ? 'mira' : 'mark'
+    const skin = SESSION ? SESSION.readSkin(state.active) : {}
+    if (Object.keys(skin).length) {
+      state.appearance[state.active] = Object.assign({}, state.appearance[state.active], skin)
+      rigs[state.active].setAppearance(state.appearance[state.active])
+    }
+    document.querySelectorAll('.char-card').forEach((x) => x.classList.toggle('active', x.dataset.character === state.active))
+    document.querySelectorAll('.actor').forEach((x) => x.classList.toggle('active', x.dataset.char === state.active))
+    syncAppearanceInputs()
+    saveSession()
+  }
+  document.querySelectorAll('.char-card').forEach((b) => {
+    b.addEventListener('click', () => setActive(b.dataset.character))
+  })
+  document.querySelectorAll('.phoneme-tools [data-lang]').forEach((b) => {
+    b.addEventListener('click', () => {
+      state.filter = b.dataset.lang
+      document.querySelectorAll('.phoneme-tools [data-lang]').forEach((x) => x.classList.toggle('active', x === b))
+      buildPhonemes()
+    })
+  })
+  $('silBtn').addEventListener('click', () => setPhoneme(null))
+  $('speakBtn').addEventListener('click', speak)
+  $('clearSpeechBtn').addEventListener('click', clearSpeech)
+  ;['skinColor', 'topColor', 'hairColor'].forEach((id) => {
+    $(id).addEventListener('input', (e) => {
+      const key = id === 'skinColor' ? 'skin' : id === 'topColor' ? 'shirt' : 'hair'
+      const patch = {}
+      patch[key] = e.target.value
+      applyAppearance(patch)
+    })
+  })
+  $('skeletonCheck').addEventListener('change', (e) => {
+    rigs.mark.setSkeleton(e.target.checked)
+    rigs.mira.setSkeleton(e.target.checked)
+  })
+  $('blinkCheck').addEventListener('change', (e) => {
+    rigs.mark.setBlink(e.target.checked)
+    rigs.mira.setBlink(e.target.checked)
+  })
+  $('gazeCheck').addEventListener('change', (e) => {
+    rigs.mark.setAutoGaze(e.target.checked)
+    rigs.mira.setAutoGaze(e.target.checked)
+  })
+  $('copyBtn').addEventListener('click', async () => {
+    const payload = {
+      type: 'paper-cast',
+      character: 'mark+mira',
+      pose: state.pose,
+      emotion: state.emotion,
+      appearance: state.appearance,
+      text: $('speechText').value,
+      visemes: state.visemes,
+    }
+    const text = JSON.stringify(payload, null, 2)
+    try {
+      await navigator.clipboard.writeText(text)
+      toast('Конфиг скопирован')
+    } catch (e) {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      document.body.append(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+      toast('Конфиг скопирован')
+    }
+  })
+  $('resetBtn').addEventListener('click', () => {
+    state.pose = 'neutral'
+    state.emotion = 'neutral'
+    state.phoneme = null
+    state.visemes = []
+    state.t = 0
+    state.playing = true
+    $('playBtn').textContent = 'PAUSE'
+    rigs.mark.setPose('neutral')
+    rigs.mira.setPose('neutral')
+    rigs.mark.setEmotion('neutral')
+    rigs.mira.setEmotion('neutral')
+    rigs.mark.setPhoneme(null)
+    rigs.mira.setPhoneme(null)
+    rigs.mark.setVisemes([])
+    rigs.mira.setVisemes([])
+    document.querySelectorAll('.pose-btn').forEach((b) => b.classList.toggle('active', b.dataset.pose === 'neutral'))
+    document.querySelectorAll('.emotion-btn').forEach((b) => b.classList.toggle('active', b.dataset.emotion === 'neutral'))
+    document.querySelectorAll('.phoneme').forEach((b) => b.classList.remove('active'))
+    $('speechMeta').textContent = '0 визёмов'
+    syncAppearanceInputs()
+    updateStatus()
+  })
+  document.addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return
+    if (e.code === 'Space') { e.preventDefault(); togglePlay() }
+    if (e.key === 's') { const c = $('skeletonCheck'); c.checked = !c.checked; c.dispatchEvent(new Event('change')) }
+    if (e.key === 'b') { const c = $('blinkCheck'); c.checked = !c.checked; c.dispatchEvent(new Event('change')) }
+  })
+
+  buildPoses()
+  buildEmotions()
+  buildPhonemes()
+  setActive(state.active)
+  drawRigs()
+  updateStatus()
+  raf = requestAnimationFrame(frame)
+
+  window.__paperStudio = {
+    rigs,
+    state,
+    setPose,
+    setEmotion,
+    setPhoneme,
+    setActive,
+    speak,
+    togglePlay,
+    get counts() { return P.counts },
+    seek(t) { state.t = Number(t) || 0; drawRigs(); updateStatus() },
+  }
+})()
 </script>
 </body>
 </html>

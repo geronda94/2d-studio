@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paper Cast — Director</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg:#0b0f14; --panel:#121820; --panel-2:#18212b; --line:#26313d;
+    --text:#e8e4da; --muted:#92a0ab; --teal:#67d8c8; --teal-dim:#2f7e76; --gold:#d8b46f;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size:13px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .app { min-height:100dvh; display:flex; flex-direction:column; }
+  .topbar {
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 16px;
+    border-bottom:1px solid var(--line); background:rgba(18,24,32,.97); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .mark { width:30px; height:30px; border:1px solid var(--teal-dim); border-radius:8px; position:relative; }
+  .mark::before, .mark::after { content:''; position:absolute; background:var(--teal); }
+  .mark::before { width:12px; height:1px; top:14px; left:8px; }
+  .mark::after { width:1px; height:12px; top:8px; left:14px; }
+  .title { font-weight:750; letter-spacing:.14em; font-size:12px; text-transform:uppercase; }
+  .sub { color:var(--muted); font:10px/1.2 ui-monospace, monospace; }
+  .links { margin-left:auto; display:flex; gap:12px; }
+  .links a { color:var(--muted); text-decoration:none; font-size:11px; }
+  .links a:hover { color:var(--text); }
+  .workspace { display:grid; grid-template-columns: minmax(0,1fr) 380px; gap:12px; padding:12px; width:min(1700px,100%); margin:0 auto; flex:1; align-items:start; }
+  .stage { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#0e141b; min-width:0; }
+  .stage-head { display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); }
+  .stage-title { font-size:15px; font-weight:700; }
+  .modes { margin-left:auto; display:flex; gap:6px; }
+  .mode { border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:999px; padding:6px 10px; font-size:11px; cursor:pointer; }
+  .mode.on { color:var(--teal); border-color:var(--teal-dim); background:rgba(103,216,200,.08); }
+  #stage { position:relative; height:min(70vh, 760px); background:#0c1218; }
+  #cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .transport { display:flex; align-items:center; gap:10px; padding:8px 12px; border-top:1px solid var(--line); }
+  .transport button { border:1px solid var(--line); background:var(--panel-2); border-radius:8px; padding:7px 12px; cursor:pointer; }
+  .transport .time { font:10px/1 ui-monospace, monospace; color:var(--muted); min-width:64px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--teal); }
+  select, textarea { background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 8px; }
+  .panel { border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .panel h3 { margin:0; font:10px/1.2 ui-monospace, monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row > * { min-width:0; }
+  textarea { width:100%; min-height:260px; resize:vertical; font:10.5px/1.5 ui-monospace, monospace; color:var(--muted); }
+  .hint { color:var(--muted); font-size:11px; line-height:1.45; }
+  .panel button, .row button {
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    border-radius:8px; padding:6px 10px; cursor:pointer; font-size:12px;
+  }
+  .panel button:hover, .row button:hover { border-color:var(--teal-dim); }
+  .tr { border-top:1px solid var(--line); padding-top:8px; margin-top:2px; }
+  .tr summary { cursor:pointer; font-size:11px; color:var(--muted); letter-spacing:.04em; }
+  .tr textarea { min-height:150px; margin:8px 0; }
+  #tr-status { font-size:11px; color:var(--muted); }
+  @media (max-width: 1080px) { .workspace { grid-template-columns:1fr; } }
+  @media (max-width: 900px) {
+    .topbar { padding:8px 10px; } .links { display:none; }
+    .workspace { padding:8px; gap:8px; }
+    #stage { height:44dvh; min-height:260px; }
+    .stage-head { padding:8px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="mark"></div><div><div class="title">Paper Cast</div><div class="sub">director · config timeline</div></div></div>
+    <nav class="links">
+      <a href="/pose-studio.html">Pose Studio</a>
+      <a href="/character-builder.html">Builder</a>
+      <a href="/character-studio.html">Lab</a>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <section class="stage">
+      <div class="stage-head">
+        <div class="stage-title">Сцена из конфига</div>
+        <div class="modes">
+          <select id="env">
+            <option value="home">дом</option>
+            <option value="office">офис</option>
+            <option value="cafe">кафе</option>
+            <option value="loft">лофт</option>
+            <option value="room">комната</option>
+            <option value="street">улица</option>
+            <option value="studio">студия</option>
+            <option value="park">парк</option>
+          </select>
+          <button class="mode on" id="play">▶ Play</button>
+        </div>
+      </div>
+      <div id="stage"><canvas id="cv"></canvas></div>
+      <div class="transport">
+        <button id="stop">■</button>
+        <input type="range" id="scrub" min="0" max="12000" step="10" value="0">
+        <span class="time" id="time">0 ms</span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h3>Конфиг таймлайна</h3>
+      <div class="hint">Всё, что происходит в сцене, задаётся здесь: позы, клипы, эмоции, взгляды, повороты, речь и субтитры. Сцена только вызывает <code>seek(t)</code>.</div>
+      <textarea id="cfg" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="apply">Применить</button>
+        <button id="copy">Скопировать</button>
+        <span class="hint" id="status"></span>
+      </div>
+      <details class="tr" open>
+        <summary>Транскрипт → таймлайн (SRT / JSON)</summary>
+        <textarea id="tr" spellcheck="false"></textarea>
+        <div class="row">
+          <button id="tr-build">Собрать сцену</button>
+          <span id="tr-status"></span>
+        </div>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<script src="/vendor/paper-cast.js?v=31"></script>
+<script src="/vendor/paper-cast-stage.js?v=5"></script>
+<script>
+(function () {
+  'use strict'
+  const $ = (s) => document.querySelector(s)
+  const baseConfig = {
+    duration: 12000,
+    camera: { zoom: 1.02, follow: 'speaker' },
+    environment: { preset: 'home' },
+    cast: [
+      { id: 'mark', character: 'mark', x: 0.34, y: 0.95, facing: 1, pose: 'explain' },
+      { id: 'mira', character: 'mira', x: 0.66, y: 0.95, facing: -1, pose: 'neutral' },
+    ],
+    timeline: [
+      { at: 0, type: 'pose', who: 'mark', pose: 'explain' },
+      { at: 300, type: 'speak', who: 'mark', text: 'Привет. Это сцена, собранная из конфига.', dur: 2600 },
+      { at: 900, type: 'clip', who: 'mira', clip: 'wave' },
+      { at: 2400, type: 'emotion', who: 'mira', emotion: 'joy' },
+      { at: 3200, type: 'speak', who: 'mira', text: 'Все ключи идут по таймингам.', dur: 2600 },
+      { at: 3600, type: 'gesture', who: 'mira', pose: 'point', dur: 900 },
+      { at: 4200, type: 'turn', who: 'mark', yaw: 0.6 },
+      { at: 6200, type: 'clip', who: 'mark', clip: 'thumbsUp' },
+      { at: 7000, type: 'speak', who: 'mark', text: 'Окружение, свет и реплики — из одного конфига.', dur: 3000 },
+      { at: 8600, type: 'emotion', who: 'mark', emotion: 'joy' },
+      { at: 9000, type: 'turn', who: 'mira', yaw: -0.4 },
+      { at: 6200, type: 'camera', zoom: 1.12, x: -0.02, dur: 900 },
+      { at: 10200, type: 'pose', who: 'mark', pose: 'shrug', fade: 500 },
+    ],
+    captions: [
+      { at: 300, text: 'Привет. Это сцена, собранная из конфига.', dur: 2600 },
+      { at: 3200, text: 'Все ключи идут по таймингам.', dur: 2600 },
+      { at: 7000, text: 'Окружение, свет и реплики — из одного конфига.', dur: 3000 },
+    ],
+  }
+
+  const SAMPLE_SRT = `1
+00:00:00,300 --> 00:00:02,900
+mark: Привет. Это сцена из SRT.
+
+2
+00:00:03,200 --> 00:00:05,800
+mira: Реплики, тайминги и субтитры — из файла.
+
+3
+00:00:06,000 --> 00:00:08,400
+mark: Окружение и персонажи уже на сцене.`
+  $('#tr').value = SAMPLE_SRT
+  $('#tr-build').addEventListener('click', () => {
+    try {
+      const raw = $('#tr').value.trim()
+      let part
+      if (raw.startsWith('[')) {
+        part = window.PaperCastStage.fromTranscript(JSON.parse(raw), { tail: 700 })
+      } else {
+        part = window.PaperCastStage.fromSRT(raw, { tail: 700 })
+      }
+      config.duration = part.duration
+      config.timeline = part.timeline
+      config.captions = part.captions
+      $('#cfg').value = JSON.stringify(config, null, 2)
+      $('#tr-status').textContent = 'ok · ' + part.timeline.length + ' событий'
+      build()
+    } catch (e) {
+      $('#tr-status').textContent = 'ошибка: ' + e.message
+    }
+  })
+
+  const canvas = $('#cv')
+  let config = JSON.parse(JSON.stringify(baseConfig))
+  let stage = null
+  let playing = false
+  let t0 = 0
+  let time = 0
+
+  $('#cfg').value = JSON.stringify(config, null, 2)
+
+  function build() {
+    if (stage) stage.destroy()
+    stage = window.PaperCastStage.create(canvas, config)
+    $('#scrub').max = String(stage.duration)
+    seek(0)
+  }
+  function seek(t) {
+    time = Math.max(0, Math.min(stage.duration, t))
+    stage.seek(time)
+    $('#scrub').value = String(time)
+    $('#time').textContent = Math.round(time) + ' ms'
+  }
+  function loop(now) {
+    if (!playing) return
+    const t = now - t0
+    seek(t % stage.duration)
+    requestAnimationFrame(loop)
+  }
+  $('#play').addEventListener('click', () => {
+    if (!stage) return
+    playing = !playing
+    $('#play').classList.toggle('on', playing)
+    $('#play').textContent = playing ? '❚❚ Pause' : '▶ Play'
+    if (playing) { t0 = performance.now() - time; requestAnimationFrame(loop) }
+  })
+  $('#stop').addEventListener('click', () => {
+    playing = false
+    $('#play').classList.remove('on')
+    $('#play').textContent = '▶ Play'
+    seek(0)
+  })
+  $('#scrub').addEventListener('input', () => {
+    playing = false
+    $('#play').classList.remove('on')
+    $('#play').textContent = '▶ Play'
+    seek(Number($('#scrub').value))
+  })
+  $('#env').addEventListener('change', () => {
+    config.environment = Object.assign({}, config.environment, { preset: $('#env').value })
+    $('#cfg').value = JSON.stringify(config, null, 2)
+    build()
+  })
+  $('#apply').addEventListener('click', () => {
+    try {
+      const next = JSON.parse($('#cfg').value)
+      config = next
+      $('#status').textContent = 'ok'
+      if (config.environment && config.environment.preset) $('#env').value = config.environment.preset
+      build()
+    } catch (e) {
+      $('#status').textContent = 'JSON: ' + e.message
+    }
+  })
+  $('#copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('#cfg').value); $('#status').textContent = 'copied' } catch (e) {}
+  })
+
+  window.__director = {
+    seek,
+    get time() { return time },
+    get duration() { return stage ? stage.duration : 0 },
+    get config() { return config },
+  }
+
+  build()
+})()
+</script>
+</body>
+</html>

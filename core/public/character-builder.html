@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paper Cast — Character Builder</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #121820; --panel-2: #18212b; --line: #26313d;
+    --text: #e8e4da; --muted: #92a0ab; --cream: #efe4d1; --ink: #20232d;
+    --teal: #67d8c8; --teal-dim: #2f7e76; --gold: #d8b46f; --orange: #e28a5a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; line-height: 1.4; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; touch-action: manipulation; }
+  .app { min-height: 100dvh; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: calc(13px + env(safe-area-inset-top)) 18px 13px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18,24,32,.97), rgba(11,15,20,.97));
+    position: sticky; top: 0; z-index: 30; backdrop-filter: blur(12px);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-mark {
+    width: 32px; height: 32px; border: 1px solid var(--teal-dim); border-radius: 9px;
+    display: grid; place-items: center; position: relative; background: rgba(103,216,200,.06);
+  }
+  .brand-mark::before, .brand-mark::after { content: ''; position: absolute; background: var(--teal); }
+  .brand-mark::before { width: 13px; height: 1px; top: 15px; }
+  .brand-mark::after { width: 1px; height: 13px; left: 15px; }
+  .brand-title { font-weight: 750; letter-spacing: .16em; font-size: 12px; text-transform: uppercase; }
+  .brand-sub { color: var(--muted); font: 10px/1.3 ui-monospace, Menlo, monospace; }
+  .toplinks { display: flex; gap: 14px; margin-left: auto; align-items: center; }
+  .toplinks a { color: var(--muted); text-decoration: none; font-size: 11px; border-bottom: 1px dotted transparent; }
+  .toplinks a:hover { color: var(--text); border-color: var(--teal); }
+  .toplinks a.on { color: var(--text); border-color: var(--teal); }
+
+  .workspace {
+    display: grid; grid-template-columns: minmax(0,1fr) 400px; gap: 14px; padding: 14px;
+    width: min(1700px,100%); margin: 0 auto; flex: 1; align-items: start;
+  }
+  .stage { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #0e141b; min-width: 0; position: sticky; top: 76px; }
+  .stage-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font: 10px/1.2 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: var(--teal); text-transform: uppercase; }
+  .stage-title { margin: 3px 0 0; font-size: 20px; font-weight: 720; letter-spacing: -.02em; }
+  .modes { display: flex; gap: 6px; }
+  .mode {
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+    border-radius: 999px; padding: 6px 12px; font-size: 11px;
+  }
+  .mode.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.08); }
+  #wrap {
+    position: relative; height: min(72vh, 780px);
+    background:
+      linear-gradient(rgba(32,35,45,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(32,35,45,.055) 1px, transparent 1px),
+      radial-gradient(ellipse at 50% 38%, #f7eedf 0%, #efe4d1 55%, #e2d3b9 100%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    overflow: hidden;
+  }
+  #cvHuman, #cvAnimal { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #abones { position: absolute; inset: 0; pointer-events: none; }
+  .abone {
+    position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px;
+    border-radius: 50%; background: rgba(226,138,90,.9); border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(32,35,45,.3); pointer-events: auto; cursor: grab;
+    touch-action: none;
+  }
+  .abone::after {
+    content: attr(data-label); position: absolute; left: 16px; top: -2px;
+    font: 8px/1 ui-monospace, monospace; color: #5a3a28; white-space: nowrap;
+    background: rgba(255,255,255,.72); padding: 2px 3px; border-radius: 3px;
+  }
+  .abone.far { background: rgba(226,138,90,.55); }
+  .abone.far::after { left: 10px; top: 10px; }
+  #abones.compact .abone::after { display: none; }
+  #abones.compact .abone:hover::after { display: block; }
+  #cvAnimal { display: none; }
+
+  .inspector { display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 100px); overflow: auto; padding-right: 2px; }
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .panel summary {
+    list-style: none; cursor: pointer; padding: 11px 13px; display: flex; gap: 8px; align-items: center;
+    font: 10px/1.2 ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .panel summary::-webkit-details-marker { display: none; }
+  .panel summary::before { content: '+'; color: var(--teal); width: 10px; }
+  .panel[open] summary::before { content: '–'; }
+  .panel-body { padding: 0 13px 13px; display: flex; flex-direction: column; gap: 9px; }
+  .ctrl { display: grid; grid-template-columns: 1fr 52px; gap: 4px 8px; align-items: center; }
+  .ctrl label { grid-column: 1/-1; color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; }
+  .ctrl label b { color: var(--text); font: 10px/1 ui-monospace, Menlo, monospace; }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--teal); }
+  .ctrl .val { font: 10px/1 ui-monospace, Menlo, monospace; color: var(--muted); text-align: right; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row > * { min-width: 0; }
+  .row select { flex: 1; width: auto; }
+  select, input[type=text] {
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 7px 8px; font-size: 12px; width: 100%;
+  }
+  input[type=color] {
+    width: 100%; height: 30px; padding: 2px; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--panel-2);
+  }
+  .colors { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .color { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 10px; }
+  .btn { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+  .btn:hover { border-color: var(--teal-dim); }
+  .btn.primary { background: rgba(103,216,200,.12); border-color: var(--teal-dim); color: var(--teal); }
+  .switch { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11.5px; }
+  .switch input { accent-color: var(--teal); }
+  .plist { display: flex; flex-direction: column; gap: 4px; max-height: 150px; overflow: auto; }
+  .pitem { display: flex; align-items: center; gap: 6px; }
+  .pitem .nm { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pitem .mini { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px; padding: 3px 6px; font-size: 10px; }
+  textarea {
+    width: 100%; min-height: 100px; resize: vertical; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; color: var(--muted);
+    font: 10.5px/1.5 ui-monospace, Menlo, monospace; padding: 8px;
+  }
+  .hintline { color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chips.wide { gap: 5px; }
+  .chipbtn.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.10); }
+  .tabs {
+    display: flex; gap: 5px; flex-wrap: wrap; padding: 4px; border-radius: 10px;
+    background: rgba(11,15,20,.55); border: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 6; margin-bottom: 10px;
+  }
+  .tabs button {
+    flex: 1 1 0; min-width: 72px; border: 1px solid transparent; background: transparent;
+    color: var(--muted); border-radius: 8px; padding: 7px 6px; font-size: 11px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.on { color: var(--teal); border-color: var(--teal-dim); background: rgba(103,216,200,.10); }
+  [hidden] { display: none !important; }
+  .libgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .libitem {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 3px; border: 1px solid var(--line); border-radius: 9px;
+    background: var(--panel-2); cursor: pointer; min-width: 0;
+  }
+  .libitem:hover { border-color: var(--teal-dim); }
+  .libitem.on { border-color: var(--teal); background: rgba(103,216,200,.08); }
+  .libitem img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px; background: #efe4d1; display: block; }
+  .libitem span { font-size: 9px; line-height: 1.15; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .libitem.on span { color: var(--text); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 2px; }
+  .swatch {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); cursor: pointer; padding: 0;
+  }
+  .swatch.on { border-color: var(--text); }
+  .fieldlabel { font: 10px/1.2 ui-monospace, Menlo, monospace; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+  .hintline { color: var(--muted); font-size: 11px; line-height: 1.4; }
+  .chipbtn {
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+    border-radius: 999px; padding: 4px 10px; font-size: 11px;
+  }
+  .chipbtn:hover { color: var(--text); border-color: var(--teal-dim); }
+  .hidden { display: none; }
+
+  @media (max-width: 720px) {
+    .toplinks { gap: 8px; font-size: 10px; }
+    .toplinks a { white-space: nowrap; }
+    .stage-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .modes { margin-left: 0; width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+    .modes .mode { padding: 5px 8px; font-size: 10px; flex: 0 0 auto; }
+  }
+  @media (max-width: 1080px) {
+    .workspace { grid-template-columns: 1fr; }
+    .stage { position: static; }
+    .inspector { max-height: none; }
+  }
+  @media (max-width: 900px) {
+    .topbar { padding: 8px 10px; gap: 8px; position: static; }
+    .brand-sub { display: none; }
+    .workspace { padding: 8px; gap: 8px; }
+    .stage { position: sticky; top: 0; z-index: 20; border-radius: 10px; }
+    .stage-head { padding: 8px 10px; }
+    .eyebrow { display: none; }
+    .stage-title { font-size: 15px; }
+    #wrap { height: 40dvh; min-height: 260px; }
+    .panel summary { padding: 14px 12px; }
+    .panel-body { padding: 0 12px 14px; gap: 12px; }
+    .ctrl input[type=range] { height: 30px; }
+    select, input[type=text], input[type=color] { min-height: 42px; font-size: 16px; }
+    .btn { min-height: 40px; }
+    .switch { min-height: 38px; }
+    .colors { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <div>
+        <div class="brand-title">Paper Cast</div>
+        <div class="brand-sub">character builder · v2</div>
+      </div>
+    </div>
+    <nav class="toplinks">
+      <a href="/character-builder.html" class="on">Builder</a>
+      <a href="/pose-studio.html">Pose Studio</a>
+      <a href="/rig3d.html">3D вид</a>
+      <a href="/character-studio.html">Character Lab</a>
+      <a href="/director-demo.html">Режиссёр</a>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <section class="stage">
+      <div class="stage-head">
+        <div>
+          <div class="eyebrow">constructor</div>
+          <h1 class="stage-title">Конструктор персонажа</h1>
+        </div>
+        <div class="modes">
+          <button class="mode on" id="liveBtn" title="Живой предпросмотр">live</button>
+          <button class="mode" id="resetAll" title="Сбросить персонажа">сброс</button>
+          <button class="mode" id="undoB" title="Отменить (Ctrl+Z)">↶</button>
+          <button class="mode" id="redoB" title="Вернуть (Ctrl+Shift+Z)">↷</button>
+        </div>
+      </div>
+      <div id="wrap">
+        <canvas id="cvHuman"></canvas>
+        <canvas id="cvAnimal"></canvas>
+        <div id="abones"></div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="tabs" id="tabs">
+        <button data-tab="face" class="on">Лицо</button>
+        <button data-tab="body">Тело</button>
+        <button data-tab="outfit">Одежда</button>
+        <button data-tab="animal">Животное</button>
+        <button data-tab="project">Проект</button>
+      </div>
+
+      <details class="panel" open id="p-human" data-tab="face">
+        <summary>Лицо и внешность</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="base">
+              <option value="mark">Mark</option>
+              <option value="mira">Mira</option>
+            </select>
+            <select id="pose"></select>
+          </div>
+          <div class="row">
+            <select id="emotion">
+              <option value="neutral">нейтрально</option>
+              <option value="joy">радость</option>
+              <option value="sad">грусть</option>
+              <option value="anger">злость</option>
+              <option value="surprise">удивление</option>
+              <option value="fear">страх</option>
+              <option value="think">раздумье</option>
+              <option value="disgust">отвращение</option>
+            </select>
+          </div>
+          <div id="yaw"></div>
+          <div class="fieldlabel">Причёска</div>
+          <div class="libgrid" id="hair-chips"></div>
+          <div class="fieldlabel">Борода</div>
+          <div class="libgrid" id="beard-chips"></div>
+          <div class="fieldlabel">Нос · глаза · брови</div>
+          <div class="libgrid" id="nose-chips"></div>
+          <div class="libgrid" id="eye-chips"></div>
+          <div class="libgrid" id="brow-chips"></div>
+          <div class="fieldlabel">Форма лица · губы</div>
+          <div class="libgrid" id="face-chips"></div>
+          <div class="libgrid" id="lip-chips"></div>
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="glasses"> очки</label>
+            <label class="switch"><input type="checkbox" id="cap"> кепка</label>
+            <label class="switch"><input type="checkbox" id="scarf"> шарф</label>
+          </div>
+          <div class="fieldlabel">Оправа</div>
+          <div class="libgrid" id="glasses-chips"></div>
+        </div>
+      </details>
+
+      <details class="panel" open id="p-face" data-tab="body">
+        <summary>Тело и пропорции</summary>
+        <div class="panel-body">
+          <div class="chips" id="body-presets">
+            <button class="chipbtn" data-body="adult">взрослый</button>
+            <button class="chipbtn" data-body="child">ребёнок</button>
+            <button class="chipbtn" data-body="large">крупный</button>
+            <button class="chipbtn" data-body="slim">хрупкий</button>
+          </div>
+          <div id="face-controls"></div>
+        </div>
+      </details>
+
+      <details class="panel" open id="p-outfit" data-tab="outfit">
+        <summary>Гардероб</summary>
+        <div class="panel-body">
+          <div class="fieldlabel">Верх · низ</div>
+          <div class="libgrid" id="outfit-lib"></div>
+          <div class="libgrid" id="bottom-lib"></div>
+          <div class="row">
+            <select id="sleeves">
+              <option value="auto">рукав: авто</option>
+              <option value="short">короткий</option>
+              <option value="long">длинный</option>
+            </select>
+          </div>
+          <div class="fieldlabel">Узор ткани</div>
+          <div class="libgrid" id="pattern-chips"></div>
+          <div class="fieldlabel">Аксессуар</div>
+          <div class="libgrid" id="accessory-chips"></div>
+          <div class="hintline" id="look-note" hidden></div>
+          <div class="chips" id="look-presets">
+            <button class="chipbtn" data-look="casual">кэжуал</button>
+            <button class="chipbtn" data-look="formal">формальный</button>
+            <button class="chipbtn" data-look="winter">зимний</button>
+            <button class="chipbtn" data-look="summer">летний</button>
+          </div>
+          <div class="fieldlabel">Палитра</div>
+          <div class="swatches" id="sw-skin" data-target="skin"></div>
+          <div class="swatches" id="sw-hair" data-target="hair"></div>
+          <div class="swatches" id="sw-shirt" data-target="shirt"></div>
+          <div class="swatches" id="sw-pants" data-target="pants"></div>
+          <div class="swatches" id="sw-accent" data-target="accent"></div>
+          <div class="swatches" id="sw-eye" data-target="eye"></div>
+          <div class="colors">
+            <label class="color">кожа<input type="color" id="c-skin"></label>
+            <label class="color">волосы<input type="color" id="c-hair"></label>
+            <label class="color">верх<input type="color" id="c-shirt"></label>
+            <label class="color">низ<input type="color" id="c-pants"></label>
+            <label class="color">обувь<input type="color" id="c-shoes"></label>
+            <label class="color">акцент<input type="color" id="c-accent"></label>
+            <label class="color">пальто<input type="color" id="c-coat"></label>
+            <label class="color">юбка<input type="color" id="c-skirt"></label>
+          </div>
+        </div>
+      </details>
+
+      <details class="panel" id="p-animal" open data-tab="animal">
+        <summary>Животное</summary>
+        <div class="panel-body">
+          <div class="row">
+            <select id="kind">
+              <option value="dog">Пёс</option>
+              <option value="cat">Кот</option>
+              <option value="chicken">Курица</option>
+              <option value="dove">Голубь</option>
+              <option value="pig">Свинья</option>
+              <option value="cow">Корова</option>
+              <option value="eagle">Орёл</option>
+              <option value="tit">Синица</option>
+              <option value="beetle">Жук</option>
+              <option value="bee">Пчела</option>
+            </select>
+            <select id="a-pose"></select>
+          </div>
+          <div class="row">
+            <select id="gait">
+              <option value="">стоять</option>
+              <option value="walk">идти</option>
+              <option value="run">бежать</option>
+              <option value="fly">летать</option>
+            </select>
+            <label class="switch"><input type="checkbox" id="a-skel"> скелет</label>
+          </div>
+          <div class="colors">
+            <label class="color">шерсть / тело<input type="color" id="c-fur"></label>
+            <label class="color">тёмный<input type="color" id="c-fur2"></label>
+          </div>
+        </div>
+      </details>
+
+      <details class="panel" id="p-abones" data-tab="animal">
+        <summary>Кости животного</summary>
+        <div class="panel-body">
+          <div class="hintline" id="a-bones-hint">Голова, шея, хвост, бёдра и колени. Для птиц — голова, шея, крыло.</div>
+          <div id="a-bones"></div>
+          <button class="btn" id="a-bones-reset">Сбросить кости</button>
+        </div>
+      </details>
+
+      <details class="panel" open data-tab="project">
+        <summary>Пресеты</summary>
+        <div class="panel-body">
+          <div class="row">
+            <input type="text" id="pname" placeholder="имя" value="myCharacter">
+            <button class="btn primary" id="save">Save</button>
+          </div>
+          <div class="plist" id="plist"></div>
+        </div>
+      </details>
+
+      <details class="panel" data-tab="project">
+        <summary>Экспорт</summary>
+        <div class="panel-body">
+          <div class="row">
+            <button class="btn" id="exp-json">JSON</button>
+            <button class="btn" id="exp-js">Scene JS</button>
+            <button class="btn" id="copy">Copy</button>
+          </div>
+          <textarea id="export" spellcheck="false"></textarea>
+        </div>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<script src="/vendor/paper-cast.js?v=31"></script>
+<script src="/vendor/paper-cast-session.js?v=2"></script>
+<script src="/vendor/paper-cast-library.js?v=1"></script>
+<script src="/vendor/paper-cast-animals.js?v=7"></script>
+<script>
+(function () {
+  'use strict'
+  const $ = (s) => document.querySelector(s)
+  const clone = (o) => JSON.parse(JSON.stringify(o))
+  const LS = 'papercast.builder.v1'
+  let presets = {}
+  try { presets = JSON.parse(localStorage.getItem(LS) || '{}') || {} } catch (e) { presets = {} }
+
+  const state = {
+    mode: 'human',
+    base: 'mark',
+    appearance: {},
+    pose: 'neutral',
+    yaw: 0,
+    animal: { kind: 'dog', pose: 'stand', gait: '', palette: {}, skeleton: false, fk: {} },
+    tab: 'face',
+  }
+  const SESSION = window.PaperCastSession || null
+  let remoteApply = false
+  function saveSession() {
+    if (!SESSION || remoteApply) return
+    SESSION.write({
+      mode: state.mode,
+      active: state.base,
+      appearance: state.appearance,
+      appearanceChar: state.base,
+      skins: Object.assign({}, SESSION.read().skins || {}, { [state.base]: state.appearance }),
+      pose: state.pose,
+      yaw: state.yaw,
+      animal: state.animal,
+    })
+  }
+
+  function applyRemoteSession(saved) {
+    if (!saved || saved.mode !== 'human' || state.mode === 'animal') return
+    if (!saved.active || !window.PaperCast.CHARACTERS[saved.active]) return
+    remoteApply = true
+    state.base = saved.active
+    state.appearance = SESSION.readSkin(saved.active)
+    if (saved.pose && window.PaperCast.POSES[saved.pose]) state.pose = saved.pose
+    if (typeof saved.yaw === 'number') state.yaw = Math.max(-1, Math.min(1, saved.yaw))
+    const skin = baseSkin()
+    const a = state.appearance
+    $('#base').value = state.base
+    poseSel.value = state.pose
+    $('#glasses').checked = a.glasses !== undefined ? !!a.glasses : !!skin.glasses
+    $('#cap').checked = a.headwear === 'cap' || a.headwear === 'beanie'
+    $('#scarf').checked = !!a.scarf
+    $('#sleeves').value = a.sleeves || 'auto'
+    yawInput.value = String(state.yaw)
+    setMode('human')
+    setTab('face')
+    remoteApply = false
+  }
+  if (SESSION) SESSION.on(applyRemoteSession)
+
+  // ── visual libraries: hair / beard / face / colours ──────────────────────
+  const HAIR_LABELS = { short: 'короткие', bob: 'боб', bun: 'пучок', ponytail: 'хвост', long: 'длинные', curly: 'кудри', pixie: 'пикси', afro: 'афро', mohawk: 'ирокез', bald: 'лысый' }
+  const BEARD_LABELS = { none: 'нет', short: 'щетина', full: 'полная', long: 'длинная', goatee: 'эспаньолка', mustache: 'усы' }
+  const NOSE_LABELS = { straight: 'прямой', button: 'кнопка', wide: 'широкий', hooked: 'с горбинкой', small: 'маленький' }
+  const EYE_LABELS = { round: 'круглые', almond: 'миндаль', narrow: 'узкие', wide: 'большие' }
+  const BROW_LABELS = { soft: 'мягкие', thick: 'густые', thin: 'тонкие', straight: 'прямые' }
+  const LIP_LABELS = { thin: 'тонкие', full: 'полные', wide: 'широкие', small: 'маленькие' }
+  const FACE_LABELS = { oval: 'овал', round: 'круглое', square: 'квадратное', heart: 'сердце' }
+  const PATTERN_LABELS = { solid: 'однотонно', stripes: 'полосы', check: 'клетка', dots: 'горох' }
+  const ACCESSORY_LABELS = { none: 'нет', tie: 'галстук', bowtie: 'бабочка', necklace: 'колье', badge: 'значок' }
+  const GLASSES_LABELS = { round: 'круглая', square: 'квадратная', aviator: 'авиатор' }
+
+
+  function libRow(host, labels, kind, dataKey, current, onPick) {
+    host.innerHTML = ''
+    for (const [value, label] of Object.entries(labels)) {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'libitem' + (value === current ? ' on' : '')
+      b.dataset[dataKey] = value
+      const img = document.createElement('img')
+      img.alt = label
+      img.loading = 'lazy'
+      const cap = document.createElement('span')
+      cap.textContent = label
+      b.append(img, cap)
+      if (window.PaperCastLibrary) {
+        window.PaperCastLibrary.thumb(kind, value, (url) => { if (url) img.src = url })
+      }
+      b.addEventListener('click', () => onPick(value))
+      host.appendChild(b)
+    }
+  }
+  const OUTFIT_LABELS = { shirt: 'рубашка', tee: 'футболка', hoodie: 'худи', sweater: 'свитер', jacket: 'пиджак', vest: 'жилет', coat: 'пальто', dress: 'платье' }
+  const BOTTOM_LABELS = { pants: 'брюки', shorts: 'шорты', skirt: 'юбка', dress: 'платье' }
+
+  function applyOutfit(v) {
+    state.appearance.outfit = v
+    if (v === 'dress') state.appearance.bottom = 'dress'
+    normalizeLook()
+    if (human) {
+      human.setAppearance({ outfit: state.appearance.outfit, bottom: state.appearance.bottom, sleeves: state.appearance.sleeves })
+      human.seek(800)
+    }
+    syncLookChips()
+    scheduleB()
+  }
+  function applyBottom(v) {
+    state.appearance.bottom = v
+    if (v === 'dress') state.appearance.outfit = 'dress'
+    normalizeLook()
+    if (human) { human.setAppearance({ bottom: state.appearance.bottom, outfit: state.appearance.outfit }); human.seek(800) }
+    syncLookChips()
+    scheduleB()
+  }
+
+  function pickLook(key, value) {
+    state.appearance[key] = value
+    if (key === 'beardStyle') {
+      state.appearance.beard = value !== 'none'
+    }
+    if (key === 'glassesStyle') {
+      state.appearance.glasses = true
+      $('#glasses').checked = true
+    }
+    normalizeLook()
+    if (human) {
+      human.setAppearance({ [key]: value })
+      human.seek(800)
+    }
+    syncLookChips()
+    scheduleB()
+  }
+  function syncLookChips() {
+    const a = window.PaperCast.normalizeAppearance(state.appearance)
+    const pairs = [
+      ['#hair-chips', 'hairStyle', 'hair'], ['#beard-chips', 'beardStyle', 'beard'],
+      ['#nose-chips', 'noseStyle', 'nose'], ['#eye-chips', 'eyeStyle', 'eye'],
+      ['#brow-chips', 'browStyle', 'brow'],
+      ['#face-chips', 'faceShape', 'face'],
+      ['#lip-chips', 'lipStyle', 'lip'],
+      ['#pattern-chips', 'pattern', 'pattern'],
+      ['#accessory-chips', 'accessory', 'accessory'],
+      ['#glasses-chips', 'glassesStyle', 'glasses'],
+      ['#outfit-lib', 'outfit', 'outfit'],
+      ['#bottom-lib', 'bottom', 'bottom'],
+    ]
+    for (const [sel, key, data] of pairs) {
+      const host = $(sel)
+      if (!host) continue
+      for (const b of host.children) b.classList.toggle('on', b.dataset[data] === a[key])
+    }
+  }
+  function buildLookLibraries() {
+    if (!window.PaperCast.PALETTES) return
+    const P = window.PaperCast
+    const a = state.appearance
+    libRow($('#hair-chips'), HAIR_LABELS, 'hair', 'hair', a.hairStyle || baseSkin().hairStyle, (v) => pickLook('hairStyle', v))
+    libRow($('#beard-chips'), BEARD_LABELS, 'beard', 'beard', a.beardStyle || (a.beard ? 'full' : 'none'), (v) => pickLook('beardStyle', v))
+    libRow($('#nose-chips'), NOSE_LABELS, 'nose', 'nose', a.noseStyle || 'straight', (v) => pickLook('noseStyle', v))
+    libRow($('#eye-chips'), EYE_LABELS, 'eye', 'eye', a.eyeStyle || 'round', (v) => pickLook('eyeStyle', v))
+    libRow($('#brow-chips'), BROW_LABELS, 'brow', 'brow', a.browStyle || 'soft', (v) => pickLook('browStyle', v))
+    libRow($('#face-chips'), FACE_LABELS, 'face', 'face', a.faceShape || 'oval', (v) => pickLook('faceShape', v))
+    libRow($('#lip-chips'), LIP_LABELS, 'lip', 'lip', a.lipStyle || 'full', (v) => pickLook('lipStyle', v))
+    libRow($('#pattern-chips'), PATTERN_LABELS, 'pattern', 'pattern', a.pattern || 'solid', (v) => pickLook('pattern', v))
+    libRow($('#accessory-chips'), ACCESSORY_LABELS, 'accessory', 'accessory', a.accessory || 'none', (v) => pickLook('accessory', v))
+    libRow($('#glasses-chips'), GLASSES_LABELS, 'glasses', 'glasses', a.glassesStyle || 'round', (v) => pickLook('glassesStyle', v))
+    libRow($('#outfit-lib'), OUTFIT_LABELS, 'outfit', 'outfit', a.outfit || 'shirt', applyOutfit)
+    libRow($('#bottom-lib'), BOTTOM_LABELS, 'bottom', 'bottom', a.bottom || 'pants', applyBottom)
+    for (const host of document.querySelectorAll('.swatches')) {
+      const target = host.dataset.target
+      const list = P.PALETTES[target === 'shirt' || target === 'pants' ? 'fabric' : target] || []
+      host.innerHTML = ''
+      for (const color of list) {
+        const b = document.createElement('button')
+        b.type = 'button'
+        b.className = 'swatch'
+        b.dataset.color = color
+        b.style.background = color
+        b.title = color
+        b.addEventListener('click', () => pickColor(target, color))
+        host.appendChild(b)
+      }
+    }
+    syncSwatches()
+  }
+  function pickColor(key, color) {
+    state.appearance[key] = color
+    normalizeLook()
+    if (human) { human.setAppearance({ [key]: color }); human.seek(800) }
+    syncColorInputs()
+    syncSwatches()
+    scheduleB()
+  }
+  function syncSwatches() {
+    const skin = baseSkin()
+    for (const host of document.querySelectorAll('.swatches')) {
+      const key = host.dataset.target
+      const val = state.appearance[key] || skin[key]
+      for (const b of host.children) b.classList.toggle('on', b.dataset.color === val)
+    }
+  }
+
+  const cvH = $('#cvHuman')
+  const cvA = $('#cvAnimal')
+  let human = null
+  let animal = null
+
+  const BASE_DEFAULTS = {
+    headScale: 1, eyeSize: 1, eyeGap: 1, mouthW: 1,
+    shoulderW: 1, hipW: 1, armLen: 1, legLen: 1,
+    hairStyle: 'short', outfit: 'shirt', bottom: 'pants', sleeves: 'auto',
+  }
+
+  function baseSkin() { return window.PaperCast.CHARACTERS[state.base] }
+
+  function normalizeLook() {
+    const report = window.PaperCast.validateAppearance(state.appearance)
+    state.appearance = window.PaperCast.normalizeAppearance(state.appearance)
+    const note = $('#look-note')
+    if (note) {
+      const items = report.issues.map((i) => i.text)
+      note.hidden = items.length === 0
+      note.textContent = items.join(' · ')
+      clearTimeout(note._t)
+      if (items.length) note._t = setTimeout(() => { note.hidden = true }, 3200)
+    }
+    return report
+  }
+
+  function rebuildHuman() {
+    normalizeLook()
+    if (human) { try { human.destroy() } catch (e) {} }
+    const app = Object.assign({}, state.appearance)
+    if (app.sleeves === 'auto') delete app.sleeves
+    human = window.PaperCast.create(cvH, {
+      character: state.base,
+      pose: state.pose,
+      yaw: state.yaw,
+      appearance: app,
+      autoGaze: true,
+      life: true,
+    })
+    human.seek(800)
+    syncColorInputs()
+    if (typeof syncLookChips === 'function') syncLookChips()
+    if (typeof syncSwatches === 'function') syncSwatches()
+    if (typeof refreshSliders === 'function') refreshSliders()
+    if (typeof scheduleB === 'function') scheduleB()
+  }
+
+  function rebuildAnimal() {
+    if (animal) { try { animal.destroy() } catch (e) {} }
+    animal = window.PaperCastAnimals.create(cvA, {
+      kind: state.animal.kind,
+      pose: state.animal.pose,
+      gait: state.animal.gait || null,
+      palette: state.animal.palette,
+      showSkeleton: state.animal.skeleton,
+      fk: state.animal.fk,
+    })
+    animal.seek(900)
+    syncAnimalControls()
+    buildABoneEls()
+    renderABones(animal.getState().time)
+    if (typeof scheduleB === 'function') scheduleB()
+  }
+
+  // ── human controls ───────────────────────────────────────────────────────
+  const poseSel = $('#pose')
+  for (const name of Object.keys(window.PaperCast.POSES)) {
+    const o = document.createElement('option')
+    o.value = name; o.textContent = name
+    poseSel.appendChild(o)
+  }
+  poseSel.value = state.pose
+  poseSel.addEventListener('change', () => {
+    state.pose = poseSel.value
+    human.setPose(state.pose)
+    human.seek(800)
+    scheduleB()
+  })
+
+  $('#base').addEventListener('change', () => {
+    state.base = $('#base').value
+    state.appearance = SESSION ? SESSION.readSkin(state.base) : {}
+    const a = state.appearance
+    const skin = baseSkin()
+    $('#glasses').checked = a.glasses !== undefined ? !!a.glasses : !!skin.glasses
+    $('#cap').checked = a.headwear === 'cap' || a.headwear === 'beanie'
+    $('#scarf').checked = !!a.scarf
+    $('#sleeves').value = a.sleeves || 'auto'
+    rebuildHuman()
+  })
+
+  const yawBox = $('#yaw')
+  const yawInput = document.createElement('input')
+  yawInput.type = 'range'; yawInput.min = '-1'; yawInput.max = '1'; yawInput.step = '0.01'; yawInput.value = '0'
+  yawInput.style.cssText = 'width:100%;accent-color:var(--teal)'
+  const yawLab = document.createElement('label')
+  yawLab.textContent = 'поворот 3/4'
+  yawLab.style.cssText = 'color:var(--muted);font-size:11px;display:block;margin-bottom:3px'
+  yawBox.appendChild(yawLab); yawBox.appendChild(yawInput)
+  yawInput.addEventListener('input', () => {
+    state.yaw = Number(yawInput.value)
+    human.setYaw(state.yaw); human.seek(800)
+    scheduleB()
+  })
+  $('#glasses').checked = !!baseSkin().glasses
+
+  $('#glasses').addEventListener('change', () => {
+    state.appearance.glasses = $('#glasses').checked
+    human.setAppearance({ glasses: state.appearance.glasses }); human.seek(800)
+    scheduleB()
+  })
+  $('#cap').addEventListener('change', () => {
+    state.appearance.headwear = $('#cap').checked ? 'cap' : 'none'
+    human.setAppearance({ headwear: state.appearance.headwear }); human.seek(800)
+    scheduleB()
+  })
+  $('#scarf').addEventListener('change', () => {
+    state.appearance.scarf = $('#scarf').checked
+    human.setAppearance({ scarf: state.appearance.scarf }); human.seek(800)
+    scheduleB()
+  })
+
+
+  const sliders = []
+  function slider(parent, label, min, max, step, key, fmt) {
+    const row = document.createElement('div')
+    row.className = 'ctrl'
+    const lab = document.createElement('label')
+    lab.innerHTML = '<span>' + label + '</span><b></b>'
+    const input = document.createElement('input')
+    input.type = 'range'; input.min = min; input.max = max; input.step = step
+    input.value = state.appearance[key] !== undefined ? state.appearance[key] : BASE_DEFAULTS[key]
+    const val = document.createElement('span')
+    val.className = 'val'
+    val.style.display = 'none'
+    const show = (v) => { const s = fmt ? fmt(v) : String(v); lab.querySelector('b').textContent = s }
+    show(Number(input.value))
+    input.addEventListener('input', () => {
+      const v = Number(input.value)
+      state.appearance[key] = v
+      show(v)
+      human.setAppearance({ [key]: v }); human.seek(800)
+    })
+    row.appendChild(lab); row.appendChild(input); row.appendChild(val)
+    parent.appendChild(row)
+    sliders.push({ input, key, show: () => show(Number(input.value)) })
+    return input
+  }
+  function refreshSliders() {
+    for (const s2 of sliders) {
+      const v = state.appearance[s2.key] !== undefined ? state.appearance[s2.key] : BASE_DEFAULTS[s2.key]
+      s2.input.value = String(v)
+      s2.show()
+    }
+  }
+  const faceBox = $('#face-controls')
+  slider(faceBox, 'голова', '0.85', '1.2', '0.01', 'headScale', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'глаза', '0.70', '1.40', '0.01', 'eyeSize', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'расстояние глаз', '0.80', '1.25', '0.01', 'eyeGap', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'рот', '0.70', '1.40', '0.01', 'mouthW', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'плечи', '0.85', '1.15', '0.01', 'shoulderW', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'бёдра', '0.90', '1.10', '0.01', 'hipW', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'руки', '0.80', '1.15', '0.01', 'armLen', (v) => v.toFixed(2) + '×')
+  slider(faceBox, 'ноги', '0.75', '1.15', '0.01', 'legLen', (v) => v.toFixed(2) + '×')
+
+  $('#sleeves').addEventListener('change', () => {
+    const v = $('#sleeves').value
+    if (v === 'auto') delete state.appearance.sleeves
+    else state.appearance.sleeves = v
+    normalizeLook()
+    human.setAppearance({ sleeves: state.appearance.sleeves }); human.seek(800)
+    scheduleB()
+  })
+
+  const COLORS = [
+    ['c-skin', 'skin'], ['c-hair', 'hair'], ['c-shirt', 'shirt'], ['c-pants', 'pants'],
+    ['c-shoes', 'shoes'], ['c-accent', 'accent'], ['c-coat', 'coatColor'], ['c-skirt', 'skirtColor'],
+  ]
+  function syncColorInputs() {
+    const skin = baseSkin()
+    for (const [id, key] of COLORS) {
+      const el = $('#' + id)
+      let v = state.appearance[key] || skin[key]
+      if (key === 'coatColor') v = state.appearance.coatColor || skin.shirtDark
+      if (key === 'skirtColor') v = state.appearance.skirtColor || skin.pants
+      el.value = /^#[0-9a-f]{6}$/i.test(v || '') ? v : '#888888'
+    }
+  }
+  for (const [id, key] of COLORS) {
+    $('#' + id).addEventListener('input', () => {
+      state.appearance[key] = $('#' + id).value
+      human.setAppearance({ [key]: state.appearance[key] }); human.seek(800)
+    })
+  }
+
+  const BODY_PRESETS = {
+    adult: { headScale: 1, eyeSize: 1, eyeGap: 1, mouthW: 1, shoulderW: 1, hipW: 1, armLen: 1, legLen: 1 },
+    child: { headScale: 1.18, eyeSize: 1.16, eyeGap: 1.04, mouthW: 1.05, shoulderW: 0.9, hipW: 0.92, armLen: 0.86, legLen: 0.8 },
+    large: { headScale: 1.02, eyeSize: 1, eyeGap: 1, mouthW: 1.04, shoulderW: 1.12, hipW: 1.08, armLen: 1.03, legLen: 1.02 },
+    slim: { headScale: 1.02, eyeSize: 1, eyeGap: 1, mouthW: 0.96, shoulderW: 0.92, hipW: 0.9, armLen: 1.03, legLen: 1.03 },
+  }
+  document.querySelectorAll('#body-presets .chipbtn').forEach((b) => {
+    b.addEventListener('click', () => {
+      Object.assign(state.appearance, BODY_PRESETS[b.dataset.body] || {})
+      rebuildHuman()
+    })
+  })
+
+  const LOOKS = {
+    casual: { outfit: 'tee', bottom: 'shorts', sleeves: 'short', shirt: '#3f7f6a', pants: '#2f4452', accent: '#e28a5a' },
+    formal: { outfit: 'coat', bottom: 'pants', sleeves: 'long', shirt: '#26313d', pants: '#1f2733', coatColor: '#2b3644', accent: '#d8b46f' },
+    winter: { outfit: 'coat', bottom: 'pants', sleeves: 'long', shirt: '#6b4f3a', pants: '#3a2f2a', coatColor: '#7a5a3f', accent: '#cf4a3a' },
+    summer: { outfit: 'dress', bottom: 'dress', sleeves: 'short', shirt: '#e0b25a', skirtColor: '#e8d6a8', accent: '#cf4a3a' },
+  }
+  document.querySelectorAll('#look-presets .chipbtn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const look = LOOKS[b.dataset.look]
+      if (!look) return
+      Object.assign(state.appearance, look)
+      normalizeLook()
+      rebuildHuman()
+    })
+  })
+
+  // ── animal controls ──────────────────────────────────────────────────────
+  const APOSES = window.PaperCastAnimals.POSES
+  const aPose = $('#a-pose')
+  function fillAnimalPoses() {
+    const kind = state.animal.kind
+    aPose.innerHTML = ''
+    for (const p of APOSES[kind] || ['stand']) {
+      const o = document.createElement('option')
+      o.value = p; o.textContent = p
+      aPose.appendChild(o)
+    }
+    aPose.value = state.animal.pose
+  }
+  const ABONES = {
+    quadruped: [
+      ['head', 'голова°', -35, 35], ['neck', 'шея°', -40, 40], ['tail', 'хвост°', -60, 60],
+      ['flHip', 'перед L бедро°', -50, 50], ['flKnee', 'перед L колено°', -60, 60],
+      ['frHip', 'перед R бедро°', -50, 50], ['frKnee', 'перед R колено°', -60, 60],
+      ['blHip', 'зад L бедро°', -50, 50], ['blKnee', 'зад L колено°', -60, 60],
+      ['brHip', 'зад R бедро°', -50, 50], ['brKnee', 'зад R колено°', -60, 60],
+    ],
+    avian: [
+      ['head', 'голова°', -35, 35], ['neck', 'шея°', -40, 40], ['wing', 'крыло°', -60, 60],
+    ],
+    insectoid: (() => {
+      const rows = [['head', 'голова°', -35, 35], ['neck', 'шея°', -40, 40]]
+      const pairs = ['перед', 'средн', 'зад']
+      for (let i = 0; i < 6; i++) {
+        const lab = pairs[Math.floor(i / 2)] + ' ' + (i % 2 ? 'дальн' : 'ближн')
+        rows.push(['l' + (i + 1) + 'Hip', lab + ' бедро°', -50, 50])
+        rows.push(['l' + (i + 1) + 'Knee', lab + ' колено°', -60, 60])
+      }
+      return rows
+    })(),
+  }
+  const aBonesBox = $('#a-bones')
+  const BONE_HINTS = {
+    quadruped: 'Голова, шея, хвост, бёдра и колени. Точки на скелете тянутся.',
+    avian: 'Птицы: голова, шея, крыло. Точки на скелете тянутся.',
+    insectoid: 'Насекомые: голова и 6 ног. Точка на паре ног вращает обе ноги, тонко — слайдерами.',
+  }
+  function buildAnimalBones() {
+    aBonesBox.innerHTML = ''
+    const fam = (window.PaperCastAnimals.KINDS[state.animal.kind] || {}).family
+    const hint = $('#a-bones-hint')
+    if (hint) hint.textContent = BONE_HINTS[fam] || 'Кости этого семейства пока не редактируются.'
+    const defs = ABONES[fam] || []
+    if (!defs.length) return
+    state.animal.fk = state.animal.fk || {}
+    for (const [key, label, min, max] of defs) {
+      const row = document.createElement('div')
+      row.className = 'ctrl'
+      const lab = document.createElement('label')
+      lab.innerHTML = '<span>' + label + '</span><b></b>'
+      const input = document.createElement('input')
+      input.type = 'range'; input.min = String(min); input.max = String(max); input.step = '1'
+      input.dataset.fk = key
+      input.value = String(state.animal.fk[key] || 0)
+      const b = lab.querySelector('b')
+      b.textContent = (state.animal.fk[key] || 0) + '°'
+      input.addEventListener('input', () => {
+        const v = Number(input.value)
+        state.animal.fk[key] = v
+        b.textContent = v + '°'
+        animal.setFK({ [key]: v })
+      })
+      row.appendChild(lab); row.appendChild(input)
+      aBonesBox.appendChild(row)
+    }
+  }
+  $('#a-bones-reset').addEventListener('click', () => {
+    state.animal.fk = {}
+    if (animal) animal.resetFK()
+    buildAnimalBones()
+  })
+
+  function syncAnimalControls() {
+    $('#kind').value = state.animal.kind
+    $('#gait').value = state.animal.gait || ''
+    $('#a-skel').checked = state.animal.skeleton
+    fillAnimalPoses()
+    const pal = state.animal.palette
+    const cfg = window.PaperCastAnimals.KINDS[state.animal.kind]
+    const fur = pal.fur || pal.body || pal.shell || cfg.fur || cfg.body || cfg.shell
+    const fur2 = pal.dark || pal.bodyDark || cfg.dark || cfg.bodyDark
+    buildAnimalBones() || cfg.leg
+    if (fur) $('#c-fur').value = fur
+    if (fur2) $('#c-fur2').value = fur2
+  }
+  $('#kind').addEventListener('change', () => {
+    state.animal.kind = $('#kind').value
+    state.animal.pose = (APOSES[state.animal.kind] || ['stand'])[0]
+    state.animal.palette = {}
+    state.animal.gait = ''
+    state.animal.fk = {}
+    rebuildAnimal()
+  })
+  aPose.addEventListener('change', () => {
+    state.animal.pose = aPose.value
+    animal.setPose(state.animal.pose); animal.seek(900)
+  })
+  $('#gait').addEventListener('change', () => {
+    state.animal.gait = $('#gait').value
+    animal.setGait(state.animal.gait || null); animal.seek(900)
+  })
+  $('#a-skel').addEventListener('change', () => {
+    state.animal.skeleton = $('#a-skel').checked
+    animal.setSkeleton(state.animal.skeleton)
+    renderABones(animal.getState().time)
+  })
+  $('#c-fur').addEventListener('input', () => {
+    const v = $('#c-fur').value
+    state.animal.palette.fur = v
+    state.animal.palette.body = v
+    state.animal.palette.shell = v
+    animal.setPalette({ fur: v, body: v, shell: v }); animal.seek(900)
+  })
+  $('#c-fur2').addEventListener('input', () => {
+    const v = $('#c-fur2').value
+    state.animal.palette.dark = v
+    state.animal.palette.bodyDark = v
+    state.animal.palette.leg = v
+    animal.setPalette({ dark: v, bodyDark: v, leg: v }); animal.seek(900)
+  })
+
+  // ── animal bone dots ─────────────────────────────────────────────────────
+  const abonesEl = $('#abones')
+  function getJ(sk, path) {
+    if (!sk) return null
+    if (path.indexOf('legs.') === 0) {
+      const parts = path.split('.')
+      const L = sk.legs && sk.legs[parts[1]]
+      return L ? L[parts[2]] : null
+    }
+    return sk.joints ? sk.joints[path] : null
+  }
+  function animalBoneDefs() {
+    const fam = (window.PaperCastAnimals.KINDS[state.animal.kind] || {}).family
+    if (fam === 'quadruped') {
+      const defs = [
+        { id: 'ahead', label: 'голова', parent: 'chest', joint: 'head', key: 'neck', lim: 'neck' },
+        { id: 'atail', label: 'хвост', parent: 'hip', joint: 'tail', key: 'tail', lim: 'tail' },
+      ]
+      for (const L of ['fl', 'fr', 'bl', 'br']) {
+        defs.push({ id: L + 'k', label: L + ' колено', parent: 'legs.' + L + '.root', joint: 'legs.' + L + '.knee', key: L + 'Hip', lim: 'hip' })
+        defs.push({ id: L + 'p', label: L + ' стопа', parent: 'legs.' + L + '.knee', joint: 'legs.' + L + '.paw', key: L + 'Knee', lim: 'knee' })
+      }
+      return defs
+    }
+    if (fam === 'avian') {
+      return [
+        { id: 'ahead', label: 'голова', parent: 'body', joint: 'head', key: 'neck', lim: 'neck' },
+        { id: 'awing', label: 'крыло', parent: 'body', joint: 'wing', key: 'wing', lim: 'wing' },
+      ]
+    }
+    if (fam === 'insectoid') {
+      const defs = [
+        { id: 'ahead', label: 'голова', parent: 'body', joint: 'head', key: 'neck', lim: 'neck' },
+      ]
+      for (let p = 1; p <= 3; p++) {
+        const a = 2 * p - 1, b = 2 * p
+        defs.push({ id: 'p' + p + 'k', label: p + ' пара: колено', parent: 'legs.l' + a + '.root', joint: 'legs.l' + a + '.knee', keys: ['l' + a + 'Hip', 'l' + b + 'Hip'], lim: 'hip' })
+        defs.push({ id: 'p' + p + 'f', label: p + ' пара: стопа', parent: 'legs.l' + a + '.knee', joint: 'legs.l' + a + '.foot', keys: ['l' + a + 'Knee', 'l' + b + 'Knee'], lim: 'knee' })
+      }
+      return defs
+    }
+    return []
+  }
+  let aboneEls = {}
+  let aboneDefs = []
+  function buildABoneEls() {
+    abonesEl.innerHTML = ''
+    aboneEls = {}
+    aboneDefs = animalBoneDefs()
+    abonesEl.classList.toggle('compact', aboneDefs.length > 5)
+    for (const d of aboneDefs) {
+      const el = document.createElement('div')
+      el.className = 'abone' + (d.far ? ' far' : '')
+      el.dataset.label = d.label
+      el.dataset.key = d.keys ? d.keys.join(',') : d.key
+      el.title = d.label
+      el.style.display = 'none'
+      el.addEventListener('pointerdown', (e) => startABoneDrag(d, el, e))
+      abonesEl.appendChild(el)
+      aboneEls[d.id] = el
+    }
+  }
+  function renderABones(t) {
+    const on = state.mode === 'animal' && $('#a-skel').checked && aboneDefs.length
+    if (!on) { for (const el of Object.values(aboneEls)) el.style.display = 'none'; return }
+    const sk = window.PaperCastAnimals.skeleton(state.animal.kind, state.animal.pose, t || 0, state.animal.gait || null, 0, state.animal.fk)
+    const r = $('#wrap').getBoundingClientRect()
+    const W = 600, H = 600
+    const scale = Math.min(r.width / W, r.height / H)
+    const ox = (r.width - W * scale) / 2, oy = (r.height - H * scale) / 2
+    for (const d of aboneDefs) {
+      const p = getJ(sk, d.joint)
+      const el = aboneEls[d.id]
+      if (!p) { el.style.display = 'none'; continue }
+      el.style.display = 'block'
+      el.style.left = (ox + p[0] * scale) + 'px'
+      el.style.top = (oy + p[1] * scale) + 'px'
+    }
+  }
+  function startABoneDrag(def, el, ev) {
+    ev.preventDefault()
+    if (el.setPointerCapture) el.setPointerCapture(ev.pointerId)
+    const move = (e) => {
+      const r = $('#wrap').getBoundingClientRect()
+      const scale = Math.min(r.width / 600, r.height / 600)
+      const ox = (r.width - 600 * scale) / 2, oy = (r.height - 600 * scale) / 2
+      const pt = [(e.clientX - r.left - ox) / scale, (e.clientY - r.top - oy) / scale]
+      const t = animal ? animal.getState().time : 0
+      const sk = window.PaperCastAnimals.skeleton(state.animal.kind, state.animal.pose, t, state.animal.gait || null, 0, state.animal.fk)
+      const parent = getJ(sk, def.parent)
+      const joint = getJ(sk, def.joint)
+      if (!parent || !joint) return
+      const cur = Math.atan2(joint[1] - parent[1], joint[0] - parent[0])
+      const tgt = Math.atan2(pt[1] - parent[1], pt[0] - parent[0])
+      let d = (tgt - cur) * 180 / Math.PI
+      while (d > 180) d -= 360
+      while (d < -180) d += 360
+      const limits = { neck: [-40, 40], tail: [-60, 60], hip: [-50, 50], knee: [-60, 60], wing: [-60, 60] }
+      const lim = limits[def.lim] || [-60, 60]
+      state.animal.fk = state.animal.fk || {}
+      const keys = def.keys || (def.key ? [def.key] : [])
+      for (const key of keys) {
+        const next = (state.animal.fk[key] || 0) + d
+        state.animal.fk[key] = Math.max(lim[0], Math.min(lim[1], next))
+        animal.setFK({ [key]: state.animal.fk[key] })
+        const input = document.querySelector('#a-bones input[data-fk="' + key + '"]')
+        if (input) input.value = String(Math.round(state.animal.fk[key]))
+        const badge = input && input.parentElement && input.parentElement.querySelector('b')
+        if (badge) badge.textContent = Math.round(state.animal.fk[key]) + '°'
+      }
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+
+  // ── undo / redo ──────────────────────────────────────────────────────────
+  const bHistory = []
+  let bIndex = -1
+  let bApplying = false
+  let bTimer = null
+  function snapB() {
+    return JSON.parse(JSON.stringify({
+      mode: state.mode, base: state.base, appearance: state.appearance,
+      pose: state.pose, yaw: state.yaw, animal: state.animal,
+    }))
+  }
+  function pushB() {
+    if (bApplying) return
+    const cur = snapB()
+    const last = bHistory[bIndex]
+    if (last && JSON.stringify(last) === JSON.stringify(cur)) return
+    bHistory.splice(bIndex + 1)
+    bHistory.push(cur)
+    if (bHistory.length > 60) bHistory.shift()
+    bIndex = bHistory.length - 1
+  }
+  function scheduleB() {
+    clearTimeout(bTimer)
+    bTimer = setTimeout(() => { pushB(); saveSession() }, 300)
+  }
+  function applyB(sn) {
+    bApplying = true
+    state.mode = sn.mode
+    state.base = sn.base
+    state.appearance = JSON.parse(JSON.stringify(sn.appearance || {}))
+    state.pose = sn.pose || 'neutral'
+    state.yaw = sn.yaw || 0
+    state.animal = JSON.parse(JSON.stringify(sn.animal))
+    $('#base').value = state.base
+    poseSel.value = state.pose
+    $('#glasses').checked = state.appearance.glasses !== undefined ? !!state.appearance.glasses : !!baseSkin().glasses
+    $('#cap').checked = state.appearance.headwear === 'cap'
+    $('#scarf').checked = !!state.appearance.scarf
+    $('#sleeves').value = state.appearance.sleeves || 'auto'
+    yawInput.value = String(state.yaw)
+    $('#emotion').value = 'neutral'
+    setMode(sn.mode)
+    setTab(sn.mode === 'animal' ? 'animal' : 'face')
+    bApplying = false
+    saveSession()
+  }
+  function undoB() {
+    clearTimeout(bTimer); pushB()
+    if (bIndex > 0) { bIndex -= 1; applyB(bHistory[bIndex]) }
+  }
+  function redoB() {
+    clearTimeout(bTimer); pushB()
+    if (bIndex < bHistory.length - 1) { bIndex += 1; applyB(bHistory[bIndex]) }
+  }
+  $('#undoB').addEventListener('click', undoB)
+  $('#redoB').addEventListener('click', redoB)
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+      e.preventDefault()
+      e.shiftKey ? redoB() : undoB()
+    }
+  })
+
+  // ── modes ────────────────────────────────────────────────────────────────
+  function applyTab() {
+    const tab = state.tab || 'face'
+    document.querySelectorAll('.panel[data-tab]').forEach((el) => { el.hidden = el.dataset.tab !== tab })
+    document.querySelectorAll('#tabs [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab))
+  }
+  function setTab(tab) {
+    state.tab = tab
+    if (tab === 'animal') {
+      if (state.mode !== 'animal') setMode('animal')
+    } else if (tab !== 'project') {
+      if (state.mode !== 'human') setMode('human')
+    }
+    applyTab()
+    const box = document.querySelector('.inspector')
+    if (box) box.scrollTop = 0
+  }
+  document.querySelectorAll('#tabs [data-tab]').forEach((b) => {
+    b.addEventListener('click', () => setTab(b.dataset.tab))
+  })
+
+  function setMode(mode) {
+    state.mode = mode
+    cvH.style.display = mode === 'human' ? 'block' : 'none'
+    cvA.style.display = mode === 'animal' ? 'block' : 'none'
+    renderABones(animal ? animal.getState().time : 0)
+    if (mode === 'animal') rebuildAnimal()
+    else rebuildHuman()
+    applyTab()
+  }
+
+  // ── presets / export ─────────────────────────────────────────────────────
+  const plist = $('#plist')
+  function renderPresets() {
+    plist.innerHTML = ''
+    const names = Object.keys(presets)
+    if (!names.length) {
+      const d = document.createElement('div')
+      d.className = 'hintline'; d.textContent = 'Пока пусто. Настройте и нажмите Save.'
+      plist.appendChild(d)
+    }
+    for (const name of names) {
+      const row = document.createElement('div')
+      row.className = 'pitem'
+      const nm = document.createElement('span')
+      nm.className = 'nm'; nm.textContent = name
+      const load = document.createElement('button')
+      load.className = 'mini'; load.textContent = 'load'
+      load.addEventListener('click', () => {
+        const p = presets[name]
+        if (p.mode === 'animal') {
+          state.animal = Object.assign({}, state.animal, p.animal)
+          setMode('animal'); rebuildAnimal()
+        } else {
+          state.mode = 'human'
+          state.base = p.base || 'mark'
+          state.appearance = p.appearance || {}
+          state.pose = p.pose || 'neutral'
+          state.yaw = p.yaw || 0
+          $('#base').value = state.base
+          poseSel.value = state.pose
+          yawInput.value = String(state.yaw)
+          $('#glasses').checked = state.appearance.glasses !== undefined ? !!state.appearance.glasses : !!baseSkin().glasses
+          $('#cap').checked = state.appearance.headwear === 'cap'
+          $('#scarf').checked = !!state.appearance.scarf
+          $('#sleeves').value = state.appearance.sleeves || 'auto'
+          setMode('human')
+        }
+      })
+      const del = document.createElement('button')
+      del.className = 'mini'; del.textContent = 'del'
+      del.addEventListener('click', () => { delete presets[name]; savePresets(); renderPresets() })
+      row.appendChild(nm); row.appendChild(load); row.appendChild(del)
+      plist.appendChild(row)
+    }
+  }
+  function savePresets() { localStorage.setItem(LS, JSON.stringify(presets)) }
+  $('#save').addEventListener('click', () => {
+    const name = ($('#pname').value || '').trim() || 'character'
+    presets[name] = state.mode === 'human'
+      ? { mode: 'human', base: state.base, appearance: clone(state.appearance), pose: state.pose, yaw: state.yaw }
+      : { mode: 'animal', animal: clone(state.animal) }
+    savePresets(); renderPresets()
+  })
+
+  const exportEl = $('#export')
+  $('#exp-json').addEventListener('click', () => {
+    exportEl.value = JSON.stringify(state.mode === 'human'
+      ? { base: state.base, appearance: state.appearance, pose: state.pose, yaw: state.yaw }
+      : { kind: state.animal.kind, pose: state.animal.pose, gait: state.animal.gait, palette: state.animal.palette },
+    null, 2)
+  })
+  $('#exp-js').addEventListener('click', () => {
+    if (state.mode === 'human') {
+      exportEl.value = [
+        'const cast = PaperCast.create(canvas, { character: ' + JSON.stringify(state.base) + ', appearance: ' + JSON.stringify(state.appearance) + ', pose: ' + JSON.stringify(state.pose) + ', yaw: ' + state.yaw + ' })',
+        'cast.seek(0)',
+      ].join('\n')
+    } else {
+      exportEl.value = [
+        'const pet = PaperCastAnimals.create(canvas, { kind: ' + JSON.stringify(state.animal.kind) + ', pose: ' + JSON.stringify(state.animal.pose) + ', gait: ' + (state.animal.gait ? JSON.stringify(state.animal.gait) : 'null') + ', palette: ' + JSON.stringify(state.animal.palette) + ' })',
+        'pet.seek(0)',
+      ].join('\n')
+    }
+  })
+  $('#copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(exportEl.value) } catch (e) {}
+  })
+
+  $('#resetAll').addEventListener('click', () => {
+    state.base = 'mark'
+    state.appearance = {}
+    state.pose = 'neutral'
+    state.yaw = 0
+    state.animal = { kind: 'dog', pose: 'stand', gait: '', palette: {}, skeleton: false, fk: {} }
+    $('#base').value = 'mark'
+    poseSel.value = 'neutral'
+    $('#glasses').checked = !!baseSkin().glasses
+    $('#cap').checked = false
+    $('#scarf').checked = false
+    $('#sleeves').value = 'auto'
+    $('#emotion').value = 'neutral'
+    yawInput.value = '0'
+    $('#kind').value = 'dog'
+    $('#gait').value = ''
+    $('#a-skel').checked = false
+    fillAnimalPoses()
+    if (state.mode === 'human') rebuildHuman()
+    else rebuildAnimal()
+  })
+
+  // ── live preview ─────────────────────────────────────────────────────────
+  let live = true
+  const liveT0 = performance.now()
+  $('#liveBtn').addEventListener('click', () => {
+    live = !live
+    $('#liveBtn').classList.toggle('on', live)
+    $('#liveBtn').textContent = live ? 'live' : 'paused'
+  })
+  let liveVisible = true
+  let livePaint = 0
+  if (typeof IntersectionObserver !== 'undefined') {
+    new IntersectionObserver(([entry]) => { liveVisible = entry.isIntersecting }).observe($('#wrap'))
+  }
+  function liveLoop(now) {
+    requestAnimationFrame(liveLoop)
+    if (!live || document.hidden || !liveVisible) return
+    if (now - livePaint < 32) return
+    livePaint = now
+    const t = now - liveT0
+    if (state.mode === 'human' && human) human.seek(t)
+    else if (state.mode === 'animal' && animal) { animal.seek(t); renderABones(t) }
+  }
+  requestAnimationFrame(liveLoop)
+
+  // ── boot ─────────────────────────────────────────────────────────────────
+  function restoreSession() {
+    if (!SESSION) return false
+    const saved = SESSION.read()
+    const urlChar = SESSION.fromURL()
+    if (urlChar) saved.active = urlChar
+    if (!saved || !Object.keys(saved).length) return false
+    if (saved.mode === 'animal' && saved.animal && window.PaperCastAnimals && PaperCastAnimals.KINDS[saved.animal.kind]) {
+      state.animal = Object.assign({}, state.animal, saved.animal)
+      state.animal.palette = Object.assign({}, saved.animal.palette || {})
+      state.animal.fk = Object.assign({}, saved.animal.fk || {})
+      $('#kind').value = state.animal.kind
+      fillAnimalPoses()
+      $('#a-pose').value = state.animal.pose
+      $('#gait').value = state.animal.gait || ''
+      $('#a-skel').checked = !!state.animal.skeleton
+      setMode('animal')
+      setTab('animal')
+      return true
+    }
+    if (saved.active && window.PaperCast.CHARACTERS[saved.active]) {
+      state.base = saved.active
+      state.appearance = SESSION.readSkin(saved.active)
+      if (saved.pose && window.PaperCast.POSES[saved.pose]) state.pose = saved.pose
+      state.yaw = Math.max(-1, Math.min(1, Number(saved.yaw) || 0))
+      const skin = baseSkin()
+      const a = state.appearance
+      $('#base').value = state.base
+      poseSel.value = state.pose
+      $('#glasses').checked = a.glasses !== undefined ? !!a.glasses : !!skin.glasses
+      $('#cap').checked = a.headwear === 'cap' || a.headwear === 'beanie'
+      $('#scarf').checked = !!a.scarf
+      $('#sleeves').value = a.sleeves || 'auto'
+      yawInput.value = String(state.yaw)
+      setMode('human')
+      setTab('face')
+      return true
+    }
+    return false
+  }
+
+  fillAnimalPoses()
+  renderPresets()
+  buildLookLibraries()
+  if (!restoreSession()) { setMode('human'); setTab('face') }
+  else applyTab()
+  setTimeout(pushB, 0)
+  window.__builder = { state, get animal() { return animal }, get human() { return human }, saveSession, normalizeLook, setTab, setMode }
+  new ResizeObserver(() => { if (human) human.seek(800); if (animal) animal.seek(900) }).observe($('#wrap'))
+})()
+</script>
+</body>
+</html>
