@@ -154,7 +154,7 @@
                   }}
                 </div>
                 <div
-                  class="text-[9px] truncate opacity-50 font-mono mt-0.5"
+                  class="text-[9px] truncate text-gray-600 font-mono mt-0.5"
                   :title="slide.component"
                 >
                   {{ slide.component }}
@@ -166,7 +166,7 @@
         <!-- Add Scene Button -->
         <button
           @click="$emit('add-slide')"
-          class="w-full h-12 flex flex-row items-center justify-center gap-2 bg-brand-green/10 hover:bg-brand-green/20 text-brand-green rounded-lg transition-colors border border-brand-green/30 font-bold group mt-1"
+          class="w-full h-12 flex flex-row items-center justify-center gap-2 bg-brand-green/10 hover:bg-brand-green/20 text-emerald-700 rounded-lg transition-colors border border-brand-green/30 font-bold group mt-1"
           title="Добавить сцену"
         >
           <svg
@@ -401,7 +401,7 @@
           <!-- Slide Counter (на телефоне — кнопка открытия списка) -->
           <button
             @click="isMobile && (isSidebarOpen = !isSidebarOpen)"
-            class="text-text-secondary font-mono text-sm tracking-wide select-none whitespace-nowrap shrink-0 px-1"
+            class="text-text-secondary font-mono text-sm tracking-wide select-none whitespace-nowrap shrink-0 px-1.5 py-1"
             :class="{ 'cursor-pointer hover:text-text-primary': isMobile }"
             :title="isMobile ? 'Список слайдов' : ''"
           >

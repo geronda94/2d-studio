@@ -1,17 +1,17 @@
 {
   "base": "http://localhost:5590",
-  "started": "2026-10-29T23:27:40.406Z",
+  "started": "2026-10-29T23:49:51.745Z",
   "pages": [
     {
       "name": "home",
       "url": "/",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1156,
+      "loadMs": 1283,
       "nav": {
-        "dom": 153,
-        "load": 154,
-        "ttfb": 9
+        "dom": 232,
+        "load": 232,
+        "ttfb": 30
       },
       "heapMb": 3,
       "canvasCount": 0,
@@ -24,11 +24,11 @@
       "url": "/p/1",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1732,
+      "loadMs": 4282,
       "nav": {
-        "dom": 167,
-        "load": 167,
-        "ttfb": 10
+        "dom": 160,
+        "load": 161,
+        "ttfb": 8
       },
       "heapMb": 6,
       "canvasCount": 0,
@@ -41,11 +41,11 @@
       "url": "/p/12",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1644,
+      "loadMs": 3196,
       "nav": {
-        "dom": 215,
-        "load": 215,
-        "ttfb": 8
+        "dom": 166,
+        "load": 167,
+        "ttfb": 10
       },
       "heapMb": 6,
       "canvasCount": 0,
@@ -58,10 +58,10 @@
       "url": "/p/13",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1751,
+      "loadMs": 1775,
       "nav": {
-        "dom": 214,
-        "load": 215,
+        "dom": 200,
+        "load": 201,
         "ttfb": 17
       },
       "heapMb": 6,
@@ -75,13 +75,13 @@
       "url": "/pose-studio.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 751,
+      "loadMs": 759,
       "nav": {
-        "dom": 499,
-        "load": 572,
-        "ttfb": 16
+        "dom": 582,
+        "load": 627,
+        "ttfb": 8
       },
-      "heapMb": 3,
+      "heapMb": 2,
       "canvasCount": 1,
       "errors": [],
       "warnings": [],
@@ -92,11 +92,11 @@
       "url": "/character-builder.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 702,
+      "loadMs": 720,
       "nav": {
-        "dom": 535,
-        "load": 543,
-        "ttfb": 10
+        "dom": 493,
+        "load": 512,
+        "ttfb": 9
       },
       "heapMb": 3,
       "canvasCount": 3,
@@ -109,13 +109,13 @@
       "url": "/character-studio.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 739,
+      "loadMs": 757,
       "nav": {
-        "dom": 513,
-        "load": 521,
-        "ttfb": 8
+        "dom": 582,
+        "load": 585,
+        "ttfb": 12
       },
-      "heapMb": 3,
+      "heapMb": 2,
       "canvasCount": 2,
       "errors": [],
       "warnings": [],
@@ -126,11 +126,11 @@
       "url": "/rig3d.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 622,
+      "loadMs": 721,
       "nav": {
-        "dom": 226,
-        "load": 236,
-        "ttfb": 7
+        "dom": 377,
+        "load": 387,
+        "ttfb": 8
       },
       "heapMb": 2,
       "canvasCount": 2,
@@ -143,13 +143,13 @@
       "url": "/director-demo.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 657,
+      "loadMs": 646,
       "nav": {
-        "dom": 446,
-        "load": 455,
-        "ttfb": 6
+        "dom": 443,
+        "load": 456,
+        "ttfb": 11
       },
-      "heapMb": 2,
+      "heapMb": 3,
       "canvasCount": 3,
       "errors": [],
       "warnings": [],
@@ -159,13 +159,13 @@
   "perf": {
     "papercast": {
       "frames": 180,
-      "msPerFrame": 2.2,
-      "fps": 454
+      "msPerFrame": 2.32,
+      "fps": 431.6
     },
     "animals": {
       "frames": 120,
-      "msPerFrame": 0.45,
-      "fps": 2222.2
+      "msPerFrame": 0.31,
+      "fps": 3278.7
     },
     "idle": {
       "idleMs": 600,
@@ -173,9 +173,9 @@
     },
     "scene": {
       "frames": 24,
-      "p50": 21,
-      "p95": 201.4,
-      "max": 206.7
+      "p50": 21.5,
+      "p95": 128.7,
+      "max": 203
     }
   },
   "ui": [
@@ -444,6 +444,14 @@
       "tight": [],
       "tiny": [
         {
+          "text": "NEW",
+          "size": 9
+        },
+        {
+          "text": "NEW",
+          "size": 9
+        },
+        {
           "text": "joints",
           "size": 9
         },
@@ -457,14 +465,6 @@
         },
         {
           "text": "mouths",
-          "size": 9
-        },
-        {
-          "text": "short / beard",
-          "size": 9
-        },
-        {
-          "text": "bob / glasses",
           "size": 9
         }
       ]
@@ -758,6 +758,14 @@
       "tight": [],
       "tiny": [
         {
+          "text": "NEW",
+          "size": 9
+        },
+        {
+          "text": "NEW",
+          "size": 9
+        },
+        {
           "text": "joints",
           "size": 9
         },
@@ -771,14 +779,6 @@
         },
         {
           "text": "mouths",
-          "size": 9
-        },
-        {
-          "text": "short / beard",
-          "size": 9
-        },
-        {
-          "text": "bob / glasses",
           "size": 9
         }
       ]
@@ -862,8 +862,8 @@
         {
           "tag": "button",
           "text": "1 / 2",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -926,8 +926,8 @@
         {
           "tag": "button",
           "text": "1 / 1",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -982,8 +982,8 @@
         {
           "tag": "button",
           "text": "1 / 1",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -1105,6 +1105,14 @@
       "tight": [],
       "tiny": [
         {
+          "text": "NEW",
+          "size": 9
+        },
+        {
+          "text": "NEW",
+          "size": 9
+        },
+        {
           "text": "neutral / neutral",
           "size": 9
         },
@@ -1118,14 +1126,6 @@
         },
         {
           "text": "LIVE",
-          "size": 9
-        },
-        {
-          "text": "joints",
-          "size": 9
-        },
-        {
-          "text": "poses",
           "size": 9
         }
       ]
@@ -1209,8 +1209,8 @@
         {
           "tag": "button",
           "text": "1 / 2",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -1273,8 +1273,8 @@
         {
           "tag": "button",
           "text": "1 / 1",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -1329,8 +1329,8 @@
         {
           "tag": "button",
           "text": "1 / 1",
-          "w": 57,
-          "h": 24
+          "w": 61,
+          "h": 28
         },
         {
           "tag": "button",
@@ -1452,6 +1452,14 @@
       "tight": [],
       "tiny": [
         {
+          "text": "NEW",
+          "size": 9
+        },
+        {
+          "text": "NEW",
+          "size": 9
+        },
+        {
           "text": "neutral / neutral",
           "size": 9
         },
@@ -1465,14 +1473,6 @@
         },
         {
           "text": "LIVE",
-          "size": 9
-        },
-        {
-          "text": "joints",
-          "size": 9
-        },
-        {
-          "text": "poses",
           "size": 9
         }
       ]
@@ -1791,6 +1791,14 @@
       "tight": [],
       "tiny": [
         {
+          "text": "NEW",
+          "size": 9
+        },
+        {
+          "text": "NEW",
+          "size": 9
+        },
+        {
           "text": "joints",
           "size": 9
         },
@@ -1804,14 +1812,6 @@
         },
         {
           "text": "mouths",
-          "size": 9
-        },
-        {
-          "text": "short / beard",
-          "size": 9
-        },
-        {
-          "text": "bob / glasses",
           "size": 9
         }
       ]
@@ -1842,7 +1842,7 @@
     }
   ],
   "problems": [],
-  "finished": "2026-10-29T23:29:44.938Z",
+  "finished": "2026-10-29T23:51:49.762Z",
   "summary": {
     "pages": 9,
     "consoleErrors": 0,

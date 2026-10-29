@@ -39,6 +39,8 @@ jobs:
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/pose-studio.html >/dev/null && break; sleep 1; done
       - name: Audit (console, layout, targets)
         run: node tests/audit/run.cjs http://127.0.0.1:4173
+      - name: Contrast (WCAG AA)
+        run: node tests/audit/contrast.cjs http://127.0.0.1:4173 --fail
       - name: End-to-end walk
         run: node tests/audit/e2e.cjs http://127.0.0.1:4173
       - name: Benchmark (report only on CI hardware)

@@ -137,7 +137,7 @@ const getDisplayColors = (projectId) => {
           <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Core</span>
         </h1>
 
-        <p class="text-lg md:text-xl text-gray-500 max-w-2xl font-light leading-relaxed">
+        <p class="text-lg md:text-xl text-gray-600 max-w-2xl font-light leading-relaxed">
           Центральный пульт управления. Выберите проект, чтобы начать работу с папками и презентациями.
         </p>
       </header>
@@ -146,31 +146,31 @@ const getDisplayColors = (projectId) => {
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <a href="/character-studio.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">2D CAST</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-600 mb-2">2D CAST</div>
           <div class="font-bold text-gray-900 group-hover:text-blue-700">Paper Cast Studio</div>
           <div class="text-sm text-gray-500 mt-1">Canvas-персонажи: общий риг, 31 поза, 82 фонемы, липсинк и эмоции.</div>
         </a>
         <a href="/character-builder.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">BUILDER</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-600 mb-2">BUILDER</div>
           <div class="font-bold text-gray-900 group-hover:text-blue-700">Конструктор персонажа</div>
           <div class="text-sm text-gray-500 mt-1">Пропорции, лицо, причёски, гардероб и животные: 10 видов скелетов.</div>
         </a>
         <a href="/pose-studio.html" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">POSES</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-600 mb-2">POSES</div>
           <div class="font-bold text-gray-900 group-hover:text-blue-700">Pose Studio</div>
           <div class="text-sm text-gray-500 mt-1">Кости, лимиты, пресеты, A→B и библиотека жестов.</div>
         </a>
         <a href="/p/1" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">SCENES</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-600 mb-2">SCENES</div>
           <div class="font-bold text-gray-900 group-hover:text-blue-700">Демо-сцены</div>
           <div class="text-sm text-gray-500 mt-1">Движок презентаций и 2D/2.5D сцены в одном месте.</div>
         </a>
         <a href="/themes" target="_blank" rel="noopener"
            class="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-500 mb-2">THEMES</div>
+          <div class="text-[10px] font-bold tracking-[0.18em] text-blue-600 mb-2">THEMES</div>
           <div class="font-bold text-gray-900 group-hover:text-blue-700">Темы</div>
           <div class="text-sm text-gray-500 mt-1">Палитры и оформление проектов.</div>
         </a>
@@ -225,7 +225,7 @@ const getDisplayColors = (projectId) => {
         <!-- New project card -->
         <button
           @click="openCreateProject"
-          class="group flex flex-col items-center justify-center h-[28rem] rounded-3xl border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300 text-gray-400 hover:text-blue-600"
+          class="group flex flex-col items-center justify-center h-[28rem] rounded-3xl border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300 text-gray-600 hover:text-blue-700"
         >
           <span class="text-5xl font-light mb-3">+</span>
           <span class="font-bold">Новый проект</span>
@@ -256,14 +256,14 @@ const getDisplayColors = (projectId) => {
                    </div>
                 </div>
                 <!-- Mock Content -->
-                <div class="space-y-2.5 mt-2">
+                <div class="space-y-2.5 mt-2" data-audit-ignore>
                    <div class="w-3/4 h-5 rounded-md opacity-90" :style="{ backgroundColor: getTheme(project.id).textPrimary }"></div>
                    <div class="w-1/2 h-3 rounded-md opacity-60" :style="{ backgroundColor: getTheme(project.id).textSecondary }"></div>
                 </div>
                 <!-- Mock Footer/Palette -->
-                <div class="mt-auto flex justify-end items-end">
+                <div class="mt-auto flex justify-end items-end" data-audit-ignore>
                    <!-- Mock Button -->
-                   <div class="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white shadow-sm" :style="{ backgroundColor: getTheme(project.id).brand }">
+                   <div class="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-gray-900 shadow-sm" :style="{ backgroundColor: getTheme(project.id).brand }">
                       View
                    </div>
                 </div>
@@ -274,17 +274,17 @@ const getDisplayColors = (projectId) => {
           <div class="p-8 flex flex-col flex-1 bg-white relative z-10 border-t border-gray-100">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: getTheme(project.id).brand }"></div>
-              <div class="text-xs font-bold uppercase tracking-[0.15em] text-gray-400">Проект</div>
+              <div class="text-xs font-bold uppercase tracking-[0.15em] text-gray-600">Проект</div>
             </div>
             <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ project.title }}</h2>
-            <p class="text-gray-500 text-sm mb-6 flex-1 font-light leading-relaxed line-clamp-2">{{ project.description }}</p>
+            <p class="text-gray-600 text-sm mb-6 flex-1 font-light leading-relaxed line-clamp-2">{{ project.description }}</p>
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-               <div class="text-xs font-semibold text-gray-400">
+               <div class="text-xs font-semibold text-gray-600">
                   <span v-if="getDisplayColors(project.id).length">{{ getDisplayColors(project.id).length }} Styles</span>
                   <span v-else>Default Theme</span>
                </div>
-              <div class="flex items-center gap-1.5 text-gray-400 group-hover:text-blue-600 transition-colors font-medium text-sm">
+              <div class="flex items-center gap-1.5 text-gray-600 group-hover:text-blue-700 transition-colors font-medium text-sm">
                 <span>Открыть</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform group-hover:translate-x-1 transition-transform">
                   <line x1="5" y1="12" x2="19" y2="12"></line>

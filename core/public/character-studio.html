@@ -81,9 +81,10 @@
   .news-card:hover { border-color: var(--teal); transform: translateY(-1px); }
   .news-card b { font-size: 14px; letter-spacing: -.01em; }
   .news-card span { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+  .news-card .news-badge { color: #062b27; font-size: 9px; }
   .news-badge {
     position: absolute; right: 10px; top: 10px; font: 9px/1 ui-monospace, monospace;
-    letter-spacing: .12em; color: #0b0f14; background: var(--teal);
+    letter-spacing: .12em; color: #062b27; background: var(--teal);
     border-radius: 999px; padding: 3px 6px;
   }
   @media (max-width: 720px) { .news { grid-template-columns: 1fr; } }
@@ -127,9 +128,9 @@
   .actor.active { border-color: var(--teal); transform: translateY(-2px); }
   .actor-top {
     display: flex; align-items: center; gap: 8px; padding: 9px 11px 6px;
-    font: 10px/1 ui-monospace, monospace; letter-spacing: .10em; color: rgba(32,35,45,.62);
+    font: 10px/1 ui-monospace, monospace; letter-spacing: .10em; color: rgba(32,35,45,.80);
   }
-  .actor-top .idx { color: rgba(32,35,45,.35); }
+  .actor-top .idx { color: rgba(32,35,45,.66); }
   .actor-top .name { font-weight: 750; color: var(--ink); letter-spacing: .16em; }
   .actor-top .meta { margin-left: auto; }
   .canvas-wrap {
@@ -150,10 +151,10 @@
   .canvas-wrap canvas { width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
   .actor-foot {
     display: flex; justify-content: space-between; gap: 8px; padding: 6px 11px 10px;
-    font: 10px/1.2 ui-monospace, monospace; letter-spacing: .06em; color: rgba(32,35,45,.58);
+    font: 10px/1.2 ui-monospace, monospace; letter-spacing: .06em; color: rgba(32,35,45,.78);
     border-top: 1px solid rgba(32,35,45,.10);
   }
-  .actor-foot .live { color: var(--teal-dim); }
+  .actor-foot .live { color: #1d6b62; }
   .stage-foot {
     display: flex; align-items: center; gap: 12px; padding: 12px 16px;
     border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; flex-wrap: wrap;
@@ -250,7 +251,7 @@
     border: 1px solid var(--line-soft); background: #0f151c; color: var(--muted); border-radius: 6px;
     min-height: 34px; padding: 3px 2px; font: 12px/1.1 ui-monospace, monospace; position: relative;
   }
-  .phoneme small { display: block; font-size: 7px; color: #687783; margin-top: 2px; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+  .phoneme small { display: block; font-size: 8.5px; color: #8a99a6; margin-top: 2px; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
   .phoneme:hover { color: var(--text); border-color: var(--teal-dim); }
   .phoneme.active { border-color: var(--teal); color: var(--teal); background: rgba(103,216,200,.08); }
   .phoneme.active small { color: var(--teal-dim); }
@@ -273,7 +274,7 @@
   .color-field input[type="color"] { width: 23px; height: 23px; padding: 0; border: 0; background: transparent; cursor: pointer; }
   .color-field span { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
   .toggles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-  .footer-note { color: #5f6d78; font-size: 10px; line-height: 1.5; margin-top: 10px; }
+  .footer-note { color: #8d9aa5; font-size: 10px; line-height: 1.5; margin-top: 10px; }
   .toast {
     position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(12px);
     background: #e8e4da; color: var(--ink); border-radius: 8px; padding: 8px 13px;
