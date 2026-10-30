@@ -13,7 +13,14 @@ node tests/audit/e2e.cjs   http://localhost:5590   # сквозной прохо
 node tests/audit/bench.cjs http://localhost:5590   # бенчмарк кадров (медианы)
 node tests/audit/bench.cjs http://localhost:5590 --check   # сравнение с baseline.json
 node tests/audit/bench.cjs http://localhost:5590 --save    # новый baseline
+node tests/audit/contrast.cjs http://localhost:5590         # контраст WCAG AA
+node tests/audit/stress.cjs   http://localhost:5590         # навигация, утечки
 ```
+
+Стресс-тест гоняет `/p/1 → /p/12 → /p/13 → / → /p/1` шесть раз с принудительным
+`gc()` и сравнивает **удерживаемый** heap: сейчас 4.2 МБ → 4.2 МБ (рост 0.4 МБ),
+iframe никогда не больше одного. Без `--expose-gc` любой SPA выглядит «текущим»:
+V8 просто не собирает мусор без давления.
 
 `--check` падает, если метрика стала хуже baseline более чем в **2.5×** — это защита от
 регрессий, а не от шума конкретной машины.

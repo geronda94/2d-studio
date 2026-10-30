@@ -41,6 +41,8 @@ jobs:
         run: node tests/audit/run.cjs http://127.0.0.1:4173
       - name: Contrast (WCAG AA)
         run: node tests/audit/contrast.cjs http://127.0.0.1:4173 --fail
+      - name: Stress (navigation, leaks)
+        run: node tests/audit/stress.cjs http://127.0.0.1:4173
       - name: End-to-end walk
         run: node tests/audit/e2e.cjs http://127.0.0.1:4173
       - name: Benchmark (report only on CI hardware)
