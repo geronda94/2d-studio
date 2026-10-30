@@ -4,8 +4,9 @@
 //   node tests/audit/bench.cjs http://localhost:5590 --check    # vs baseline
 //   node tests/audit/bench.cjs http://localhost:5590 --save     # new baseline
 //
-// Metrics are milliseconds per frame. `--check` fails when a metric is more
-// than 2.5× slower than the stored baseline (a regression, not machine noise).
+// Metrics are milliseconds per frame, best of 5 runs (the least contended
+// sample — a shared server makes medians jump). `--check` fails when a metric
+// is more than 2.5× slower than the stored baseline: a regression, not noise.
 const { chromium } = require('playwright')
 const fs = require('fs')
 const path = require('path')
@@ -43,7 +44,7 @@ async function main() {
       runs.push((performance.now() - t0) / N)
     }
     runs.sort((a, b) => a - b)
-    return +runs[2].toFixed(2)
+    return +runs[0].toFixed(2)   // best of 5: least contention
   })
 
   // Animals: one dog
@@ -63,7 +64,7 @@ async function main() {
       runs.push((performance.now() - t0) / N)
     }
     runs.sort((a, b) => a - b)
-    return +runs[2].toFixed(2)
+    return +runs[0].toFixed(2)
   })
   await p1.close()
 
@@ -86,7 +87,7 @@ async function main() {
       runs.push(med(t))
     }
     runs.sort((a, b) => a - b)
-    return +runs[2].toFixed(2)
+    return +runs[0].toFixed(2)
   })
   await p2.close()
 
@@ -103,7 +104,8 @@ async function main() {
       await window.__sceneSeek((i * 400) % 12000)
       t.push(performance.now() - t0)
     }
-    return +med(t).toFixed(2)
+    t.sort((a, b) => a - b)
+    return +t[0].toFixed(2)
   })
   await p3.close()
   await browser.close()

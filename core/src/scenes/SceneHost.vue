@@ -10,6 +10,20 @@
       title="scene"
     ></iframe>
 
+    <!-- Loading veil: the iframe needs 300–800 ms to fetch the runtime and
+         fonts, and an empty slide reads as a broken slide. It is removed the
+         moment `scene-ready` arrives, so a video capture never sees it. -->
+    <div
+      v-if="!ready && !props.preview"
+      class="scene-loading absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+      aria-live="polite"
+    >
+      <div class="scene-loading-inner">
+        <span class="scene-loading-dot" aria-hidden="true"></span>
+        <span class="scene-loading-text">{{ readySlow ? 'сцена грузится дольше обычного' : 'сцена' }}</span>
+      </div>
+    </div>
+
     <div
       v-if="showErrors && error"
       class="absolute left-3 right-3 bottom-3 z-30 rounded-lg border border-red-400/60 bg-red-950/90 px-3 py-2 text-[11px] leading-snug text-red-100 font-mono whitespace-pre-wrap pointer-events-none"
@@ -24,6 +38,8 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDirector } from '../composables/useDirector'
 import { buildSceneDoc, collectThemeVars, loadGsapSource, loadKitSource, loadCharSource, loadPaperSource, loadRiveSource, loadRiveCharSource, loadRiveCharacterBuffer, loadRiveActorSource, loadRiveActorBuffer, loadRiveOldManBuffer, loadAnimalSource, loadStageSource } from './runtime'
 
+const readySlow = ref(false)
+let slowTimer = 0
 const props = defineProps({
   code: { type: Object, default: () => ({}) },
   sceneProps: { type: Object, default: () => ({}) },
@@ -192,12 +208,21 @@ function seek(t) {
   })
 }
 
+function armSlowTimer() {
+  clearTimeout(slowTimer)
+  readySlow.value = false
+  slowTimer = window.setTimeout(() => { readySlow.value = true }, 3000)
+}
+armSlowTimer()
+
 function onMessage(e) {
   if (!frameEl.value || e.source !== frameEl.value.contentWindow) return
   const msg = e.data || {}
   if (!msg.__scene) return
   if (msg.type === 'scene-ready') {
     ready.value = true
+    readySlow.value = false
+    clearTimeout(slowTimer)
     if (typeof window !== 'undefined' && !props.preview) {
       window.__sceneReady = true
       window.__sceneSeek = seek
@@ -250,5 +275,26 @@ defineExpose({ seek, rebuild, patchObject, post })
 <style scoped>
 .scene-host {
   contain: layout paint;
+}
+.scene-loading-inner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border-radius: 999px;
+  background: rgba(16, 20, 27, 0.55);
+  color: rgba(240, 236, 226, 0.86);
+  font: 11px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.scene-loading-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #67d8c8;
+  animation: scene-loading-pulse 1.1s ease-in-out infinite;
+}
+@keyframes scene-loading-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-loading-dot { animation: none; opacity: 0.8; }
 }
 </style>
