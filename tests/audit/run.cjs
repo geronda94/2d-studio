@@ -204,6 +204,20 @@ async function main() {
             if (r.width < 24 || r.height < 24) small.push(rec)
             else if (r.width < 32 || r.height < 32) tight.push(rec)
           }
+          // icon-only controls need an accessible name (aria-label/title)
+          const unlabeled = []
+          for (const el of document.querySelectorAll('button, a[href], [role=button]')) {
+            const r = el.getBoundingClientRect()
+            if (r.width === 0 || r.height === 0) continue
+            if (typeof el.checkVisibility === 'function' &&
+                !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) continue
+            const name = (el.getAttribute('aria-label') || el.getAttribute('title') || '').trim()
+            const text = (el.textContent || '').replace(/\s+/g, ' ').trim()
+            const hasWord = /[A-Za-zА-Яа-яЁё0-9]{2,}/.test(text)
+            if (!name && (!text || !hasWord) ) {
+              unlabeled.push({ tag: el.tagName.toLowerCase(), text: text.slice(0, 12), cls: (el.className || '').toString().slice(0, 24) })
+            }
+          }
           // tiny text
           const tiny = []
           for (const el of document.querySelectorAll('body *')) {
@@ -212,11 +226,12 @@ async function main() {
             const size = parseFloat(cs.fontSize)
             if (size && size < 10) tiny.push({ text: el.textContent.trim().slice(0, 20), size })
           }
-          return { overflow, viewportW, offenders: offenders.slice(0, 6), small: small.slice(0, 8), tight: tight.slice(0, 8), tiny: tiny.slice(0, 6) }
+          return { overflow, viewportW, offenders: offenders.slice(0, 6), small: small.slice(0, 8), tight: tight.slice(0, 8), tiny: tiny.slice(0, 6), unlabeled: unlabeled.slice(0, 10) }
         })
         report.ui.push({ page: def.name, ...vp, ...info })
         if (info.overflow) bad(def.name, `overflow@${vp.name}`, info.offenders)
         if (info.small.length) bad(def.name, `tap-target@${vp.name}`, info.small)
+        if (info.unlabeled.length) bad(def.name, `aria@${vp.name}`, info.unlabeled)
       } catch (e) {
         bad(def.name, `ui@${vp.name}`, String(e).slice(0, 160))
       }
