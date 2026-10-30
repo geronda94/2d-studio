@@ -1,19 +1,19 @@
 {
-  "base": "http://localhost:5590",
-  "started": "2026-10-29T23:49:51.745Z",
+  "base": "http://localhost:5175",
+  "started": "2026-10-29T23:58:51.612Z",
   "pages": [
     {
       "name": "home",
       "url": "/",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1283,
+      "loadMs": 2104,
       "nav": {
-        "dom": 232,
-        "load": 232,
-        "ttfb": 30
+        "dom": 637,
+        "load": 648,
+        "ttfb": 29
       },
-      "heapMb": 3,
+      "heapMb": 8,
       "canvasCount": 0,
       "errors": [],
       "warnings": [],
@@ -24,13 +24,13 @@
       "url": "/p/1",
       "kind": "spa",
       "status": 200,
-      "loadMs": 4282,
+      "loadMs": 2572,
       "nav": {
-        "dom": 160,
-        "load": 161,
-        "ttfb": 8
+        "dom": 476,
+        "load": 488,
+        "ttfb": 22
       },
-      "heapMb": 6,
+      "heapMb": 16,
       "canvasCount": 0,
       "errors": [],
       "warnings": [],
@@ -41,13 +41,13 @@
       "url": "/p/12",
       "kind": "spa",
       "status": 200,
-      "loadMs": 3196,
+      "loadMs": 2563,
       "nav": {
-        "dom": 166,
-        "load": 167,
-        "ttfb": 10
+        "dom": 409,
+        "load": 418,
+        "ttfb": 8
       },
-      "heapMb": 6,
+      "heapMb": 16,
       "canvasCount": 0,
       "errors": [],
       "warnings": [],
@@ -58,13 +58,13 @@
       "url": "/p/13",
       "kind": "spa",
       "status": 200,
-      "loadMs": 1775,
+      "loadMs": 2381,
       "nav": {
-        "dom": 200,
-        "load": 201,
-        "ttfb": 17
+        "dom": 471,
+        "load": 481,
+        "ttfb": 14
       },
-      "heapMb": 6,
+      "heapMb": 16,
       "canvasCount": 0,
       "errors": [],
       "warnings": [],
@@ -75,13 +75,13 @@
       "url": "/pose-studio.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 759,
+      "loadMs": 750,
       "nav": {
-        "dom": 582,
-        "load": 627,
-        "ttfb": 8
+        "dom": 492,
+        "load": 542,
+        "ttfb": 12
       },
-      "heapMb": 2,
+      "heapMb": 3,
       "canvasCount": 1,
       "errors": [],
       "warnings": [],
@@ -92,11 +92,11 @@
       "url": "/character-builder.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 720,
+      "loadMs": 750,
       "nav": {
-        "dom": 493,
-        "load": 512,
-        "ttfb": 9
+        "dom": 655,
+        "load": 661,
+        "ttfb": 18
       },
       "heapMb": 3,
       "canvasCount": 3,
@@ -109,13 +109,13 @@
       "url": "/character-studio.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 757,
+      "loadMs": 775,
       "nav": {
-        "dom": 582,
-        "load": 585,
+        "dom": 537,
+        "load": 544,
         "ttfb": 12
       },
-      "heapMb": 2,
+      "heapMb": 3,
       "canvasCount": 2,
       "errors": [],
       "warnings": [],
@@ -126,11 +126,11 @@
       "url": "/rig3d.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 721,
+      "loadMs": 649,
       "nav": {
-        "dom": 377,
-        "load": 387,
-        "ttfb": 8
+        "dom": 291,
+        "load": 298,
+        "ttfb": 17
       },
       "heapMb": 2,
       "canvasCount": 2,
@@ -143,10 +143,10 @@
       "url": "/director-demo.html",
       "kind": "studio",
       "status": 200,
-      "loadMs": 646,
+      "loadMs": 642,
       "nav": {
-        "dom": 443,
-        "load": 456,
+        "dom": 466,
+        "load": 477,
         "ttfb": 11
       },
       "heapMb": 3,
@@ -159,13 +159,13 @@
   "perf": {
     "papercast": {
       "frames": 180,
-      "msPerFrame": 2.32,
-      "fps": 431.6
+      "msPerFrame": 2.73,
+      "fps": 366.3
     },
     "animals": {
       "frames": 120,
-      "msPerFrame": 0.31,
-      "fps": 3278.7
+      "msPerFrame": 0.33,
+      "fps": 3045.7
     },
     "idle": {
       "idleMs": 600,
@@ -173,9 +173,9 @@
     },
     "scene": {
       "frames": 24,
-      "p50": 21.5,
-      "p95": 128.7,
-      "max": 203
+      "p50": 51.7,
+      "p95": 148.8,
+      "max": 153.3
     }
   },
   "ui": [
@@ -1842,7 +1842,7 @@
     }
   ],
   "problems": [],
-  "finished": "2026-10-29T23:51:49.762Z",
+  "finished": "2026-10-30T00:01:05.908Z",
   "summary": {
     "pages": 9,
     "consoleErrors": 0,
