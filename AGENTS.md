@@ -24,6 +24,9 @@ Human+AI продукт: **`docs/HUMAN_AI_STUDIO.md`**. Персонажи: **`d
 Object Studio: **`docs/OBJECT_STUDIO.md`**. Режимы сцен: **`docs/SCENE_MODES.md`**. UI студий: **`docs/PAPERCAST_UI.md`**.
 Канал: **`docs/CHANNEL_PRAVOSLAVIE.md`**. Роли ИИ: **`docs/AGENT_ROLES.md`**.
 Как делать контент: **`docs/PROCESSES.md`**. Сервер: **`docs/SERVER.md`**.
+Тесты и качество: **`docs/PERFORMANCE.md`** (бенчмарки, бюджеты), **`docs/AUDIT_2026-10-30.md`**
+(последний аудит). Скрипты: `tests/qa/` (арт-регрессия, golden-кадры) и
+`tests/audit/` (консоль, вёрстка, контраст, e2e, утечки, бенчмарк).
 Аудит и конвейер DeepSeek: **`docs/CLAUDE_ANALYSIS.md`**.
 
 ---
