@@ -75,7 +75,7 @@
       <aside class="w-full lg:w-[46%] xl:w-[42%] shrink-0 border-t lg:border-t-0 lg:border-l border-text-muted/30 bg-bg-surface/40 flex flex-col min-h-0">
         <div class="shrink-0 flex items-center gap-1 px-3 pt-3 overflow-x-auto hide-scrollbar">
           <button v-for="tab in tabs" :key="tab.id"
-            class="rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors"
+            class="rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors shrink-0 whitespace-nowrap"
             :class="activeTab === tab.id ? 'bg-brand-blue text-white' : 'text-text-secondary hover:bg-bg-surface'"
             @click="activeTab = tab.id">
             {{ tab.label }}
