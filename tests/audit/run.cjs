@@ -54,16 +54,21 @@ async function main() {
     const warnings = []
     const failed = []
     page.on('pageerror', (e) => errors.push(String(e).slice(0, 300)))
+    // Third-party font CDNs are not our uptime: a blocked or flaky
+    // fonts.gstatic.com must not fail the page, but it is still reported.
+    const isFontCdn = (u) => /fonts\.(googleapis|gstatic)\.com/.test(u)
     page.on('console', (m) => {
       const text = m.text()
       if (m.type() === 'error') {
         if (/favicon|ERR_ABORTED/i.test(text)) return
+        if (/fonts\.gstatic|fonts\.googleapis/.test(text)) { warnings.push('font cdn: ' + text.slice(0, 120)); return }
         errors.push(text.slice(0, 300))
       } else if (m.type() === 'warning') warnings.push(text.slice(0, 200))
     })
     page.on('requestfailed', (r) => {
       const u = r.url()
       if (/favicon|\.map$/.test(u)) return
+      if (isFontCdn(u)) { warnings.push('font cdn: ' + r.failure().errorText); return }
       failed.push(`${r.failure().errorText} ${u}`.slice(0, 200))
     })
     const t0 = Date.now()
