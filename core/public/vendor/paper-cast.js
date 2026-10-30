@@ -1535,6 +1535,73 @@
     ctx.restore()
   }
 
+  function drawSkirtBlock(ctx, sk, c, outfit, bottom, spA) {
+    const fill = c.skirtColor || (outfit === 'dress' ? c.shirt : c.pants)
+    // Cloth hangs: the waist turns with the body, but the hem lags behind
+    // (35 % of the spine bend instead of 100 %). The inherited transform
+    // already carries the full bend, so undo 65 % of it around the waist.
+    ctx.save()
+    if (spA) { ctx.translate(300, 527); ctx.rotate(-spA * 0.65); ctx.translate(-300, -527) }
+    // The hem lifts and parts on the side of a raised leg: a knee above the
+    // hip pulls the cloth up, so the skirt never cuts the thigh in half.
+    const liftL = sk.liftL || 0
+    const liftR = sk.liftR || 0
+    const hemL = 660 - liftL * 104
+    const hemR = 660 - liftR * 104
+    const outL = 200 - liftL * 6
+    const outR = 400 + liftR * 6
+    const sag = 678 - Math.min(liftL, liftR) * 26
+    const topL = [208, 494]
+    const topC = [300, 486]
+    const topR = [392, 494]
+    ctx.beginPath()
+    ctx.moveTo(topL[0], topL[1])
+    ctx.quadraticCurveTo(topC[0], topC[1], topR[0], topR[1])
+    ctx.lineTo(outR, hemR)
+    ctx.quadraticCurveTo(300 + (liftR - liftL) * 34, sag, outL, hemL)
+    ctx.closePath()
+    ctx.fillStyle = fill
+    ctx.fill()
+    // outline the silhouette only: no line across the waist
+    ctx.beginPath()
+    ctx.moveTo(topL[0], topL[1] + 2)
+    ctx.lineTo(outL, hemL)
+    ctx.quadraticCurveTo(300 + (liftR - liftL) * 34, sag, outR, hemR)
+    ctx.lineTo(topR[0], topR[1] + 2)
+    ctx.strokeStyle = INK
+    ctx.lineWidth = 3.2
+    ctx.stroke()
+    // folds follow the hem: a raised side gets a longer, leaning crease
+    for (const x of [-44, 0, 44]) {
+      const lift = x < 0 ? liftL : liftR
+      const hem = 658 - lift * 100
+      ctx.beginPath()
+      ctx.moveTo(300 + x * 0.7, 528)
+      ctx.lineTo(300 + x + (x < 0 ? -lift : lift) * 8, hem)
+      ctx.strokeStyle = 'rgba(0,0,0,.14)'
+      ctx.lineWidth = 2.2
+      ctx.stroke()
+    }
+    // a soft fold from the hip toward the raised knee sells the drape
+    for (const [side, lift] of [['L', liftL], ['R', liftR]]) {
+      if (lift < 0.15) continue
+      const knee = side === 'L' ? sk.kneeL : sk.kneeR
+      ctx.beginPath()
+      ctx.moveTo(300 + (side === 'L' ? -58 : 58), 536)
+      ctx.quadraticCurveTo(knee[0] * 0.42 + 300 * 0.58, 600, knee[0] * 0.5 + 150, 660 - lift * 96)
+      ctx.strokeStyle = 'rgba(0,0,0,.10)'
+      ctx.lineWidth = 3
+      ctx.stroke()
+    }
+    ctx.beginPath()
+    ctx.moveTo(210, 640 - liftL * 96)
+    ctx.quadraticCurveTo(300 + (liftR - liftL) * 30, 656 - Math.min(liftL, liftR) * 30, 390, 640 - liftR * 96)
+    ctx.strokeStyle = c.accent
+    ctx.lineWidth = 4
+    ctx.stroke()
+    ctx.restore()
+  }
+
   function drawTorso(ctx, sk, p, c) {
     if (sk.profile) { drawTorsoSide(ctx, sk, p, c); return }
     ctx.save()
@@ -1835,54 +1902,10 @@
       }
     }
 
-    if (outfit === 'dress' || bottom === 'skirt') {
-      const fill = c.skirtColor || (outfit === 'dress' ? c.shirt : c.pants)
-      // The hem lifts and parts on the side of a raised leg: a knee above the
-      // hip pulls the cloth up, so the skirt never cuts the thigh in half.
-      const liftL = sk.liftL || 0
-      const liftR = sk.liftR || 0
-      const hemL = 660 - liftL * 104
-      const hemR = 660 - liftR * 104
-      const outL = 200 - liftL * 6
-      const outR = 400 + liftR * 6
-      const sag = 678 - Math.min(liftL, liftR) * 26
-      ctx.beginPath()
-      ctx.moveTo(212, 512)
-      ctx.quadraticCurveTo(300, 503, 388, 512)
-      ctx.lineTo(outR, hemR)
-      ctx.quadraticCurveTo(300 + (liftR - liftL) * 34, sag, outL, hemL)
-      ctx.closePath()
-      fillStroke(ctx, fill, INK, 3.2)
-      // folds follow the hem: a raised side gets a longer, leaning crease
-      for (const x of [-44, 0, 44]) {
-        const lift = x < 0 ? liftL : liftR
-        const hem = 658 - lift * 100
-        ctx.beginPath()
-        ctx.moveTo(300 + x * 0.7, 528)
-        ctx.lineTo(300 + x + (x < 0 ? -lift : lift) * 8, hem)
-        ctx.strokeStyle = 'rgba(0,0,0,.14)'
-        ctx.lineWidth = 2.2
-        ctx.stroke()
-      }
-      // a soft fold from the hip toward the raised knee sells the drape
-      for (const [side, lift] of [['L', liftL], ['R', liftR]]) {
-        if (lift < 0.15) continue
-        const knee = side === 'L' ? sk.kneeL : sk.kneeR
-        ctx.beginPath()
-        ctx.moveTo(300 + (side === 'L' ? -58 : 58), 536)
-        ctx.quadraticCurveTo(knee[0] * 0.42 + 300 * 0.58, 600, knee[0] * 0.5 + 150, 660 - lift * 96)
-        ctx.strokeStyle = 'rgba(0,0,0,.10)'
-        ctx.lineWidth = 3
-        ctx.stroke()
-      }
-      ctx.beginPath()
-      ctx.moveTo(210, 640 - liftL * 96)
-      ctx.quadraticCurveTo(300 + (liftR - liftL) * 30, 656 - Math.min(liftL, liftR) * 30, 390, 640 - liftR * 96)
-      ctx.strokeStyle = c.accent
-      ctx.lineWidth = 4
-      ctx.stroke()
-    }
 
+    // dress / skirt: drawn over the torso hem, but with no stroke on its top
+    // edge, so a dress reads as one garment instead of two plates
+    if (outfit === 'dress' || bottom === 'skirt') drawSkirtBlock(ctx, sk, c, outfit, bottom, spA)
     if (!back && c.accessory && c.accessory !== 'none') {
       const ac = c.accessoryColor || c.accent
       if (c.accessory === 'tie') {
