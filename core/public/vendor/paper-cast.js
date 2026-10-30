@@ -914,6 +914,12 @@
       hipL, kneeL: legL.knee, ankleL: legL.ankle, legAngleL: legL.angle,
       hipR, kneeR: legR.knee, ankleR: legR.ankle, legAngleR: legR.angle,
       bodyRot, hipBase: hip, profile: Math.abs(yaw) >= 0.97, headTilt: (p.head.tilt || 0) * DEG,
+      // how far each leg is lifted in front of the body: the skirt hem and the
+      // draw order react to it (adaptive clothing)
+      // a foot off the floor means the leg is in front of the skirt: the hem
+      // follows the same 0..1 value (a walking step stays near zero)
+      liftL: clamp((RIG.floor - legL.ankle[1]) / 260, 0, 1),
+      liftR: clamp((RIG.floor - legR.ankle[1]) / 260, 0, 1),
     }
   }
 
@@ -1129,28 +1135,39 @@
       knee[0] + (ankle[0] - knee[0]) * 0.46,
       knee[1] + (ankle[1] - knee[1]) * 0.46,
     ]
+    // a raised knee pulls the garment up with it: the hip cap and the shorts
+    // hem follow the thigh instead of staying at the pelvis
+    const thighA = Math.atan2(knee[1] - hip[1], knee[0] - hip[0])
     if (!bare) {
       ctx.beginPath()
-      ctx.arc(hip[0], hip[1], 33, 0, TAU)
+      ctx.arc(hip[0], hip[1], 34, 0, TAU)
       fillStroke(ctx, dark, INK, 3)
     }
     limb(ctx, [hip, knee, calf, ankle], [33, 27, 24, 17], bare ? c.skin : dark, INK, 3)
-    if (!bare) {
-      ctx.beginPath()
-      ctx.arc(knee[0], knee[1], 24, 0, TAU)
-      ctx.fillStyle = dark
-      ctx.fill()
-    }
     if (bare && c.bottom === 'shorts') {
       const cut = 0.46
       const hem = [hip[0] + (knee[0] - hip[0]) * cut, hip[1] + (knee[1] - hip[1]) * cut]
       limb(ctx, [hip, hem], [33, 28], dark, INK, 3)
+      // the hem is a band across the thigh, not a horizontal line
+      const nx = -Math.sin(thighA), ny = Math.cos(thighA)
       ctx.beginPath()
-      ctx.moveTo(hem[0] - 24, hem[1])
-      ctx.lineTo(hem[0] + 24, hem[1])
+      ctx.moveTo(hem[0] + nx * 26, hem[1] + ny * 26)
+      ctx.lineTo(hem[0] - nx * 26, hem[1] - ny * 26)
       ctx.strokeStyle = 'rgba(0,0,0,.28)'
       ctx.lineWidth = 2.4
       ctx.stroke()
+    }
+    if (!bare) {
+      // re-draw the hip cap over the tube seam so a lifted thigh never shows
+      // the skin body through the joint
+      ctx.beginPath()
+      ctx.arc(hip[0], hip[1], 32, 0, TAU)
+      ctx.fillStyle = dark
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(knee[0], knee[1], 24, 0, TAU)
+      ctx.fillStyle = dark
+      ctx.fill()
     }
     // side seam only on trousers
     if (!bare) {
@@ -1218,6 +1235,12 @@
         ctx.fillStyle = sleeveFill
         ctx.fill()
       }
+      // a folded elbow pinches the tube: a disc of cloth keeps the sleeve
+      // continuous instead of showing a notch at the joint
+      ctx.beginPath()
+      ctx.arc(el[0], el[1], 15.5, 0, TAU)
+      ctx.fillStyle = sleeveFill
+      ctx.fill()
       // soft crease on the inside of the elbow
       const a1 = Math.atan2(el[1] - sh[1], el[0] - sh[0])
       ctx.beginPath()
@@ -1814,24 +1837,47 @@
 
     if (outfit === 'dress' || bottom === 'skirt') {
       const fill = c.skirtColor || (outfit === 'dress' ? c.shirt : c.pants)
+      // The hem lifts and parts on the side of a raised leg: a knee above the
+      // hip pulls the cloth up, so the skirt never cuts the thigh in half.
+      const liftL = sk.liftL || 0
+      const liftR = sk.liftR || 0
+      const hemL = 660 - liftL * 104
+      const hemR = 660 - liftR * 104
+      const outL = 200 - liftL * 6
+      const outR = 400 + liftR * 6
+      const sag = 678 - Math.min(liftL, liftR) * 26
       ctx.beginPath()
       ctx.moveTo(212, 512)
       ctx.quadraticCurveTo(300, 503, 388, 512)
-      ctx.lineTo(400, 660)
-      ctx.quadraticCurveTo(300, 678, 200, 660)
+      ctx.lineTo(outR, hemR)
+      ctx.quadraticCurveTo(300 + (liftR - liftL) * 34, sag, outL, hemL)
       ctx.closePath()
       fillStroke(ctx, fill, INK, 3.2)
+      // folds follow the hem: a raised side gets a longer, leaning crease
       for (const x of [-44, 0, 44]) {
+        const lift = x < 0 ? liftL : liftR
+        const hem = 658 - lift * 100
         ctx.beginPath()
         ctx.moveTo(300 + x * 0.7, 528)
-        ctx.lineTo(300 + x, 658)
+        ctx.lineTo(300 + x + (x < 0 ? -lift : lift) * 8, hem)
         ctx.strokeStyle = 'rgba(0,0,0,.14)'
         ctx.lineWidth = 2.2
         ctx.stroke()
       }
+      // a soft fold from the hip toward the raised knee sells the drape
+      for (const [side, lift] of [['L', liftL], ['R', liftR]]) {
+        if (lift < 0.15) continue
+        const knee = side === 'L' ? sk.kneeL : sk.kneeR
+        ctx.beginPath()
+        ctx.moveTo(300 + (side === 'L' ? -58 : 58), 536)
+        ctx.quadraticCurveTo(knee[0] * 0.42 + 300 * 0.58, 600, knee[0] * 0.5 + 150, 660 - lift * 96)
+        ctx.strokeStyle = 'rgba(0,0,0,.10)'
+        ctx.lineWidth = 3
+        ctx.stroke()
+      }
       ctx.beginPath()
-      ctx.moveTo(210, 640)
-      ctx.quadraticCurveTo(300, 656, 390, 640)
+      ctx.moveTo(210, 640 - liftL * 96)
+      ctx.quadraticCurveTo(300 + (liftR - liftL) * 30, 656 - Math.min(liftL, liftR) * 30, 390, 640 - liftR * 96)
       ctx.strokeStyle = c.accent
       ctx.lineWidth = 4
       ctx.stroke()
@@ -1896,6 +1942,34 @@
     fillStroke(ctx, c.pantsDark, INK, 3)
     rr(ctx, 286, 524, 28, 18, 4)
     fillStroke(ctx, c.accent, INK, 2)
+    ctx.restore()
+  }
+
+  // Shorts are two tubes plus a small shell at the hips: without the shell a
+  // raised knee opens the crotch and the skin body shows through.
+  function drawShortsShell(ctx, sk, c) {
+    ctx.save()
+    ctx.translate(sk.hipBase[0], sk.hipBase[1])
+    ctx.rotate(sk.bodyRot)
+    ctx.translate(-RIG.hip[0], -RIG.hip[1])
+    if ((c.hipW && c.hipW !== 1) || sk.profileHead) {
+      ctx.translate(300, 0); ctx.scale((c.hipW || 1) * profileNarrow(sk.yaw, sk.profileHead), 1); ctx.translate(-300, 0)
+    }
+    ctx.beginPath()
+    ctx.moveTo(232, 526)
+    ctx.quadraticCurveTo(300, 515, 368, 526)
+    ctx.quadraticCurveTo(374, 566, 356, 596)
+    ctx.quadraticCurveTo(336, 612, 300, 606)
+    ctx.quadraticCurveTo(264, 612, 244, 596)
+    ctx.quadraticCurveTo(226, 566, 232, 526)
+    ctx.closePath()
+    fillStroke(ctx, c.pants, INK, 3)
+    ctx.beginPath()
+    ctx.moveTo(300, 548)
+    ctx.quadraticCurveTo(298, 578, 300, 600)
+    ctx.strokeStyle = 'rgba(0,0,0,.20)'
+    ctx.lineWidth = 2.2
+    ctx.stroke()
     ctx.restore()
   }
 
@@ -3455,8 +3529,14 @@
         }
       }
       const legOrder = sk.profile && sk.yaw < 0 ? ['R', 'L'] : ['L', 'R']
-      drawLeg(ctx, sk, legOrder[0], c, false)
-      drawLeg(ctx, sk, legOrder[1], c, true)
+      // A leg lifted in front of the body (a raised knee) is drawn after the
+      // skirt, so the garment cannot slice through the thigh.
+      const lifted = { L: (sk.liftL || 0) > 0.3, R: (sk.liftR || 0) > 0.3 }
+      if (sk.profile) { lifted.L = false; lifted.R = false }
+      const frontLegs = legOrder.filter((side) => lifted[side])
+      const backLegs = legOrder.filter((side) => !lifted[side])
+      if (!sk.profile && c.bottom === 'shorts' && c.outfit !== 'dress') drawShortsShell(ctx, sk, c)
+      for (const side of backLegs) drawLeg(ctx, sk, side, c, side === legOrder[1])
       const skirtWear = c.outfit === 'dress' || c.bottom === 'skirt'
       if (!skirtWear) drawPelvis(ctx, sk, c)
       if (sk.profile) drawProfileNeck(ctx, sk, p, c)
@@ -3498,6 +3578,7 @@
         if (!profileArmSk.inFront) drawArm(ctx, profileArmSk, near, p, c)
       }
       drawTorso(ctx, sk, p, c)
+      for (const side of frontLegs) drawLeg(ctx, sk, side, c, true)
       // A belt-like cover hides the shirt/pelvis seam on a bent spine. A dress
       // or skirt is continuous at the waist, so the band would cut it in half.
       if (p.fk && Math.abs(p.fk.spine || 0) > 0.5 && !skirtWear) drawWaistCover(ctx, sk, c)

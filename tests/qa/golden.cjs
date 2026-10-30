@@ -34,6 +34,9 @@ const FRAMES = [
   { name: 'mira-profile-left', opts: { character: 'mira', yaw: -1 } },
   { name: 'mark-spine', opts: { character: 'mark', pose: { fk: { spine: 16 } } } },
   { name: 'mark-knee-bend', opts: { character: 'mark', pose: { fk: { kneeL: -70, elbowR: -60 } } } },
+  // adaptive clothing: a raised knee under a dress, both knees up in shorts
+  { name: 'mira-dress-knee-up', opts: { character: 'mira', appearance: { outfit: 'dress' }, pose: { fk: { kneeL: -135 } } } },
+  { name: 'mark-shorts-both-knees', opts: { character: 'mark', appearance: { bottom: 'shorts' }, pose: { fk: { kneeL: -120, kneeR: -120 } } } },
 ]
 
 async function renderAll(page) {
